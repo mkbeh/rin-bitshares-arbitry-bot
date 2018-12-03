@@ -1,0 +1,2 @@
+WORK_DIR = 'output'
+MIN_DAILY_VOLUME = 100

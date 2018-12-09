@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
 import re
-import os
 
 import requests
 
@@ -11,12 +10,13 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 
+from libs.assetchainsmaker.baseassetchainsmaker import BaseAssetChainsMaker
 from const import WORK_DIR, MIN_DAILY_VOLUME
 from libs import utils
 from libs import decorators
 
 
-class AssetsPairsParser:
+class AssetsPairsParser(BaseAssetChainsMaker):
     _urls = {
         'bridge.btc': 'https://cryptofresh.com/a/BRIDGE.BTC',
         'bts': 'https://cryptofresh.com/a/BTS',
@@ -27,7 +27,7 @@ class AssetsPairsParser:
     }
     _lock = RLock()
     _min_daily_volume = MIN_DAILY_VOLUME
-    _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR))
+    _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'pairs'))
     _date = utils.get_today_date()
     _new_file = utils.get_file(WORK_DIR, f'pairs-{_date}.lst')
 
@@ -75,34 +75,9 @@ class AssetsPairsParser:
         tds = pairs_table.findAll('td')
         self._filter_pairs(tds)
 
-    @staticmethod
-    def _run_multi_parsing(func, seq):
-        processes = [Process(target=func, args=(elem,)) for elem in seq]
-        [process.start() for process in processes]
-        [process.join() for process in processes]
-
-    @decorators.write_data_into_file(_new_file)
-    def _compare_files_with_pairs(self):
-        if self._old_file:
-            old_data_set = set()
-            new_data_set = set()
-            set_lst = [old_data_set, new_data_set]
-            files = [self._old_file, self._new_file]
-
-            for i, data_set in enumerate(set_lst):
-                with open(files[i], 'r') as f:
-                    [data_set.add(line.replace('\n', '').strip()) for line in f]
-
-            diff = old_data_set.difference(new_data_set)
-            os.remove(self._old_file)
-
-            return diff
-
     def start_parsing(self):
         htmls = [self._get_html(value) for _, value in self._urls.items()]
-        self._run_multi_parsing(self._parse_pairs, htmls)
-        self._compare_files_with_pairs()
+        self._run_in_multiprocessing(self._parse_pairs, htmls)
+        self._compare_files_with_pairs(self._old_file, self._new_file, self._lock)
 
-
-if __name__ == '__main__':
-    AssetsPairsParser().start_parsing()
+        return self._new_file

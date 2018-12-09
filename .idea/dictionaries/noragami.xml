@@ -1,11 +1,14 @@
 <component name="ProjectDictionaryState">
   <dictionary name="noragami">
     <words>
+      <w>asyncio</w>
       <w>backoff</w>
       <w>forcelist</w>
       <w>gdex</w>
       <w>htmls</w>
+      <w>ioloop</w>
       <w>lxml</w>
+      <w>proj</w>
     </words>
   </dictionary>
 </component>

@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 from functools import wraps
 
-
-def write_data_from_seq(file, seq):
-    if seq:
-        with open(file, 'a') as f:
-            for elem in seq:
-                f.write(elem + '\n')
+from libs import utils
 
 
 def write_data_into_file(file, lock=None):
@@ -17,10 +12,10 @@ def write_data_into_file(file, lock=None):
 
             if lock:
                 with lock:
-                    write_data_from_seq(file, seq)
+                    utils.write_data_from_seq(file, seq)
 
             else:
-                write_data_from_seq(file, seq)
+                utils.write_data_from_seq(file, seq)
 
         return wrapper
     return decorator

@@ -5,15 +5,11 @@ from multiprocessing import Process
 from libs import utils
 
 
-class BaseAssetChainsMaker:
+class __BaseAssetChainsMaker:
 
     @staticmethod
-    def _run_in_multiprocessing(func, seq1, seq2=None):
-        if seq2:
-            processes = [Process(target=func, args=(elem1, elem2)) for elem1, elem2 in zip(seq1, seq2)]
-        else:
-            processes = [Process(target=func, args=(elem,)) for elem in seq1]
-
+    def _run_in_multiprocessing(func, seq1):
+        processes = [Process(target=func, args=(elem,)) for elem in seq1]
         [process.start() for process in processes]
         [process.join() for process in processes]
 

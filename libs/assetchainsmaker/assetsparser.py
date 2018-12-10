@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
+# TODO парсить монеты у которых суточный объем больше N и удалять дубликаты.
 import time
 import re
 
 import requests
 
-from multiprocessing import Process, RLock
+from multiprocessing import RLock
 
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 
-from libs.assetchainsmaker.baseassetchainsmaker import BaseAssetChainsMaker
+from libs.assetchainsmaker.baseassetchainsmaker import __BaseAssetChainsMaker
 from const import WORK_DIR, MIN_DAILY_VOLUME
 from libs import utils
 from libs import decorators
 
 
-class AssetsPairsParser(BaseAssetChainsMaker):
+class AssetsPairsParser(__BaseAssetChainsMaker):
+    utils.dir_exists(WORK_DIR)
     _urls = {
         'bridge.btc': 'https://cryptofresh.com/a/BRIDGE.BTC',
         'bts': 'https://cryptofresh.com/a/BTS',

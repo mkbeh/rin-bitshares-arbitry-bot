@@ -93,3 +93,8 @@ def write_data_into_file(file, seq, lock=None):
 
     else:
         write_data_from_seq(file, seq)
+
+
+def remove_file(file):
+    if file:
+        os.remove(file)

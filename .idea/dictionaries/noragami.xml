@@ -1,12 +1,14 @@
 <component name="ProjectDictionaryState">
   <dictionary name="noragami">
     <words>
+      <w>asctime</w>
       <w>asyncio</w>
       <w>backoff</w>
       <w>forcelist</w>
       <w>gdex</w>
       <w>htmls</w>
       <w>ioloop</w>
+      <w>levelname</w>
       <w>lxml</w>
       <w>proj</w>
     </words>

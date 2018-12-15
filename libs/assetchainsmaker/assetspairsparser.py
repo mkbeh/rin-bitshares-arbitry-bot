@@ -27,6 +27,7 @@ class AssetsPairsParser:
     _date = utils.get_today_date()
     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'pairs'))
     _new_file = utils.get_file(WORK_DIR, f'pairs-{_date}.lst')
+    _pairs_count = 0
 
     async def _write_asset_pair(self, pair):
         async with self._lock:
@@ -52,7 +53,6 @@ class AssetsPairsParser:
         bs_obj = BeautifulSoup(html, 'lxml')
         table = bs_obj.find('tbody')
         valid_assets = []
-        pairs_count = 0
 
         for elem in table.find_all('tr'):
             data = await self._get_asset(str(elem), find_asset)
@@ -60,8 +60,8 @@ class AssetsPairsParser:
 
             if vol > min_volume:
                 if not find_asset:
-                    pairs_count += 1
                     await self._write_asset_pair(data)
+                    self._pairs_count += 1
                     continue
 
                 valid_assets.append(data)
@@ -71,8 +71,6 @@ class AssetsPairsParser:
 
         if find_asset:
             logging.info(f'Parsed: {len(valid_assets)} assets.')
-        else:
-            logging.info(f'Parsed {pairs_count} pairs.')
 
         return valid_assets
 
@@ -110,6 +108,7 @@ class AssetsPairsParser:
             my_event_loop.run_until_complete(asyncio.wait(tasks))
 
             utils.remove_file(self._old_file)
+            logging.info(f'Parsed: {self._pairs_count} pairs.')
             return self._new_file
 
         except TypeError:

@@ -2,17 +2,48 @@
 # # TODO optimize the algorithm 'create chains for asset'
 # # TODO проверить вот что: попробовать вместо if main[1]==pair[0] в секондари искать по 2м элементам списка
 # # TODO некорректно работает алго (см. п.2) , неправильно собираются пары.
-# # TODO изменить конфиг и выставить <$5
+from libs.assetchainsmaker.assetspairsparser import AssetsPairsParser
+from const import WORK_DIR, LOG_DIR
+from libs import utils
+
+
+class ChainsCreator:
+    _main_assets = ['BTS', 'BRIDGE.BTC', 'CNY', 'USD']
+    _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'chains'))
+    _date = utils.get_today_date()
+    _new_file = utils.get_file(WORK_DIR, f'chains-{_date}.lst')
+
+    def __init__(self):
+        self._file_with_pairs = AssetsPairsParser().start_parsing()
+
+    def _get_pairs_from_file(self):
+        try:
+            return utils.clear_each_str_in_seq(utils.read_file(self._file_with_pairs), '\n', ' ')
+        except Exception as err:
+            raise Exception(err)
+
+    def _create_chains_for_asset(self, asset):
+        pass
+
+    def start_creating_chains(self):
+        # pairs_lst = self._get_pairs_from_file()
+        pass
+
+
+
+
+
+
+
 # from multiprocessing import RLock
 #
-# from libs.assetchainsmaker.assetsparser import AssetsPairsParser
-# from libs.assetchainsmaker.baseassetchainsmaker import __BaseAssetChainsMaker
+# from libs.assetchainsmaker.assetspairsparser import AssetsPairsParser
 # from const import WORK_DIR
 # from libs import utils
 # from libs import decorators
 #
 #
-# class ChainsCreator(__BaseAssetChainsMaker):
+# class ChainsCreator():
 #     _main_assets = ['BTS', 'BRIDGE.BTC', 'CNY', 'USD']
 #     _lock = RLock()
 #     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'chains'))

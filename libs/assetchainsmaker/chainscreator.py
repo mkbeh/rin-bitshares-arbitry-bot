@@ -1,20 +1,80 @@
-# # -*- coding: utf-8 -*-
-# # TODO optimize the algorithm 'create chains for asset'
-# # TODO проверить вот что: попробовать вместо if main[1]==pair[0] в секондари искать по 2м элементам списка
-# # TODO некорректно работает алго (см. п.2) , неправильно собираются пары.
+# -*- coding: utf-8 -*-
+# TODO протестировать нагрузку с данного скрипта
+# TODO протестировать общую нагрузку со всего приложения
+# TODO исправить баг с логгированием. Лог пишется только в один файл парсера.
+# TODO исправить баг: при запуске чеинз креатора удаляется файл с парами.
+import os
+import logging
+import asyncio
+import aiofiles
+
 from libs.assetchainsmaker.assetspairsparser import AssetsPairsParser
 from const import WORK_DIR, LOG_DIR
 from libs import utils
 
 
 class ChainsCreator:
+    logging.getLogger("asyncio")
+    logging.basicConfig(filename=os.path.join(LOG_DIR, __name__),
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        level=logging.INFO)
+    _lock = asyncio.Lock()
     _main_assets = ['BTS', 'BRIDGE.BTC', 'CNY', 'USD']
     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'chains'))
     _date = utils.get_today_date()
     _new_file = utils.get_file(WORK_DIR, f'chains-{_date}.lst')
 
     def __init__(self):
-        self._file_with_pairs = AssetsPairsParser().start_parsing()
+        # self._file_with_pairs = AssetsPairsParser().start_parsing()
+        self._file_with_pairs = '/home/noragami/PycharmProjects/rin-bitshares-arbitry-bot/' \
+                                'output/pairs-16-12-2018-19-17-26.lst'
+
+    async def _write_chain(self, chain):
+        async with self._lock:
+            async with aiofiles.open(self._new_file, 'a') as f:
+                await f.write(f'{chain}\n')
+
+    @staticmethod
+    async def _adjust_asset_location_in_seq(asset, seq):
+        if seq[0] != asset:
+            seq.reverse()
+
+        return seq
+
+    async def _create_chains_for_asset(self, main_asset, pairs):
+        chains = []
+
+        for pair in pairs:
+            if main_asset in pair:
+                main = (await self._adjust_asset_location_in_seq(main_asset, pair)).copy()
+
+                for pair2 in pairs:
+                    if main[1] in pair2 and main_asset not in pair2:
+                        secondary = (await self._adjust_asset_location_in_seq(main[1], pair2)).copy()
+
+                        for pair3 in pairs:
+                            if secondary[1] in pair3 and main_asset in pair3:
+                                tertiary = (await self._adjust_asset_location_in_seq(secondary[1], pair3)).copy()
+                                chain = '{}:{},{}:{},{}:{}'.format(*main, *secondary, *tertiary)
+
+                                if chain not in chains:
+                                    chains.append(chain)
+                                    await self._write_chain(chain)
+
+        logging.info(f'Created: {len(chains)} chains.')
+
+    @staticmethod
+    def _remove_pairs_duplicates_from_seq(seq):
+        new_seq = list(map(lambda x: x.split(':'), seq))
+
+        for el in new_seq:
+            el.reverse()
+
+            if el in new_seq:
+                index = new_seq.index(el)
+                del new_seq[index]
+
+        return new_seq
 
     def _get_pairs_from_file(self):
         try:
@@ -22,72 +82,18 @@ class ChainsCreator:
         except Exception as err:
             raise Exception(err)
 
-    def _create_chains_for_asset(self, asset):
-        pass
-
     def start_creating_chains(self):
-        # pairs_lst = self._get_pairs_from_file()
-        pass
+        pairs_lst = self._remove_pairs_duplicates_from_seq(self._get_pairs_from_file())
+        ioloop = asyncio.get_event_loop()
 
+        try:
+            tasks = [ioloop.create_task(self._create_chains_for_asset(asset, pairs_lst))
+                     for asset in self._main_assets]
+            ioloop.run_until_complete(asyncio.wait(tasks))
+            utils.remove_file(self._old_file)
 
+            return self._new_file
 
+        finally:
+            ioloop.close()
 
-
-
-
-# from multiprocessing import RLock
-#
-# from libs.assetchainsmaker.assetspairsparser import AssetsPairsParser
-# from const import WORK_DIR
-# from libs import utils
-# from libs import decorators
-#
-#
-# class ChainsCreator():
-#     _main_assets = ['BTS', 'BRIDGE.BTC', 'CNY', 'USD']
-#     _lock = RLock()
-#     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'chains'))
-#     _date = utils.get_today_date()
-#     _new_file = utils.get_file(WORK_DIR, f'chains-{_date}.lst')
-#
-#     def __init__(self):
-#         self._file_with_pairs = AssetsPairsParser().start_parsing()
-#
-#     def _get_pairs_from_file(self):
-#         try:
-#             return utils.clear_each_str_in_seq(utils.read_file(self._file_with_pairs), '\n', ' ')
-#         except Exception as err:
-#             raise Exception(err)
-#
-#     @decorators.write_data_into_file(_new_file, _lock)
-#     def _create_chains_for_asset(self, asset):
-#         pairs = self._get_pairs_from_file()
-#         split_pairs = [pair.split(':') for pair in pairs]
-#         pairs_with_main_asset = [pair for pair in split_pairs
-#                                  if pair[0] == asset]
-#
-#         pairs_with_secondary_assets = [pair for main_pair in pairs_with_main_asset
-#                                        for pair in split_pairs
-#                                        if main_pair[1] == pair[0]]
-#
-#         pairs_with_tertiary_assets = [pair for secondary_pair in pairs_with_secondary_assets
-#                                       for pair in split_pairs
-#                                       if secondary_pair[1] == pair[0] and pair[1] == asset]
-#
-#         pairs_with_tertiary_assets = utils.remove_duplicate_lists(pairs_with_tertiary_assets)
-#         chains = []
-#
-#         for main_pair in pairs_with_main_asset:
-#             for secondary_pair in pairs_with_secondary_assets:
-#                 if main_pair[1] == secondary_pair[0]:
-#                     for end_pair in pairs_with_tertiary_assets:
-#                         if secondary_pair[1] == end_pair[0]:
-#                             chains.append('{}:{},{}:{},{}:{}'.format(*main_pair, *secondary_pair, *end_pair))
-#
-#         return chains
-#
-#     def start_creating_chains(self):
-#         self._run_in_multiprocessing(self._create_chains_for_asset, self._main_assets)
-#         self._compare_files_with_pairs(self._old_file, self._new_file, self._lock)
-#
-#         return self._new_file

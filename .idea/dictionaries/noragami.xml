@@ -1,9 +1,11 @@
 <component name="ProjectDictionaryState">
   <dictionary name="noragami">
     <words>
+      <w>arbitry</w>
       <w>asctime</w>
       <w>asyncio</w>
       <w>backoff</w>
+      <w>bitshares</w>
       <w>forcelist</w>
       <w>gdex</w>
       <w>htmls</w>
@@ -11,6 +13,7 @@
       <w>levelname</w>
       <w>lxml</w>
       <w>proj</w>
+      <w>splitted</w>
     </words>
   </dictionary>
 </component>

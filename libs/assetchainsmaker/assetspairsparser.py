@@ -77,8 +77,9 @@ class AssetsPairsParser:
     @staticmethod
     async def _get_html(url):
         await asyncio.sleep(random.randint(0, 30))
+        timeout = aiohttp.ClientTimeout(total=30)
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             try:
                 async with session.get(url) as resp:
                     if resp.status == 200:
@@ -91,21 +92,21 @@ class AssetsPairsParser:
                 logging.info(err)
 
     def start_parsing(self):
-        my_event_loop = asyncio.get_event_loop()
+        ioloop = asyncio.get_event_loop()
 
         try:
-            task = my_event_loop.create_task(self._get_html(self._main_page_url))
-            assets_page_html = my_event_loop.run_until_complete(asyncio.gather(task))
+            task = ioloop.create_task(self._get_html(self._main_page_url))
+            assets_page_html = ioloop.run_until_complete(asyncio.gather(task))
 
-            task = my_event_loop.create_task(self._get_valid_data(*assets_page_html, OVERALL_MIN_DAILY_VOLUME, True))
-            assets = my_event_loop.run_until_complete(asyncio.gather(task))[0]
+            task = ioloop.create_task(self._get_valid_data(*assets_page_html, OVERALL_MIN_DAILY_VOLUME, True))
+            assets = ioloop.run_until_complete(asyncio.gather(task))[0]
 
-            tasks = [my_event_loop.create_task(self._get_html(self._assets_url.format(asset)))
+            tasks = [ioloop.create_task(self._get_html(self._assets_url.format(asset)))
                      for asset in assets]
-            htmls = my_event_loop.run_until_complete(asyncio.gather(*tasks))
+            htmls = ioloop.run_until_complete(asyncio.gather(*tasks))
 
-            tasks = [my_event_loop.create_task(self._get_valid_data(html_, PAIR_MIN_DAILY_VOLUME)) for html_ in htmls]
-            my_event_loop.run_until_complete(asyncio.wait(tasks))
+            tasks = [ioloop.create_task(self._get_valid_data(html_, PAIR_MIN_DAILY_VOLUME)) for html_ in htmls]
+            ioloop.run_until_complete(asyncio.wait(tasks))
 
             utils.remove_file(self._old_file)
             logging.info(f'Parsed: {self._pairs_count} pairs.')
@@ -116,4 +117,4 @@ class AssetsPairsParser:
             return self._old_file
 
         finally:
-            my_event_loop.close()
+            ioloop.close()

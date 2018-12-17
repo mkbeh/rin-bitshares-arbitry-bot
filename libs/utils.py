@@ -21,14 +21,6 @@ def dir_exists(dir_):
     return dir_
 
 
-def file_exists(dir_, file):
-    dir_ = get_abs_path(dir_)
-    file_ = os.path.join(dir_, file)
-
-    if os.path.exists(file):
-        return file_
-
-
 def get_file(dir_, file):
     dir_ = get_abs_path(dir_)
 
@@ -73,33 +65,6 @@ def clear_each_str_in_seq(seq, *args):
     return cleared_data
 
 
-def remove_duplicate_lists(seq, convert_to_lst=True):
-    set_ = set(tuple(x) for x in seq)
-
-    return [list(x) for x in set_] if convert_to_lst else set_
-
-
-def write_data_from_seq(file, seq):
-    if seq:
-        with open(file, 'a') as f:
-            for elem in seq:
-                f.write(elem + '\n')
-
-
-def write_data_into_file(file, seq, lock=None):
-    if lock:
-        with lock:
-            write_data_from_seq(file, seq)
-
-    else:
-        write_data_from_seq(file, seq)
-
-
 def remove_file(file):
     if file:
         os.remove(file)
-
-
-def write_data(data, file):
-    with open(file, 'a') as f:
-        f.write(f'{data}\n')

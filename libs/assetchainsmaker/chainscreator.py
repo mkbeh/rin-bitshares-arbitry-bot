@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
-# TODO протестировать нагрузку с данного скрипта
-# TODO протестировать общую нагрузку со всего приложения
-import os
+import logging
 import asyncio
 import aiofiles
 
 from libs.assetchainsmaker.assetspairsparser import AssetsPairsParser
-from const import WORK_DIR, LOG_DIR
+from const import WORK_DIR
 from libs import utils
 
 
 class ChainsCreator:
-    # _log_file = os.path.join(LOG_DIR, __name__ + '.log')
+    _logger = logging.getLogger('ChainsCreator')
     _lock = asyncio.Lock()
     _main_assets = ['BTS', 'BRIDGE.BTC', 'CNY', 'USD']
     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'chains'))
@@ -19,8 +17,9 @@ class ChainsCreator:
     _new_file = utils.get_file(WORK_DIR, f'chains-{_date}.lst')
     _chains_count = 0
 
-    def __init__(self):
-        self._file_with_pairs = AssetsPairsParser().start_parsing()
+    def __init__(self, loop):
+        self._file_with_pairs = AssetsPairsParser(loop).start_parsing()
+        self.ioloop = loop
 
     async def _write_chain(self, chain):
         async with self._lock:
@@ -75,19 +74,12 @@ class ChainsCreator:
             raise Exception(err)
 
     def start_creating_chains(self):
-        ioloop = asyncio.get_event_loop()
+        pairs_lst = self._remove_pairs_duplicates_from_seq(self._get_pairs_from_file())
+        tasks = [self.ioloop.create_task(self._create_chains_for_asset(asset, pairs_lst))
+                 for asset in self._main_assets]
+        self.ioloop.run_until_complete(asyncio.wait(tasks))
 
-        try:
-            pairs_lst = self._remove_pairs_duplicates_from_seq(self._get_pairs_from_file())
-            tasks = [ioloop.create_task(self._create_chains_for_asset(asset, pairs_lst))
-                     for asset in self._main_assets]
-            ioloop.run_until_complete(asyncio.wait(tasks))
+        utils.remove_file(self._old_file)
+        self._logger.info(f'Created: {self._chains_count} chains.')
 
-            utils.remove_file(self._old_file)
-            # utils.write_data(f'Created: {self._chains_count} chains.', self._log_file)
-
-            return self._new_file
-
-        finally:
-            ioloop.close()
-
+        return self._new_file

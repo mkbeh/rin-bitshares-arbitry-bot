@@ -2,6 +2,7 @@
 import os
 import re
 import random
+import logging
 import aiohttp
 import asyncio
 
@@ -16,7 +17,10 @@ from libs import utils
 class AssetsPairsParser:
     utils.dir_exists(WORK_DIR)
     utils.dir_exists(LOG_DIR)
-    # _log_file = os.path.join(LOG_DIR, __name__ + '.log')
+    logging.basicConfig(filename=os.path.join(LOG_DIR, 'rin.log'),
+                        level=logging.INFO,
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    _logger = logging.getLogger('AssetsPairsParser')
     _main_page_url = 'https://cryptofresh.com/assets'
     _assets_url = 'https://cryptofresh.com{}'
     _lock = asyncio.Lock()
@@ -24,6 +28,9 @@ class AssetsPairsParser:
     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'pairs'))
     _new_file = utils.get_file(WORK_DIR, f'pairs-{_date}.lst')
     _pairs_count = 0
+
+    def __init__(self, loop):
+        self.ioloop = loop
 
     async def _write_data(self, data, file):
         async with self._lock:
@@ -66,8 +73,7 @@ class AssetsPairsParser:
                 break
 
         if find_asset:
-            # await self._write_data(f'Parsed: {len(valid_assets)} assets.', self._log_file)
-            pass
+            self._logger.info(f'Parsed: {len(valid_assets)} assets.')
 
         return valid_assets
 
@@ -82,39 +88,32 @@ class AssetsPairsParser:
                         return await resp.text('utf-8')
 
             except aiohttp.client_exceptions.ClientConnectionError as err:
-                # await self._write_data(err, self._log_file)
-                pass
+                self._logger.warning(err)
 
             except aiohttp.client_exceptions.ServerTimeoutError as err:
-                # await self._write_data(err, self._log_file)
-                pass
+                self._logger.warning(err)
 
     def start_parsing(self):
-        ioloop = asyncio.get_event_loop()
-
         try:
-            task = ioloop.create_task(self._get_html(self._main_page_url))
-            assets_page_html = ioloop.run_until_complete(asyncio.gather(task))
+            task = self.ioloop.create_task(self._get_html(self._main_page_url))
+            assets_page_html = self.ioloop.run_until_complete(asyncio.gather(task))
 
-            task = ioloop.create_task(self._get_valid_data(*assets_page_html, OVERALL_MIN_DAILY_VOLUME, True))
-            assets = ioloop.run_until_complete(asyncio.gather(task))[0]
+            task = self.ioloop.create_task(self._get_valid_data(*assets_page_html, OVERALL_MIN_DAILY_VOLUME, True))
+            assets = self.ioloop.run_until_complete(asyncio.gather(task))[0]
 
-            tasks = [ioloop.create_task(self._get_html(self._assets_url.format(asset)))
+            tasks = [self.ioloop.create_task(self._get_html(self._assets_url.format(asset)))
                      for asset in assets]
-            htmls = ioloop.run_until_complete(asyncio.gather(*tasks))
+            htmls = self.ioloop.run_until_complete(asyncio.gather(*tasks))
 
-            tasks = [ioloop.create_task(self._get_valid_data(html_, PAIR_MIN_DAILY_VOLUME)) for html_ in htmls]
-            ioloop.run_until_complete(asyncio.wait(tasks))
+            tasks = [self.ioloop.create_task(self._get_valid_data(html_, PAIR_MIN_DAILY_VOLUME)) for html_ in htmls]
+            self.ioloop.run_until_complete(asyncio.wait(tasks))
 
             utils.remove_file(self._old_file)
-            # utils.write_data(f'Parsed: {self._pairs_count} pairs.', self._log_file)
+            self._logger.info(f'Parsed: {self._pairs_count} pairs.')
 
             return self._new_file
 
         except TypeError:
-            # utils.write_data('HTML data retrieval error.', self._log_file)
+            self._logger.warning('HTML data retrieval error.')
 
             return self._old_file
-
-        # finally:
-        #     ioloop.close()

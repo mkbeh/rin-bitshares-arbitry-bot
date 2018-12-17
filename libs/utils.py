@@ -44,7 +44,7 @@ def get_dir_file(dir_, regex):
 
     for file in files:
         try:
-            re.match(pattern, file)
+            re.search(pattern, file).group()
             return file
         except AttributeError:
             pass
@@ -98,3 +98,8 @@ def write_data_into_file(file, seq, lock=None):
 def remove_file(file):
     if file:
         os.remove(file)
+
+
+def write_data(data, file):
+    with open(file, 'a') as f:
+        f.write(f'{data}\n')

@@ -4,7 +4,6 @@ import re
 import random
 import aiohttp
 import asyncio
-import logging
 
 import aiofiles
 
@@ -17,10 +16,7 @@ from libs import utils
 class AssetsPairsParser:
     utils.dir_exists(WORK_DIR)
     utils.dir_exists(LOG_DIR)
-    logging.getLogger("asyncio")
-    logging.basicConfig(filename=os.path.join(LOG_DIR, __name__),
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        level=logging.INFO)
+    # _log_file = os.path.join(LOG_DIR, __name__ + '.log')
     _main_page_url = 'https://cryptofresh.com/assets'
     _assets_url = 'https://cryptofresh.com{}'
     _lock = asyncio.Lock()
@@ -29,10 +25,10 @@ class AssetsPairsParser:
     _new_file = utils.get_file(WORK_DIR, f'pairs-{_date}.lst')
     _pairs_count = 0
 
-    async def _write_asset_pair(self, pair):
+    async def _write_data(self, data, file):
         async with self._lock:
-            async with aiofiles.open(self._new_file, 'a') as f:
-                await f.write(f'{pair}\n')
+            async with aiofiles.open(file, 'a') as f:
+                await f.write(f'{data}\n')
 
     @staticmethod
     async def _get_volume(str_):
@@ -60,7 +56,7 @@ class AssetsPairsParser:
 
             if vol > min_volume:
                 if not find_asset:
-                    await self._write_asset_pair(data)
+                    await self._write_data(data, self._new_file)
                     self._pairs_count += 1
                     continue
 
@@ -70,12 +66,12 @@ class AssetsPairsParser:
                 break
 
         if find_asset:
-            logging.info(f'Parsed: {len(valid_assets)} assets.')
+            # await self._write_data(f'Parsed: {len(valid_assets)} assets.', self._log_file)
+            pass
 
         return valid_assets
 
-    @staticmethod
-    async def _get_html(url):
+    async def _get_html(self, url):
         await asyncio.sleep(random.randint(0, 30))
         timeout = aiohttp.ClientTimeout(total=30)
 
@@ -86,10 +82,12 @@ class AssetsPairsParser:
                         return await resp.text('utf-8')
 
             except aiohttp.client_exceptions.ClientConnectionError as err:
-                logging.info(err)
+                # await self._write_data(err, self._log_file)
+                pass
 
             except aiohttp.client_exceptions.ServerTimeoutError as err:
-                logging.info(err)
+                # await self._write_data(err, self._log_file)
+                pass
 
     def start_parsing(self):
         ioloop = asyncio.get_event_loop()
@@ -109,12 +107,14 @@ class AssetsPairsParser:
             ioloop.run_until_complete(asyncio.wait(tasks))
 
             utils.remove_file(self._old_file)
-            logging.info(f'Parsed: {self._pairs_count} pairs.')
+            # utils.write_data(f'Parsed: {self._pairs_count} pairs.', self._log_file)
+
             return self._new_file
 
         except TypeError:
-            logging.info('HTML data retrieval error.')
+            # utils.write_data('HTML data retrieval error.', self._log_file)
+
             return self._old_file
 
-        finally:
-            ioloop.close()
+        # finally:
+        #     ioloop.close()

@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 # TODO протестировать нагрузку с данного скрипта
 # TODO протестировать общую нагрузку со всего приложения
-# TODO исправить баг с логгированием. Лог пишется только в один файл парсера.
-# TODO исправить баг: при запуске чеинз креатора удаляется файл с парами.
 import os
-import logging
 import asyncio
 import aiofiles
 
@@ -14,20 +11,16 @@ from libs import utils
 
 
 class ChainsCreator:
-    logging.getLogger("asyncio")
-    logging.basicConfig(filename=os.path.join(LOG_DIR, __name__),
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        level=logging.INFO)
+    # _log_file = os.path.join(LOG_DIR, __name__ + '.log')
     _lock = asyncio.Lock()
     _main_assets = ['BTS', 'BRIDGE.BTC', 'CNY', 'USD']
     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'chains'))
     _date = utils.get_today_date()
     _new_file = utils.get_file(WORK_DIR, f'chains-{_date}.lst')
+    _chains_count = 0
 
     def __init__(self):
-        # self._file_with_pairs = AssetsPairsParser().start_parsing()
-        self._file_with_pairs = '/home/noragami/PycharmProjects/rin-bitshares-arbitry-bot/' \
-                                'output/pairs-16-12-2018-19-17-26.lst'
+        self._file_with_pairs = AssetsPairsParser().start_parsing()
 
     async def _write_chain(self, chain):
         async with self._lock:
@@ -59,9 +52,8 @@ class ChainsCreator:
 
                                 if chain not in chains:
                                     chains.append(chain)
+                                    self._chains_count += 1
                                     await self._write_chain(chain)
-
-        logging.info(f'Created: {len(chains)} chains.')
 
     @staticmethod
     def _remove_pairs_duplicates_from_seq(seq):
@@ -83,14 +75,16 @@ class ChainsCreator:
             raise Exception(err)
 
     def start_creating_chains(self):
-        pairs_lst = self._remove_pairs_duplicates_from_seq(self._get_pairs_from_file())
         ioloop = asyncio.get_event_loop()
 
         try:
+            pairs_lst = self._remove_pairs_duplicates_from_seq(self._get_pairs_from_file())
             tasks = [ioloop.create_task(self._create_chains_for_asset(asset, pairs_lst))
                      for asset in self._main_assets]
             ioloop.run_until_complete(asyncio.wait(tasks))
+
             utils.remove_file(self._old_file)
+            # utils.write_data(f'Created: {self._chains_count} chains.', self._log_file)
 
             return self._new_file
 

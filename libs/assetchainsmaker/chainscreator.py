@@ -47,7 +47,7 @@ class ChainsCreator:
                         for pair3 in pairs:
                             if secondary[1] in pair3 and main_asset in pair3:
                                 tertiary = (await self._adjust_asset_location_in_seq(secondary[1], pair3)).copy()
-                                chain = '{}:{},{}:{},{}:{}'.format(*main, *secondary, *tertiary)
+                                chain = '{}:{} {}:{} {}:{}'.format(*main, *secondary, *tertiary)
 
                                 if chain not in chains:
                                     chains.append(chain)
@@ -80,6 +80,6 @@ class ChainsCreator:
         self.ioloop.run_until_complete(asyncio.wait(tasks))
 
         utils.remove_file(self._old_file)
-        self._logger.info(f'Created: {self._chains_count} chains.')
+        self._logger.info(f'Created: {self._chains_count} chains.\n')
 
         return self._new_file

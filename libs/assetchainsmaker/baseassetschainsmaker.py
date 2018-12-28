@@ -24,8 +24,8 @@ class BaseAssetsChainsMaker:
                 await f.write(f'{data}\n')
 
     @staticmethod
-    async def _get_html(url, logger, json=False):
-        await asyncio.sleep(random.randint(0, 30))
+    async def _get_html(url, logger, delay, json=False):
+        await asyncio.sleep(random.randint(0, delay))
         timeout = aiohttp.ClientTimeout(total=30)
 
         async with aiohttp.ClientSession(timeout=timeout) as session:

@@ -22,23 +22,32 @@ class BTSPriceParser(BaseAssetsChainsMaker):
         self.ioloop = loop
 
     async def _parse_price(self, url):
-        html = await self._get_html(url, self._logger)
+        html = await self._get_html(url, self._logger, delay=2)
 
         bs_obj = BeautifulSoup(html, 'lxml')
         price = bs_obj.find('span', {'data-coin-symbol': 'bts'}).get_text()\
             .replace('$', '').replace(',', '.').replace(' ', '').strip()
-        await self._write_data(price, self._new_file, self._lock)
 
-        return float(price)
+        try:
+            price = float(price)
+            await self._write_data(price, self._new_file, self._lock)
+
+            return price
+
+        except ValueError:
+            self._logger.warning(f'Could not convert {price} to float.')
+            return
 
     def get_bts_price_in_usd(self):
         try:
             task = self.ioloop.create_task(self._parse_price(self._url))
             price = self.ioloop.run_until_complete(asyncio.gather(task))
-            utils.remove_file(self._old_file)
-            self._logger.info(f'BTS price is {price[0]}.')
 
-            return price[0]
+            if price:
+                utils.remove_file(self._old_file)
+                self._logger.info(f'BTS price is {price[0]}.')
+
+                return price[0]
 
         except TypeError:
             self._logger.warning('HTML data retrieval error.')

@@ -27,16 +27,9 @@ class BTSPriceParser(BaseAssetsChainsMaker):
         bs_obj = BeautifulSoup(html, 'lxml')
         price = bs_obj.find('span', {'data-coin-symbol': 'bts'}).get_text()\
             .replace('$', '').replace(',', '.').replace(' ', '').strip()
+        await self._write_data(float(price), self._new_file, self._lock)
 
-        try:
-            price = float(price)
-            await self._write_data(price, self._new_file, self._lock)
-
-            return price
-
-        except ValueError:
-            self._logger.warning(f'Could not convert {price} to float.')
-            return
+        return price
 
     def get_bts_price_in_usd(self):
         try:
@@ -48,6 +41,16 @@ class BTSPriceParser(BaseAssetsChainsMaker):
                 self._logger.info(f'BTS price is {price[0]}.')
 
                 return price[0]
+
+        except ValueError:
+            self._logger.warning(f'Could not convert parsed price to float.')
+
+            return self._old_file
+
+        except AttributeError:
+            self._logger.warning('Could not get price from html.')
+
+            return self._old_file
 
         except TypeError:
             self._logger.warning('HTML data retrieval error.')

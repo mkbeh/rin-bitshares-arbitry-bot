@@ -21,6 +21,11 @@ class BTSPriceParser(BaseAssetsChainsMaker):
     def __init__(self, loop):
         self.ioloop = loop
 
+    def actions_when_error(self, msg):
+        self._logger.warning(msg)
+
+        return self._old_file
+
     async def _parse_price(self, url):
         html = await self._get_html(url, self._logger, delay=2)
 
@@ -43,16 +48,10 @@ class BTSPriceParser(BaseAssetsChainsMaker):
                 return price[0]
 
         except ValueError:
-            self._logger.warning(f'Could not convert parsed price to float.')
-
-            return self._old_file
+            self.actions_when_error('Could not convert parsed price to float.')
 
         except AttributeError:
-            self._logger.warning('Could not get price from html.')
-
-            return self._old_file
+            self.actions_when_error('Could not get price from html.')
 
         except TypeError:
-            self._logger.warning('HTML data retrieval error.')
-
-            return self._old_file
+            self.actions_when_error('HTML data retrieval error.')

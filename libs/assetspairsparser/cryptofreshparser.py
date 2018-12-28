@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# TODO поправить этот скрипт , чтобы он отрубался , если vol = low vol.
+# TODO если криптофреш в ауте , то дергать по апи. (НАОБОРОТ делать :D)
 import os
 import re
 import random
@@ -14,13 +16,13 @@ from const import OVERALL_MIN_DAILY_VOLUME, PAIR_MIN_DAILY_VOLUME, WORK_DIR, LOG
 from libs import utils
 
 
-class AssetsPairsParser:
+class CryptofreshParser:
     utils.dir_exists(WORK_DIR)
     utils.dir_exists(LOG_DIR)
     logging.basicConfig(filename=os.path.join(LOG_DIR, 'rin.log'),
                         level=logging.INFO,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    _logger = logging.getLogger('AssetsPairsParser')
+    _logger = logging.getLogger('CryptofreshParser')
     _main_page_url = 'https://cryptofresh.com/assets'
     _assets_url = 'https://cryptofresh.com{}'
     _lock = asyncio.Lock()

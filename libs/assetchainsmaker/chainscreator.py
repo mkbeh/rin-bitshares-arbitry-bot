@@ -3,7 +3,7 @@ import logging
 import asyncio
 import aiofiles
 
-from libs.assetchainsmaker.assetspairsparser import AssetsPairsParser
+from libs.assetspairsparser.cryptofreshparser import CryptofreshParser
 from const import WORK_DIR
 from libs import utils
 
@@ -18,7 +18,7 @@ class ChainsCreator:
     _chains_count = 0
 
     def __init__(self, loop):
-        self._file_with_pairs = AssetsPairsParser(loop).start_parsing()
+        self._file_with_pairs = CryptofreshParser(loop).start_parsing()
         self.ioloop = loop
 
     async def _write_chain(self, chain):

@@ -31,10 +31,11 @@ class ChainsCreator(BaseRin):
         for parser in parsers:
             file_data = parser().start_parsing()
 
-            if file_data.new_version:
-                return file_data.file
-
-            file_with_pairs.append(file_data)
+            try:
+                if file_data.new_version:
+                    return file_data.file
+            except AttributeError:
+                file_with_pairs.append(file_data)
 
         return file_with_pairs[0]
 

@@ -44,8 +44,12 @@ class BaseRin:
                 logger.warning(err)
 
     @staticmethod
-    def _actions_when_error(msg, logger, retrieve_file=None):
+    def _actions_when_error(msg, logger, retrieve_file=None, value_from_file=False):
         logger.warning(msg)
 
         if retrieve_file:
+            if value_from_file:
+                return utils.read_file(retrieve_file)[0].replace('\n', '').strip()
+
             return retrieve_file
+

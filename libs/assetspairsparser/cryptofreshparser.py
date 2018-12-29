@@ -3,6 +3,8 @@ import re
 import logging
 import asyncio
 
+from collections import namedtuple
+
 from bs4 import BeautifulSoup
 
 from libs.baserin import BaseRin
@@ -26,7 +28,7 @@ class CryptofreshParser(BaseRin):
     @staticmethod
     async def _get_volume(str_):
         pattern = re.compile(r'(\$\d+([,.]?\d+)*)')
-        res = re.findall(pattern, str_)[-1]
+        res = re.findall(pattern, str_)[2]
         new_res = float(re.sub(r'\$?,?', '', res[0]).strip())
 
         return new_res
@@ -43,9 +45,13 @@ class CryptofreshParser(BaseRin):
         table = bs_obj.find('tbody')
         valid_assets = []
 
-        for elem in table.find_all('tr'):
+        for i, elem in enumerate(table.find_all('tr')):
             data = await self._get_asset(str(elem), find_asset)
-            vol = await self._get_volume(str(elem))
+
+            try:
+                vol = await self._get_volume(str(elem))
+            except IndexError:
+                break
 
             if vol > min_volume:
                 if not find_asset:
@@ -71,17 +77,24 @@ class CryptofreshParser(BaseRin):
             task = self.ioloop.create_task(self._get_valid_data(*assets_page_html, OVERALL_MIN_DAILY_VOLUME, True))
             assets = self.ioloop.run_until_complete(asyncio.gather(task))[0]
 
-            tasks = [self.ioloop.create_task(self._get_html(self._assets_url.format(asset), self._logger, delay=30))
-                     for asset in assets]
-            htmls = self.ioloop.run_until_complete(asyncio.gather(*tasks))
+            if assets:
+                tasks = [self.ioloop.create_task(self._get_html(self._assets_url.format(asset), self._logger, delay=30))
+                         for asset in assets]
+                htmls = self.ioloop.run_until_complete(asyncio.gather(*tasks))
 
-            tasks = [self.ioloop.create_task(self._get_valid_data(html_, PAIR_MIN_DAILY_VOLUME)) for html_ in htmls]
-            self.ioloop.run_until_complete(asyncio.wait(tasks))
+                tasks = [self.ioloop.create_task(self._get_valid_data(html_, PAIR_MIN_DAILY_VOLUME)) for html_ in htmls]
+                self.ioloop.run_until_complete(asyncio.wait(tasks))
 
-            utils.remove_file(self._old_file)
-            self._logger.info(f'Parsed: {self._pairs_count} pairs.')
+                utils.remove_file(self._old_file)
+                self._logger.info(f'Parsed: {self._pairs_count} pairs.')
+                FileData = namedtuple('FileData', ['file', 'new_version'])
 
-            return self._new_file
+                return FileData(self._new_file, True)
+
+            else:
+                self._logger.info('Cryptofresh assets is corrupted (low vol).')
+
+                return self._old_file
 
         except TypeError:
             self._actions_when_error('HTML data retrieval error.', self._logger, self._old_file)

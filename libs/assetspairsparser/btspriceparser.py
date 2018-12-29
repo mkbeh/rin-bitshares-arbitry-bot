@@ -43,13 +43,13 @@ class BTSPriceParser(BaseRin):
                 return price[0]
 
         except ValueError:
-            self._actions_when_error('Could not convert parsed price to float.', self._logger, self._old_file)
-
+            self._actions_when_error('Could not convert parsed price to float.',
+                                     self._logger, self._old_file, value_from_file=True)
         except AttributeError:
-            self._actions_when_error('Could not get price from html.', self._logger, self._old_file)
-
+            self._actions_when_error('Could not get price from html.',
+                                     self._logger, self._old_file, value_from_file=True)
         except TypeError:
-            self._actions_when_error('HTML data retrieval error.', self._logger, self._old_file)
-
+            self._actions_when_error('HTML data retrieval error.',
+                                     self._logger, self._old_file, value_from_file=True)
         except Exception as err:
-            self._actions_when_error(err, self._logger, self._old_file)
+            self._actions_when_error(err, self._logger, self._old_file, value_from_file=True)

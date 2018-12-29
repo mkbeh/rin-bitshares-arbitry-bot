@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
+# TODO 1. разобраться с парсерами пар. Сделать метод который будет отдавать файл с парами и записывать его в селф.
+# TODO 2. проверить объемы 24 часовые в эксплорере
+# TODO 3. доработать парсинг с основного и альтернативного парсера пар в данном модуле.
 import logging
 import asyncio
 import aiofiles
 
+from libs.baserin import BaseRin
 from libs.assetspairsparser.cryptofreshparser import CryptofreshParser
 from const import WORK_DIR
 from libs import utils
 
 
-class ChainsCreator:
+class ChainsCreator(BaseRin):
     _logger = logging.getLogger('ChainsCreator')
     _lock = asyncio.Lock()
     _main_assets = ['BTS', 'BRIDGE.BTC', 'CNY', 'USD']
@@ -68,18 +72,19 @@ class ChainsCreator:
         return new_seq
 
     def _get_pairs_from_file(self):
-        try:
-            return utils.clear_each_str_in_seq(utils.read_file(self._file_with_pairs), '\n', ' ')
-        except Exception as err:
-            raise Exception(err)
+        return utils.clear_each_str_in_seq(utils.read_file(self._file_with_pairs), '\n', ' ')
 
     def start_creating_chains(self):
-        pairs_lst = self._remove_pairs_duplicates_from_seq(self._get_pairs_from_file())
-        tasks = [self.ioloop.create_task(self._create_chains_for_asset(asset, pairs_lst))
-                 for asset in self._main_assets]
-        self.ioloop.run_until_complete(asyncio.wait(tasks))
+        try:
+            pairs_lst = self._remove_pairs_duplicates_from_seq(self._get_pairs_from_file())
+            tasks = [self.ioloop.create_task(self._create_chains_for_asset(asset, pairs_lst))
+                     for asset in self._main_assets]
+            self.ioloop.run_until_complete(asyncio.wait(tasks))
 
-        utils.remove_file(self._old_file)
-        self._logger.info(f'Created: {self._chains_count} chains.\n')
+            utils.remove_file(self._old_file)
+            self._logger.info(f'Created: {self._chains_count} chains.\n')
 
-        return self._new_file
+            return self._new_file
+
+        except Exception as err:
+            self._actions_when_error(err, self._logger, self._old_file)

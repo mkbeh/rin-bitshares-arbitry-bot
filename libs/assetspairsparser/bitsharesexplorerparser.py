@@ -63,6 +63,8 @@ class BitsharesExplorerParser(BaseRin):
 
             utils.remove_file(self._old_file)
             self._logger.info(f'Parsed: {self._pairs_count} pairs.')
+            
+            return self._new_file
 
         except TypeError:
             self._actions_when_error('JSON data retrieval error.', self._logger, self._old_file)

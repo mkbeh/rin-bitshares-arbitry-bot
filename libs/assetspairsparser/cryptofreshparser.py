@@ -23,7 +23,7 @@ class CryptofreshParser(BaseRin):
     _pairs_count = 0
 
     def __init__(self, loop):
-        self.ioloop = loop
+        self._ioloop = loop
 
     @staticmethod
     async def _get_volume(str_):
@@ -71,19 +71,19 @@ class CryptofreshParser(BaseRin):
 
     def start_parsing(self):
         try:
-            task = self.ioloop.create_task(self._get_html(self._main_page_url, self._logger, delay=2))
-            assets_page_html = self.ioloop.run_until_complete(asyncio.gather(task))
+            task = self._ioloop.create_task(self._get_html(self._main_page_url, self._logger, delay=2))
+            assets_page_html = self._ioloop.run_until_complete(asyncio.gather(task))
 
-            task = self.ioloop.create_task(self._get_valid_data(*assets_page_html, OVERALL_MIN_DAILY_VOLUME, True))
-            assets = self.ioloop.run_until_complete(asyncio.gather(task))[0]
+            task = self._ioloop.create_task(self._get_valid_data(*assets_page_html, OVERALL_MIN_DAILY_VOLUME, True))
+            assets = self._ioloop.run_until_complete(asyncio.gather(task))[0]
 
             if assets:
-                tasks = [self.ioloop.create_task(self._get_html(self._assets_url.format(asset), self._logger, delay=30))
+                tasks = [self._ioloop.create_task(self._get_html(self._assets_url.format(asset), self._logger, delay=30))
                          for asset in assets]
-                htmls = self.ioloop.run_until_complete(asyncio.gather(*tasks))
+                htmls = self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
-                tasks = [self.ioloop.create_task(self._get_valid_data(html_, PAIR_MIN_DAILY_VOLUME)) for html_ in htmls]
-                self.ioloop.run_until_complete(asyncio.wait(tasks))
+                tasks = [self._ioloop.create_task(self._get_valid_data(html_, PAIR_MIN_DAILY_VOLUME)) for html_ in htmls]
+                self._ioloop.run_until_complete(asyncio.wait(tasks))
 
                 utils.remove_file(self._old_file)
                 self._logger.info(f'Parsed: {self._pairs_count} pairs.')

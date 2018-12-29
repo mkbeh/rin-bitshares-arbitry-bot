@@ -22,13 +22,13 @@ class BitsharesExplorerParser(BaseRin):
     _pairs_count = 0
 
     def __init__(self, loop):
-        self.ioloop = loop
-        self.bts_price_in_usd = BTSPriceParser(loop).get_bts_price_in_usd()
-        self.overall_min_daily_vol = OVERALL_MIN_DAILY_VOLUME / self.bts_price_in_usd
+        self._ioloop = loop
+        self._bts_price_in_usd = BTSPriceParser(loop).get_bts_price_in_usd()
+        self._overall_min_daily_vol = OVERALL_MIN_DAILY_VOLUME / self._bts_price_in_usd
 
     async def _check_pair_on_valid(self, pair, base_price):
         market_data = await self._get_html(self._market_data_url.format(*pair),
-                                           logger=self._logger, delay=30, json=True)
+                                           logger=self._logger, delay=5, json=True)
 
         if float(market_data['base_volume']) * float(base_price) > PAIR_MIN_DAILY_VOLUME:
             await self._write_data('{}:{}'.format(*pair), self._new_file, self._lock)
@@ -36,18 +36,16 @@ class BitsharesExplorerParser(BaseRin):
 
     async def _get_valid_pairs(self, asset_info):
         asset_markets_data = await self._get_html(self._assets_markets_url.format(asset_info.id),
-                                                  logger=self._logger, delay=30, json=True)
+                                                  logger=self._logger, delay=5, json=True)
         pairs = list(map(lambda x: x[1].strip().split('/'), asset_markets_data))
-
-        for pair in pairs:
-            await self._check_pair_on_valid(pair, asset_info.price)
+        [await self._check_pair_on_valid(pair, asset_info.price) for pair in pairs]
 
     async def _get_valid_assets(self):
         assets_data = await self._get_html(self._assets_url, self._logger, 2, json=True)
         AssetInfo = namedtuple('AssetsInfo', ['id', 'price'])
         assets = [
             AssetInfo(asset[2], asset[3]) for asset in assets_data
-            if float(asset[4]) > self.overall_min_daily_vol
+            if float(asset[4]) > self._overall_min_daily_vol
         ]
         self._logger.info(f'Parsed: {len(assets)} assets.')
 
@@ -55,16 +53,17 @@ class BitsharesExplorerParser(BaseRin):
 
     def start_parsing(self):
         try:
-            task = self.ioloop.create_task(self._get_valid_assets())
-            assets_info = (self.ioloop.run_until_complete(asyncio.gather(task)))[0]
+            task = self._ioloop.create_task(self._get_valid_assets())
+            assets_info = (self._ioloop.run_until_complete(asyncio.gather(task)))[0]
 
-            tasks = [self.ioloop.create_task(self._get_valid_pairs(asset_info)) for asset_info in assets_info]
-            self.ioloop.run_until_complete(asyncio.gather(*tasks))
+            tasks = [self._ioloop.create_task(self._get_valid_pairs(asset_info)) for asset_info in assets_info]
+            self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
             utils.remove_file(self._old_file)
             self._logger.info(f'Parsed: {self._pairs_count} pairs.')
-            
-            return self._new_file
+            FileData = namedtuple('FileData', ['file', 'new_version'])
+
+            return FileData(self._new_file, True)
 
         except TypeError:
             self._actions_when_error('JSON data retrieval error.', self._logger, self._old_file)

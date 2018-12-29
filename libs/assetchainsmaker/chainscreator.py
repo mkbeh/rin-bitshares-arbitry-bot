@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-# TODO 1. разобраться с парсерами пар. Сделать метод который будет отдавать файл с парами и записывать его в селф.
-# TODO 2. проверить объемы 24 часовые в эксплорере
-# TODO 3. доработать парсинг с основного и альтернативного парсера пар в данном модуле.
 import logging
 import asyncio
 import aiofiles
 
 from libs.baserin import BaseRin
 from libs.assetspairsparser.cryptofreshparser import CryptofreshParser
+from libs.assetspairsparser.bitsharesexplorerparser import BitsharesExplorerParser
 from const import WORK_DIR
 from libs import utils
 
@@ -22,8 +20,23 @@ class ChainsCreator(BaseRin):
     _chains_count = 0
 
     def __init__(self, loop):
-        self._file_with_pairs = CryptofreshParser(loop).start_parsing()
-        self.ioloop = loop
+        self._file_with_pairs = self._get_file_with_pairs()
+        self._ioloop = loop
+
+    @staticmethod
+    def _get_file_with_pairs():
+        parsers = [BitsharesExplorerParser, CryptofreshParser]
+        file_with_pairs = []
+
+        for parser in parsers:
+            file_data = parser().start_parsing()
+
+            if file_data.new_version:
+                return file_data.file
+
+            file_with_pairs.append(file_data)
+
+        return file_with_pairs[0]
 
     async def _write_chain(self, chain):
         async with self._lock:
@@ -77,9 +90,9 @@ class ChainsCreator(BaseRin):
     def start_creating_chains(self):
         try:
             pairs_lst = self._remove_pairs_duplicates_from_seq(self._get_pairs_from_file())
-            tasks = [self.ioloop.create_task(self._create_chains_for_asset(asset, pairs_lst))
+            tasks = [self._ioloop.create_task(self._create_chains_for_asset(asset, pairs_lst))
                      for asset in self._main_assets]
-            self.ioloop.run_until_complete(asyncio.wait(tasks))
+            self._ioloop.run_until_complete(asyncio.wait(tasks))
 
             utils.remove_file(self._old_file)
             self._logger.info(f'Created: {self._chains_count} chains.\n')

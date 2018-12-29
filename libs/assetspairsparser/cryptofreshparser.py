@@ -1,27 +1,16 @@
 # -*- coding: utf-8 -*-
-# TODO поправить этот скрипт , чтобы он отрубался , если vol = low vol.
-# TODO если криптофреш в ауте , то дергать по апи. (НАОБОРОТ делать :D)
-import os
 import re
-import random
 import logging
-import aiohttp
 import asyncio
-
-import aiofiles
 
 from bs4 import BeautifulSoup
 
-from const import OVERALL_MIN_DAILY_VOLUME, PAIR_MIN_DAILY_VOLUME, WORK_DIR, LOG_DIR
+from libs.baserin import BaseRin
+from const import OVERALL_MIN_DAILY_VOLUME, PAIR_MIN_DAILY_VOLUME, WORK_DIR
 from libs import utils
 
 
-class CryptofreshParser:
-    utils.dir_exists(WORK_DIR)
-    utils.dir_exists(LOG_DIR)
-    logging.basicConfig(filename=os.path.join(LOG_DIR, 'rin.log'),
-                        level=logging.INFO,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+class CryptofreshParser(BaseRin):
     _logger = logging.getLogger('CryptofreshParser')
     _main_page_url = 'https://cryptofresh.com/assets'
     _assets_url = 'https://cryptofresh.com{}'
@@ -33,11 +22,6 @@ class CryptofreshParser:
 
     def __init__(self, loop):
         self.ioloop = loop
-
-    async def _write_data(self, data, file):
-        async with self._lock:
-            async with aiofiles.open(file, 'a') as f:
-                await f.write(f'{data}\n')
 
     @staticmethod
     async def _get_volume(str_):
@@ -65,7 +49,7 @@ class CryptofreshParser:
 
             if vol > min_volume:
                 if not find_asset:
-                    await self._write_data(data, self._new_file)
+                    await self._write_data(data, self._new_file, self._lock)
                     self._pairs_count += 1
                     continue
 
@@ -79,31 +63,15 @@ class CryptofreshParser:
 
         return valid_assets
 
-    async def _get_html(self, url):
-        await asyncio.sleep(random.randint(0, 30))
-        timeout = aiohttp.ClientTimeout(total=30)
-
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            try:
-                async with session.get(url) as resp:
-                    if resp.status == 200:
-                        return await resp.text('utf-8')
-
-            except aiohttp.client_exceptions.ClientConnectionError as err:
-                self._logger.warning(err)
-
-            except aiohttp.client_exceptions.ServerTimeoutError as err:
-                self._logger.warning(err)
-
     def start_parsing(self):
         try:
-            task = self.ioloop.create_task(self._get_html(self._main_page_url))
+            task = self.ioloop.create_task(self._get_html(self._main_page_url, self._logger, delay=2))
             assets_page_html = self.ioloop.run_until_complete(asyncio.gather(task))
 
             task = self.ioloop.create_task(self._get_valid_data(*assets_page_html, OVERALL_MIN_DAILY_VOLUME, True))
             assets = self.ioloop.run_until_complete(asyncio.gather(task))[0]
 
-            tasks = [self.ioloop.create_task(self._get_html(self._assets_url.format(asset)))
+            tasks = [self.ioloop.create_task(self._get_html(self._assets_url.format(asset), self._logger, delay=30))
                      for asset in assets]
             htmls = self.ioloop.run_until_complete(asyncio.gather(*tasks))
 
@@ -116,6 +84,7 @@ class CryptofreshParser:
             return self._new_file
 
         except TypeError:
-            self._logger.warning('HTML data retrieval error.')
+            self._actions_when_error('HTML data retrieval error.', self._logger, self._old_file)
 
-            return self._old_file
+        except Exception as err:
+            self._actions_when_error(err, self._logger, self._old_file)

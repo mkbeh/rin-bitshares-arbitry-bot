@@ -10,7 +10,7 @@ from libs import utils
 from const import LOG_DIR, WORK_DIR
 
 
-class BaseAssetsChainsMaker:
+class BaseRin:
     utils.dir_exists(WORK_DIR)
     utils.dir_exists(LOG_DIR)
     logging.basicConfig(filename=os.path.join(LOG_DIR, 'rin.log'),
@@ -42,3 +42,10 @@ class BaseAssetsChainsMaker:
 
             except aiohttp.client_exceptions.ServerTimeoutError as err:
                 logger.warning(err)
+
+    @staticmethod
+    def _actions_when_error(msg, logger, retrieve_file=None):
+        logger.warning(msg)
+
+        if retrieve_file:
+            return retrieve_file

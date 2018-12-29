@@ -4,12 +4,12 @@ import asyncio
 
 from bs4 import BeautifulSoup
 
-from libs.assetchainsmaker.baseassetschainsmaker import BaseAssetsChainsMaker
+from libs.baserin import BaseRin
 from libs import utils
 from const import WORK_DIR
 
 
-class BTSPriceParser(BaseAssetsChainsMaker):
+class BTSPriceParser(BaseRin):
     _logger = logging.getLogger('BTSPriceParser')
     _url = 'https://www.coingecko.com/ru/%D0%B4%D0%B8%D0%BD%D0%B0%D0%BC%D0%B8%D0%BA%D0%B0_%D1%86%D0%B5%D0%BD' \
            '/bitshares/usd'
@@ -21,11 +21,6 @@ class BTSPriceParser(BaseAssetsChainsMaker):
     def __init__(self, loop):
         self.ioloop = loop
 
-    def actions_when_error(self, msg):
-        self._logger.warning(msg)
-
-        return self._old_file
-
     async def _parse_price(self, url):
         html = await self._get_html(url, self._logger, delay=2)
 
@@ -34,7 +29,7 @@ class BTSPriceParser(BaseAssetsChainsMaker):
             .replace('$', '').replace(',', '.').replace(' ', '').strip()
         await self._write_data(float(price), self._new_file, self._lock)
 
-        return price
+        return float(price)
 
     def get_bts_price_in_usd(self):
         try:
@@ -48,10 +43,13 @@ class BTSPriceParser(BaseAssetsChainsMaker):
                 return price[0]
 
         except ValueError:
-            self.actions_when_error('Could not convert parsed price to float.')
+            self._actions_when_error('Could not convert parsed price to float.', self._logger, self._old_file)
 
         except AttributeError:
-            self.actions_when_error('Could not get price from html.')
+            self._actions_when_error('Could not get price from html.', self._logger, self._old_file)
 
         except TypeError:
-            self.actions_when_error('HTML data retrieval error.')
+            self._actions_when_error('HTML data retrieval error.', self._logger, self._old_file)
+
+        except Exception as err:
+            self._actions_when_error(err, self._logger, self._old_file)

@@ -1,29 +1,20 @@
 # -*- coding: utf-8 -*-
-# TODO написать метод для получения актуального курса шар , для того чтобы осеивать по долларовому эквиваленту.
-import os
-import re
-import random
 import logging
-import aiohttp
 import asyncio
 
-import aiofiles
+from collections import namedtuple
 
+from libs.baserin import BaseRin
+from libs.assetspairsparser.btspriceparser import BTSPriceParser
 from libs import utils
-from const import OVERALL_MIN_DAILY_VOLUME, PAIR_MIN_DAILY_VOLUME, WORK_DIR, LOG_DIR
-
-from pprint import pprint
+from const import OVERALL_MIN_DAILY_VOLUME, PAIR_MIN_DAILY_VOLUME, WORK_DIR
 
 
-class BitsharesExplorerParser:
-    utils.dir_exists(WORK_DIR)
-    utils.dir_exists(LOG_DIR)
-    logging.basicConfig(filename=os.path.join(LOG_DIR, 'rin.log'),
-                        level=logging.INFO,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+class BitsharesExplorerParser(BaseRin):
     _logger = logging.getLogger('BitsharesExplorerParser')
     _assets_url = 'http://185.208.208.184:5000/assets'
     _assets_markets_url = 'http://185.208.208.184:5000/get_markets?asset_id={}'
+    _market_data_url = 'http://185.208.208.184:5000/get_volume?base={}&quote={}'
     _lock = asyncio.Lock()
     _date = utils.get_today_date()
     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'pairs'))
@@ -32,54 +23,49 @@ class BitsharesExplorerParser:
 
     def __init__(self, loop):
         self.ioloop = loop
+        self.bts_price_in_usd = BTSPriceParser(loop).get_bts_price_in_usd()
+        self.overall_min_daily_vol = OVERALL_MIN_DAILY_VOLUME / self.bts_price_in_usd
 
-    async def _get_valid_assets(self, url):
-        assets = await self._get_html(url)
-        pprint(assets)
+    async def _check_pair_on_valid(self, pair, base_price):
+        market_data = await self._get_html(self._market_data_url.format(*pair),
+                                           logger=self._logger, delay=30, json=True)
 
-        valid_assets = []
+        if float(market_data['base_volume']) * float(base_price) > PAIR_MIN_DAILY_VOLUME:
+            await self._write_data('{}:{}'.format(*pair), self._new_file, self._lock)
+            self._pairs_count += 1
 
-        for asset in assets:
-            if asset[4] > 5:
-                valid_assets.append(asset)
+    async def _get_valid_pairs(self, asset_info):
+        asset_markets_data = await self._get_html(self._assets_markets_url.format(asset_info.id),
+                                                  logger=self._logger, delay=30, json=True)
+        pairs = list(map(lambda x: x[1].strip().split('/'), asset_markets_data))
 
-    async def _get_html(self, url):
-        await asyncio.sleep(random.randint(0, 30))
-        timeout = aiohttp.ClientTimeout(total=30)
+        for pair in pairs:
+            await self._check_pair_on_valid(pair, asset_info.price)
 
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            try:
-                async with session.get(url) as resp:
-                    if resp.status == 200:
-                        return await resp.json()
+    async def _get_valid_assets(self):
+        assets_data = await self._get_html(self._assets_url, self._logger, 2, json=True)
+        AssetInfo = namedtuple('AssetsInfo', ['id', 'price'])
+        assets = [
+            AssetInfo(asset[2], asset[3]) for asset in assets_data
+            if float(asset[4]) > self.overall_min_daily_vol
+        ]
+        self._logger.info(f'Parsed: {len(assets)} assets.')
 
-            except aiohttp.client_exceptions.ClientConnectionError as err:
-                self._logger.warning(err)
-
-            except aiohttp.client_exceptions.ServerTimeoutError as err:
-                self._logger.warning(err)
+        return assets
 
     def start_parsing(self):
         try:
-            task = self.ioloop.create_task(self._get_valid_assets(self._assets_url))
-            self.ioloop.run_until_complete(asyncio.gather(task))
+            task = self.ioloop.create_task(self._get_valid_assets())
+            assets_info = (self.ioloop.run_until_complete(asyncio.gather(task)))[0]
 
-            # task = self.ioloop.create_task(self._get_valid_data(*assets_page_html, OVERALL_MIN_DAILY_VOLUME, True))
-            # assets = self.ioloop.run_until_complete(asyncio.gather(task))[0]
-            #
-            # tasks = [self.ioloop.create_task(self._get_html(self._assets_url.format(asset)))
-            #          for asset in assets]
-            # htmls = self.ioloop.run_until_complete(asyncio.gather(*tasks))
-            #
-            # tasks = [self.ioloop.create_task(self._get_valid_data(html_, PAIR_MIN_DAILY_VOLUME)) for html_ in htmls]
-            # self.ioloop.run_until_complete(asyncio.wait(tasks))
-            #
-            # utils.remove_file(self._old_file)
-            # self._logger.info(f'Parsed: {self._pairs_count} pairs.')
-            #
-            # return self._new_file
+            tasks = [self.ioloop.create_task(self._get_valid_pairs(asset_info)) for asset_info in assets_info]
+            self.ioloop.run_until_complete(asyncio.gather(*tasks))
+
+            utils.remove_file(self._old_file)
+            self._logger.info(f'Parsed: {self._pairs_count} pairs.')
 
         except TypeError:
-            self._logger.warning('HTML data retrieval error.')
+            self._actions_when_error('JSON data retrieval error.', self._logger, self._old_file)
 
-            # return self._old_file
+        except Exception as err:
+            self._actions_when_error(err, self._logger, self._old_file)

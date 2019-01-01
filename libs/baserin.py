@@ -15,7 +15,7 @@ class BaseRin:
     utils.dir_exists(LOG_DIR)
     logging.basicConfig(filename=os.path.join(LOG_DIR, 'rin.log'),
                         level=logging.INFO,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+                        format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
     @staticmethod
     async def _write_data(data, file, lock):

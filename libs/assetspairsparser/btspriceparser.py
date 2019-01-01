@@ -38,7 +38,7 @@ class BTSPriceParser(BaseRin):
 
             if price:
                 utils.remove_file(self._old_file)
-                self._logger.info(f'BTS price is {price[0]}.')
+                self._logger.info(f'BTS price is ${price[0]}.')
 
                 return price[0]
 

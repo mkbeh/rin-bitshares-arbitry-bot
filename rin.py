@@ -2,9 +2,10 @@
 import logging
 import asyncio
 
-# from libs.assetchainsmaker.chainscreator import ChainsCreator
-from libs.assetspairsparser.bitsharesexplorerparser import BitsharesExplorerParser
-from libs.assetspairsparser.cryptofreshparser import CryptofreshParser
+# from libs.assetschainsmaker.chainscreator import ChainsCreator
+# from libs.assetspairsparser.bitsharesexplorerparser import BitsharesExplorerParser
+# from libs.assetspairsparser.cryptofreshparser import CryptofreshParser
+from libs.algorithms.bitsharesarbitrage import BitsharesArbitrage
 
 logger = logging.getLogger('Rin')
 
@@ -16,8 +17,9 @@ class Rin:
 
         try:
             # BitsharesExplorerParser(ioloop).start_parsing()
-            CryptofreshParser(ioloop).start_parsing()
+            # CryptofreshParser(ioloop).start_parsing()
             # file_with_chains = ChainsCreator(ioloop).start_creating_chains()
+            BitsharesArbitrage(ioloop).start_arbitrage()
         finally:
             ioloop.close()
 

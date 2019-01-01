@@ -20,16 +20,15 @@ class ChainsCreator(BaseRin):
     _chains_count = 0
 
     def __init__(self, loop):
-        self._file_with_pairs = self._get_file_with_pairs()
         self._ioloop = loop
+        self._file_with_pairs = self._get_file_with_pairs()
 
-    @staticmethod
-    def _get_file_with_pairs():
+    def _get_file_with_pairs(self):
         parsers = [BitsharesExplorerParser, CryptofreshParser]
         file_with_pairs = []
 
         for parser in parsers:
-            file_data = parser().start_parsing()
+            file_data = parser(self._ioloop).start_parsing()
 
             try:
                 if file_data.new_version:

@@ -22,6 +22,7 @@ class BitsharesArbitrage:
         self.num_pattern = re.compile(r'(\d+([,.]?\d+)*)')
         self.file = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/output/chains-30-12-2018-12-06-26.lst'
         self.bitshares_obj = BitShares('ws://130.193.42.72:8090/ws')
+        self.market_obj = Market(bitshares_instance=self.bitshares_obj)
 
     @staticmethod
     async def _check_on_profit(arr):

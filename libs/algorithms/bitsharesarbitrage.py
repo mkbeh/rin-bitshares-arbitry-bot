@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
-# TODO наблюдения: цены в ордерах кошелька шар округляются в большую сторону ровно до 8 знаков
-# TODO 1. определиться: стоит ли округлять до 8 знаков цену или же считать как есть (склоняюсь ко 2му варианту)
-# TODO 2. ФИКС БАГА. Индекс ерр массива и принтуются иногда пустые массивы.
 import re
 import array
 import asyncio
 
 from decimal import Decimal
 
-from bitshares.market import Market
-from bitshares.bitshares import BitShares
+# from bitshares.market import Market
+# from bitshares.bitshares import BitShares
+from libs.pybitshares.pygram import PyGram
 from libs import utils
 
 from pprint import pprint
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 class BitsharesArbitrage:
@@ -21,8 +19,8 @@ class BitsharesArbitrage:
         self._ioloop = loop
         self.num_pattern = re.compile(r'(\d+([,.]?\d+)*)')
         self.file = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/output/chains-30-12-2018-12-06-26.lst'
-        self.bitshares_obj = BitShares('ws://130.193.42.72:8090/ws')
-        self.market_obj = Market(bitshares_instance=self.bitshares_obj)
+        # self.bitshares_obj = BitShares('ws://130.193.42.72:8090/ws')
+        self.pygram = PyGram(node='ws://130.193.42.72:8090/ws')
 
     @staticmethod
     async def _check_on_profit(arr):
@@ -63,23 +61,23 @@ class BitsharesArbitrage:
         for data in re.findall(self.num_pattern, str(raw_data)):
             yield float(data[0].replace(',', ''))
 
-    async def _get_order_data_for_pair(self, pair):
-        pass
-
     async def _get_orders_data_for_chain(self, chain):
         arr = array.array('d')
-        # TODO надо как то одновременно запрос делать на 3 пары , а не по очереди в цикле.
 
-        for pair in chain:
+        async def get_order_data_for_pair(pair):
             start = datetime.now()
-            raw_orders_data = Market(pair, bitshares_instance=self.bitshares_obj).orderbook(1)['bids']
-            pprint(raw_orders_data)
-            end = datetime.now()
-            delta = end - start
-            print(delta.microseconds / 1000000)
+            raw_order_data = self.pygram.get_order_book()
+            # pprint(raw_order_data)
+            # end = datetime.now()
+            # delta = end - start
+            # print(delta.microseconds / 1000000)
+            #
+            # async for order_data in self._clear_order_data(raw_order_data):
+            #     arr.append(order_data)
 
-            async for order_data in self._clear_order_data(raw_orders_data):
-                arr.append(order_data)
+        await asyncio.gather(
+            *[get_order_data_for_pair(pair) for pair in chain]
+        )
 
         return arr
 
@@ -88,12 +86,12 @@ class BitsharesArbitrage:
         print(chain)
         arr = await self._get_orders_data_for_chain(chain)
 
-        vol_limit1 = await self._calc_vol_limit(arr[3], arr[2])
-        vol_limit2 = await self._calc_vol_limit(arr[6], arr[5])
-        new_arr = await self._compare_first_vol_limit_with_order_base_vol(vol_limit=vol_limit1, arr=arr)
-        final_arr = await self._compare_second_vol_limit_with_order_base_vol(vol_limit=vol_limit2, arr=new_arr)
-
-        await self._check_on_profit(final_arr)
+        # vol_limit1 = await self._calc_vol_limit(arr[3], arr[2])
+        # vol_limit2 = await self._calc_vol_limit(arr[6], arr[5])
+        # new_arr = await self._compare_first_vol_limit_with_order_base_vol(vol_limit=vol_limit1, arr=arr)
+        # final_arr = await self._compare_second_vol_limit_with_order_base_vol(vol_limit=vol_limit2, arr=new_arr)
+        #
+        # await self._check_on_profit(final_arr)
 
     @staticmethod
     def _split_chain_on_pairs(seq):

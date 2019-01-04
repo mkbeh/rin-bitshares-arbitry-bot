@@ -1,4 +1,6 @@
 # -*- coding: utf-8
+# TODO 1. Разобраться с упаковкой проекта в файл
+# TODO 2. Сделать конфиг и использовать configparser
 import logging
 import asyncio
 

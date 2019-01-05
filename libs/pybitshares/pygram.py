@@ -48,6 +48,3 @@ class PyGram:
             return json.loads(raw_data)['result'][0]['id']
         except IndexError:
             raise Exception(f'Got error while getting {asset_name} id.')
-
-    def __del__(self):
-        self.ws.close()

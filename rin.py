@@ -1,11 +1,10 @@
 # -*- coding: utf-8
 # TODO 1. Разобраться с упаковкой проекта в файл
-# TODO 2. Сделать конфиг и использовать configparser
+# TODO 2. Сделать конфиг и использовать configparser (прежде подумать , нужен ли он :D)
 import logging
 import asyncio
 
-from libs.assetschainsmaker.chainscreator import ChainsCreator
-# from libs.algorithms.bitsharesarbitrage import BitsharesArbitrage
+from libs.algorithms.bitsharesarbitrage import BitsharesArbitrage
 
 logger = logging.getLogger('Rin')
 
@@ -16,8 +15,7 @@ class Rin:
         ioloop = asyncio.get_event_loop()
 
         try:
-            file_with_chains = ChainsCreator(ioloop).start_creating_chains()
-            # BitsharesArbitrage(ioloop).start_arbitrage()
+            BitsharesArbitrage(ioloop).start_arbitrage()
         finally:
             ioloop.close()
 

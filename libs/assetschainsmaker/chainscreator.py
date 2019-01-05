@@ -7,7 +7,7 @@ from libs.baserin import BaseRin
 from libs.assetspairsparser.cryptofreshparser import CryptofreshParser
 from libs.assetspairsparser.bitsharesexplorerparser import BitsharesExplorerParser
 from libs.aiopybitshares.pygram import PyGram
-from const import WORK_DIR
+from const import WORK_DIR, NODE
 from libs import utils
 
 
@@ -62,7 +62,7 @@ class ChainsCreator(BaseRin):
 
     async def _create_chains_for_asset(self, main_asset, pairs):
         chains = []
-        pygram = PyGram()
+        pygram = PyGram(node=NODE)
         await pygram.connect()
 
         for pair in pairs:

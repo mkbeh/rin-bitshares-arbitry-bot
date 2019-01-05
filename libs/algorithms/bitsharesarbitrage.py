@@ -7,7 +7,7 @@ from decimal import Decimal
 
 # from bitshares.market import Market
 # from bitshares.bitshares import BitShares
-from libs.pybitshares.pygram import PyGram
+from libs.aiopybitshares.pygram import PyGram
 from libs import utils
 
 from pprint import pprint

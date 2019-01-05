@@ -39,7 +39,7 @@ class PyGram:
         try:
             return json.loads(raw_data)['result'][order_type]
         except Exception as err:
-            raise Exception(f'Fail while getting result for pair {base}:{quote}.', err)
+            raise Exception(f'Fail while getting result for pair {base_asset}:{quote_asset}.', err)
 
     async def convert_name_to_id(self, asset_name, limit=1):
         raw_data = await self._call_method('list_assets', asset_name.upper(), limit)

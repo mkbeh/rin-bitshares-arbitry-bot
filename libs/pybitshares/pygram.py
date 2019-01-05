@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-import asyncio
 import websockets
 
 
@@ -9,13 +8,16 @@ class PyGram:
 
     def __init__(self, node=_default_node):
         self._node = node
-        self.ws = self._get_websocket()
+        self.ws = None
 
-    def _get_websocket(self):
-        return asyncio.get_event_loop().run_until_complete(websockets.connect(self._node))
+    async def connect(self):
+        self.ws = await websockets.connect(self._node)
 
-    async def _connect(self, call_method, *args):
-        message = json.dumps({'id': 1, 'method': '{}'.format(call_method), 'params': [*args]})
+    async def close(self):
+        await self.ws.close()
+
+    async def _call_method(self, method, *args):
+        message = json.dumps({'id': 1, 'method': '{}'.format(method), 'params': [*args]})
         await self.ws.send(message)
 
         return await self.ws.recv()
@@ -32,7 +34,7 @@ class PyGram:
 
     async def get_order_book(self, base, quote, order_type, limit=1):
         base_asset, quote_asset = await self._get_base_quote_assets_id(base, quote)
-        raw_data = await self._connect('get_order_book', base_asset, quote_asset, limit)
+        raw_data = await self._call_method('get_order_book', base_asset, quote_asset, limit)
 
         try:
             return json.loads(raw_data)['result'][order_type]
@@ -40,7 +42,7 @@ class PyGram:
             raise Exception(f'Fail while getting result for pair {base}:{quote}.', err)
 
     async def convert_name_to_id(self, asset_name, limit=1):
-        raw_data = await self._connect('list_assets', asset_name.upper(), limit)
+        raw_data = await self._call_method('list_assets', asset_name.upper(), limit)
 
         try:
             return json.loads(raw_data)['result'][0]['id']

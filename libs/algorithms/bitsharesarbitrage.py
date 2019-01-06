@@ -5,9 +5,9 @@ import asyncio
 
 from decimal import Decimal
 
-# from bitshares.market import Market
-# from bitshares.bitshares import BitShares
-from libs.aiopybitshares.pygram import PyGram
+from bitshares.market import Market
+from bitshares.bitshares import BitShares
+from libs.aiopybitshares.grambitshares import PyGram
 from libs import utils
 
 from pprint import pprint

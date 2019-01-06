@@ -6,7 +6,7 @@ import aiofiles
 from libs.baserin import BaseRin
 from libs.assetspairsparser.cryptofreshparser import CryptofreshParser
 from libs.assetspairsparser.bitsharesexplorerparser import BitsharesExplorerParser
-from libs.aiopybitshares.pygram import PyGram
+from libs.aiopybitshares.grambitshares import PyGram
 from const import WORK_DIR, NODE
 from libs import utils
 

@@ -23,7 +23,7 @@ class Order(GramBitshares):
         self.fillkill = fillkill
         self.broadcast = broadcast
 
-    async def create_order(self):
+    async def create(self):
         if self.order_type == 'buy':
             self.sell_asset, self.receive_asset, self.amount, self.min_to_receive = \
                 self.receive_asset, self.sell_asset, self.min_to_receive, self.amount

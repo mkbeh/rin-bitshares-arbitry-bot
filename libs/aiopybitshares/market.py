@@ -28,14 +28,3 @@ class Market(GramBitshares):
             return json.loads(raw_data)['result'][order_type]
         except Exception as err:
             raise Exception(f'Fail while getting result for pair {base_asset}:{quote_asset}.', err)
-
-    async def buy(self):
-        pass
-
-    async def sell(self):
-        pass
-
-    async def cancel(self):
-        pass
-
-

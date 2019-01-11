@@ -3,22 +3,28 @@ import json
 import websockets
 
 
-class GramBitshares:
-    _default_node = 'wss://bitshares.openledger.info/ws'
+default_node = 'wss://bitshares.openledger.info/ws'
 
-    def __init__(self, node=_default_node):
+
+class GramBitshares:
+    def __init__(self, node=default_node):
         self._node = node
-        self.ws = None
+        self._ws = None
+
+    async def alternative_connect(self, ws_node=default_node):
+        gram = GramBitshares()
+        await gram.connect()
+
+        return gram
 
     async def connect(self):
-        self.ws = await websockets.connect(self._node)
+        self._ws = await websockets.connect(self._node)
 
     async def close(self):
-        await self.ws.close()
+        await self._ws.close()
 
     async def call_method(self, method, *args):
         message = json.dumps({'id': 0, 'method': '{}'.format(method), 'params': [*args]})
-        print(message)
-        await self.ws.send(message)
+        await self._ws.send(message)
 
-        return await self.ws.recv()
+        return await self._ws.recv()

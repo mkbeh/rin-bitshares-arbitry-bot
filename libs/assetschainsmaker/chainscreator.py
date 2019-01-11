@@ -6,7 +6,7 @@ import aiofiles
 from libs.baserin import BaseRin
 from libs.assetspairsparser.cryptofreshparser import CryptofreshParser
 from libs.assetspairsparser.bitsharesexplorerparser import BitsharesExplorerParser
-from libs.aiopybitshares.grambitshares import PyGram
+from libs.aiopybitshares.asset import Asset
 from const import WORK_DIR, NODE
 from libs import utils
 
@@ -62,8 +62,8 @@ class ChainsCreator(BaseRin):
 
     async def _create_chains_for_asset(self, main_asset, pairs):
         chains = []
-        pygram = PyGram(node=NODE)
-        await pygram.connect()
+        pygram_asset = Asset()
+        await pygram_asset.alternative_connect()
 
         for pair in pairs:
             if main_asset in pair:
@@ -76,14 +76,14 @@ class ChainsCreator(BaseRin):
                         for pair3 in pairs:
                             if secondary[1] in pair3 and main_asset in pair3:
                                 tertiary = (await self._adjust_asset_location_in_seq(secondary[1], pair3)).copy()
-                                chain = await self._get_chain_with_ids(pygram, *main, *secondary, *tertiary)
+                                chain = await self._get_chain_with_ids(pygram_asset, *main, *secondary, *tertiary)
 
                                 if chain not in chains:
                                     chains.append(chain)
                                     self._chains_count += 1
                                     await self._write_chain(chain)
 
-        await pygram.close()
+        await pygram_asset.close()
 
     @staticmethod
     def _remove_pairs_duplicates_from_seq(seq):

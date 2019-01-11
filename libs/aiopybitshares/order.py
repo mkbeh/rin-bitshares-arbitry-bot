@@ -8,8 +8,8 @@ class Order(GramBitshares):
     __slots__ = ['seller', 'amount', 'sell_asset', 'min_to_receive', 'receive_asset',
                  'order_type', 'timeout', 'fillkill', 'broadcast']
 
-    def __init__(self, gram_instance, seller, amount, sell_asset, min_to_receive, receive_asset,
-                 order_type, timeout=0, fillkill=True, broadcast=False):
+    def __init__(self, seller, amount, sell_asset, min_to_receive, receive_asset,
+                 order_type, timeout=0, fillkill=True, broadcast=False, gram_instance=None):
         super().__init__()
         self._gram = gram_instance
 

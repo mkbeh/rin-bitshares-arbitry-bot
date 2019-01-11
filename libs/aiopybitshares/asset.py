@@ -5,7 +5,7 @@ from .grambitshares import GramBitshares, default_node
 
 
 class Asset(GramBitshares):
-    def __init__(self, gram_instance):
+    def __init__(self, gram_instance=None):
         super().__init__()
         self._gram = gram_instance
 

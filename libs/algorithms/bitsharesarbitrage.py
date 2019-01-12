@@ -6,8 +6,6 @@ import asyncio
 from decimal import Decimal
 
 from bitshares.market import Market
-from bitshares.bitshares import BitShares
-from libs.aiopybitshares.grambitshares import PyGram
 from libs import utils
 
 from pprint import pprint
@@ -19,8 +17,6 @@ class BitsharesArbitrage:
         self._ioloop = loop
         self.num_pattern = re.compile(r'(\d+([,.]?\d+)*)')
         self.file = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/output/chains-30-12-2018-12-06-26.lst'
-        # self.bitshares_obj = BitShares('ws://130.193.42.72:8090/ws')
-        self.pygram = PyGram(node='ws://130.193.42.72:8090/ws')
 
     @staticmethod
     async def _check_on_profit(arr):

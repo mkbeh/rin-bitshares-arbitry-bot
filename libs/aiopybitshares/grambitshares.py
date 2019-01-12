@@ -12,6 +12,13 @@ class GramBitshares:
         self._node = node
         self._ws = None
 
+    async def connect(self):
+        self._ws = await websockets.connect(self._node)
+        try:
+            self._ws = await websockets.connect(self._node)
+        except ConnectionRefusedError:
+            await self.reconnect()
+
     async def alternative_connect(self, ws_node=default_node):
         gram = GramBitshares(ws_node)
         await gram.connect()
@@ -21,13 +28,6 @@ class GramBitshares:
     async def reconnect(self):
         await asyncio.sleep(30)
         await self.connect()
-
-    async def connect(self):
-        self._ws = await websockets.connect(self._node)
-        try:
-            self._ws = await websockets.connect(self._node)
-        except ConnectionRefusedError:
-            await self.reconnect()
 
     async def close(self):
         await self._ws.close()

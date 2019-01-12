@@ -11,7 +11,7 @@ class Asset(GramBitshares):
 
     @classmethod
     async def alternative_connect(cls, ws_node=default_node):
-        await super().alternative_connect()
+        await super().alternative_connect(ws_node)
 
     async def convert_name_to_id(self, asset_name, limit=1):
         raw_data = await self._gram.call_method('list_assets', asset_name.upper(), limit)

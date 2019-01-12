@@ -11,7 +11,7 @@ class Market(GramBitshares):
         self._gram = gram_instance
 
     async def alternative_connect(self, ws_node=default_node):
-        self._gram = await super().alternative_connect()
+        self._gram = await super().alternative_connect(ws_node)
 
     async def _get_base_quote_assets_id(self, **kwargs):
         base_asset, quote_asset = kwargs.values()

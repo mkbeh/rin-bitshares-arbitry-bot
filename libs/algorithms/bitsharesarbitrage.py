@@ -21,8 +21,6 @@ from datetime import datetime
 class BitsharesArbitrage:
     def __init__(self, loop):
         self._ioloop = loop
-        self._lock = asyncio.Lock()
-        # self.num_pattern = re.compile(r'(\d+([,.]?\d+)*)')
         self.file = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/output/chains-05-01-2019-15-35-09.lst'
 
     # @staticmethod
@@ -64,11 +62,12 @@ class BitsharesArbitrage:
     async def split_pair_raw_on_assets(pair):
         return pair.split(':')
 
-    async def _get_orders_data_for_chain(self, chain, gram_market):
+    @staticmethod
+    async def _get_orders_data_for_chain(chain, gram_market):
         arr = array.array('d')
 
         async def get_order_data_for_pair(pair, market_gram):
-            base_asset, quote_asset = await self.split_pair_raw_on_assets(pair)
+            base_asset, quote_asset = pair.split(':')
             raw_order_data = (await market_gram.get_order_book(base_asset, quote_asset, 'bids'))[0]
             order_data = (float(data) for data in raw_order_data.values())
 
@@ -88,14 +87,14 @@ class BitsharesArbitrage:
         [await market.alternative_connect() for market in markets]
         arr = await self._get_orders_data_for_chain(chain, markets)
 
-        [await market.close() for market in markets]
-
         # vol_limit1 = await self._calc_vol_limit(arr[3], arr[2])
         # vol_limit2 = await self._calc_vol_limit(arr[6], arr[5])
         # new_arr = await self._compare_first_vol_limit_with_order_base_vol(vol_limit=vol_limit1, arr=arr)
         # final_arr = await self._compare_second_vol_limit_with_order_base_vol(vol_limit=vol_limit2, arr=new_arr)
         #
         # await self._check_on_profit(final_arr)
+
+        [await market.close() for market in markets]
 
     @staticmethod
     def _split_chain_on_pairs(seq):

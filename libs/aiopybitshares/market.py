@@ -5,9 +5,9 @@ from .grambitshares import GramBitshares, default_node
 
 
 class Market(GramBitshares):
-    def __init__(self, gram_instance=None):
+    def __init__(self):
         super().__init__()
-        self._gram = gram_instance
+        self._gram = None
 
     async def alternative_connect(self, ws_node=default_node):
         self._gram = await super().alternative_connect(ws_node)

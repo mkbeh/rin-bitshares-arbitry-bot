@@ -5,9 +5,9 @@ from .grambitshares import GramBitshares, default_node
 
 
 class Asset(GramBitshares):
-    def __init__(self, gram_instance=None):
+    def __init__(self):
         super().__init__()
-        self._gram = gram_instance
+        self._gram = None
 
     @classmethod
     async def alternative_connect(cls, ws_node=default_node):

@@ -9,9 +9,9 @@ class Order(GramBitshares):
                  'order_type', 'timeout', 'fillkill', 'broadcast']
 
     def __init__(self, seller, amount, sell_asset, min_to_receive, receive_asset,
-                 order_type, timeout=0, fillkill=True, broadcast=False, gram_instance=None):
+                 order_type, timeout=0, fillkill=True, broadcast=False):
         super().__init__()
-        self._gram = gram_instance
+        self._gram = None
 
         self.seller = seller
         self.amount = amount

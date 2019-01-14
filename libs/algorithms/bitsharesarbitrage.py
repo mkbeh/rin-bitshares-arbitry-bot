@@ -28,7 +28,35 @@ class BitsharesArbitrage:
         return pair.split(':')
 
     @staticmethod
-    async def _get_orders_data_for_chain(chain, gram_market):
+    async def run_chain_data_thorough_algo(arr):
+        price0, quote0, base0, price1, quote1, base1, price2, quote2, base2 = arr
+
+        if quote0 > base1:
+            quote0 = base1
+            base0 = Decimal(quote0) * Decimal(price0)
+
+        elif quote0 < base1:
+            base1 = quote0
+            quote1 = Decimal(base1) / Decimal(price1)
+
+        if quote1 > base2:
+            quote1 = base2
+            base1 = Decimal(quote1) * Decimal(price1)
+            quote0 = base1
+            base0 = Decimal(quote0) * Decimal(price0)
+
+        elif quote1 < base2:
+            base2 = quote1
+            quote2 = Decimal(base2) / Decimal(price2)
+
+        if base0 < quote2:
+            print(base0, quote2)
+
+            profit = Decimal(quote2) - Decimal(base1)
+            print(f'Profit = {profit}! Set orders!\n')
+
+    @staticmethod
+    async def _get_orders_data_for_chain(chain, gram_markets):
         arr = array.array('d')
 
         async def get_order_data_for_pair(pair, market_gram):
@@ -39,7 +67,7 @@ class BitsharesArbitrage:
             return order_data
 
         pairs_orders_data = await asyncio.gather(
-            *[get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_market)]
+            *[get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_markets)]
         )
 
         [arr.extend(pairs_orders_data[i]) for i in range(len(chain))]
@@ -50,6 +78,7 @@ class BitsharesArbitrage:
         markets = [Market() for _ in range(len(chain))]
         [await market.alternative_connect() for market in markets]
         arr = await self._get_orders_data_for_chain(chain, markets)
+        await self.run_chain_data_thorough_algo(arr)
 
         [await market.close() for market in markets]
 
@@ -80,5 +109,5 @@ class BitsharesArbitrage:
 
     def start_arbitrage(self):
         chains = self._get_chains()
-        tasks = [self._ioloop.create_task(self._algorithm_testing(chain)) for chain in chains[:1]]
+        tasks = [self._ioloop.create_task(self._algorithm_testing(chain)) for chain in chains]
         self._ioloop.run_until_complete(asyncio.gather(*tasks))

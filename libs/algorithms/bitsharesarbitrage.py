@@ -23,41 +23,6 @@ class BitsharesArbitrage:
         self._ioloop = loop
         self.file = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/output/chains-05-01-2019-15-35-09.lst'
 
-    # @staticmethod
-    # async def _check_on_profit(arr):
-    #     if arr[0] < arr[7]:
-    #         print('profit', arr[7], arr[0])
-    #
-    # async def _compare_second_vol_limit_with_order_base_vol(self, vol_limit, arr):
-    #     new_arr = array.array('d')
-    #
-    #     if vol_limit >= arr[3]:
-    #         arr[6] = Decimal(vol_limit) / Decimal(arr[8])
-    #
-    #     elif vol_limit < arr[3]:
-    #         arr[3] = vol_limit
-    #         arr[4] = Decimal(arr[3]) * Decimal(arr[5])
-    #         vol_limit1 = await self._calc_vol_limit(arr[3], arr[2])
-    #         new_arr = await self._compare_first_vol_limit_with_order_base_vol(vol_limit=vol_limit1, arr=arr)
-    #         new_arr[7] = Decimal(new_arr[6]) * Decimal(new_arr[8])
-    #
-    #     return new_arr
-    #
-    # @staticmethod
-    # async def _compare_first_vol_limit_with_order_base_vol(vol_limit, arr):
-    #     if vol_limit >= arr[0]:
-    #         arr[3] = Decimal(vol_limit) / Decimal(arr[5])
-    #
-    #     elif vol_limit < arr[0]:
-    #         arr[0] = vol_limit
-    #         arr[1] = Decimal(arr[0]) * Decimal(arr[2])
-    #
-    #     return arr
-    #
-    # @staticmethod
-    # async def _calc_vol_limit(dividend, divider):
-    #     return Decimal(dividend) / Decimal(divider)
-
     @staticmethod
     async def split_pair_raw_on_assets(pair):
         return pair.split(':')
@@ -82,17 +47,9 @@ class BitsharesArbitrage:
         return arr
 
     async def _algorithm_testing(self, chain):
-        # x1=0 | y1=1 | z1=2 | x2=3 | y2=4 | z2=5 | x3=6 | y3=7 | z3=8
         markets = [Market() for _ in range(len(chain))]
         [await market.alternative_connect() for market in markets]
         arr = await self._get_orders_data_for_chain(chain, markets)
-
-        # vol_limit1 = await self._calc_vol_limit(arr[3], arr[2])
-        # vol_limit2 = await self._calc_vol_limit(arr[6], arr[5])
-        # new_arr = await self._compare_first_vol_limit_with_order_base_vol(vol_limit=vol_limit1, arr=arr)
-        # final_arr = await self._compare_second_vol_limit_with_order_base_vol(vol_limit=vol_limit2, arr=new_arr)
-        #
-        # await self._check_on_profit(final_arr)
 
         [await market.close() for market in markets]
 

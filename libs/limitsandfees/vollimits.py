@@ -64,6 +64,6 @@ class VolLimits(BaseRin):
             self._actions_when_error(err, self._logger, self._old_file)
         else:
             utils.remove_file(self._old_file)
-            self._logger.info(f'Successfully got price and calculate limits: {self._parsed_data}')
+            self._logger.info(f'Successfully got prices and calculate limits: {self._parsed_data}')
 
             return self._new_file

@@ -5,7 +5,7 @@ import asyncio
 from decimal import Decimal, getcontext, ROUND_HALF_UP
 
 from libs.assetschainsmaker.chainscreator import ChainsCreator
-from libs.fee.vollimits import VolLimits
+from libs.limitsandfees.vollimits import VolLimits
 from libs.aiopybitshares.market import Market
 from libs import utils
 

@@ -5,7 +5,7 @@ import logging
 import asyncio
 
 from libs.algorithms.bitsharesarbitrage import BitsharesArbitrage
-from libs.fee.vollimits import VolLimits
+from libs.limitsandfees.vollimits import VolLimits
 
 logger = logging.getLogger('Rin')
 

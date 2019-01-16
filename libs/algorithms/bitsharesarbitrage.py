@@ -3,7 +3,7 @@ import re
 import array
 import asyncio
 
-from decimal import Decimal
+from decimal import Decimal, getcontext, ROUND_HALF_UP
 
 from libs.aiopybitshares.market import Market
 from libs import utils
@@ -19,6 +19,10 @@ from datetime import datetime
 
 
 class BitsharesArbitrage:
+    context = getcontext()
+    context.prec = 12
+    context.rounding = ROUND_HALF_UP
+
     def __init__(self, loop):
         self._ioloop = loop
         self.file = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/output/chains-05-01-2019-15-35-09.lst'
@@ -52,7 +56,7 @@ class BitsharesArbitrage:
         if base0 < quote2:
             print(base0, quote2)
 
-            profit = Decimal(quote2) - Decimal(base1)
+            profit = Decimal(quote2) - Decimal(base0)
             print(f'Profit = {profit}! Set orders!\n')
 
     @staticmethod

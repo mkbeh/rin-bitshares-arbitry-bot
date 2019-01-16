@@ -5,6 +5,7 @@ import logging
 import asyncio
 
 from libs.algorithms.bitsharesarbitrage import BitsharesArbitrage
+from libs.fee.vollimits import VolLimits
 
 logger = logging.getLogger('Rin')
 
@@ -15,7 +16,8 @@ class Rin:
         ioloop = asyncio.get_event_loop()
 
         try:
-            BitsharesArbitrage(ioloop).start_arbitrage()
+            # BitsharesArbitrage(ioloop).start_arbitrage()
+            VolLimits(ioloop).run()
         finally:
             ioloop.close()
 

@@ -24,7 +24,7 @@ class BaseRin:
                 await f.write(f'{data}\n')
 
     @staticmethod
-    async def _get_html(url, logger, delay, json=False):
+    async def get_data(url, logger, delay, json=False):
         await asyncio.sleep(random.randint(0, delay))
         timeout = aiohttp.ClientTimeout(total=30)
 

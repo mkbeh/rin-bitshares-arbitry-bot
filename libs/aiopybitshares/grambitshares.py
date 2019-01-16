@@ -27,7 +27,7 @@ class GramBitshares:
 
     async def reconnect(self):
         await asyncio.sleep(30)
-        await self.connect()
+        await self.alternative_connect()
 
     async def close(self):
         await self._ws.close()

@@ -27,7 +27,7 @@ class VolLimits(BaseRin):
         self._ioloop = loop
 
     async def _get_asset_price(self, asset):
-        response = await self._get_html(self._url.format(asset), logger=self._logger, delay=1, json=True)
+        response = await self.get_data(self._url.format(asset), logger=self._logger, delay=1, json=True)
 
         try:
             return response['latest']

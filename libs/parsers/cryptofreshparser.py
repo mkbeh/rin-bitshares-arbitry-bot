@@ -71,14 +71,14 @@ class CryptofreshParser(BaseRin):
 
     def start_parsing(self):
         try:
-            task = self._ioloop.create_task(self._get_html(self._main_page_url, self._logger, delay=2))
+            task = self._ioloop.create_task(self.get_data(self._main_page_url, self._logger, delay=2))
             assets_page_html = self._ioloop.run_until_complete(asyncio.gather(task))
 
             task = self._ioloop.create_task(self._get_valid_data(*assets_page_html, OVERALL_MIN_DAILY_VOLUME, True))
             assets = self._ioloop.run_until_complete(asyncio.gather(task))[0]
 
             if assets:
-                tasks = [self._ioloop.create_task(self._get_html(self._assets_url.format(asset), self._logger, delay=30))
+                tasks = [self._ioloop.create_task(self.get_data(self._assets_url.format(asset), self._logger, delay=30))
                          for asset in assets]
                 htmls = self._ioloop.run_until_complete(asyncio.gather(*tasks))
 

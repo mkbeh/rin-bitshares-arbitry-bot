@@ -4,8 +4,8 @@ import asyncio
 import aiofiles
 
 from libs.baserin import BaseRin
-from libs.assetspairsparser.cryptofreshparser import CryptofreshParser
-from libs.assetspairsparser.bitsharesexplorerparser import BitsharesExplorerParser
+from libs.parsers.cryptofreshparser import CryptofreshParser
+from libs.parsers.bitsharesexplorerparser import BitsharesExplorerParser
 from libs.aiopybitshares.asset import Asset
 from const import WORK_DIR, NODE
 from libs import utils

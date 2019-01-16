@@ -5,7 +5,7 @@ import asyncio
 from collections import namedtuple
 
 from libs.baserin import BaseRin
-from libs.assetspairsparser.btspriceparser import BTSPriceParser
+from libs.parsers.btspriceparser import BTSPriceParser
 from libs import utils
 from const import OVERALL_MIN_DAILY_VOLUME, PAIR_MIN_DAILY_VOLUME, WORK_DIR
 
@@ -27,21 +27,21 @@ class BitsharesExplorerParser(BaseRin):
         self._overall_min_daily_vol = OVERALL_MIN_DAILY_VOLUME / self._bts_price_in_usd
 
     async def _check_pair_on_valid(self, pair, base_price):
-        market_data = await self._get_html(self._market_data_url.format(*pair),
-                                           logger=self._logger, delay=5, json=True)
+        market_data = await self.get_data(self._market_data_url.format(*pair),
+                                          logger=self._logger, delay=5, json=True)
 
         if float(market_data['base_volume']) * float(base_price) > PAIR_MIN_DAILY_VOLUME:
             await self._write_data('{}:{}'.format(*pair), self._new_file, self._lock)
             self._pairs_count += 1
 
     async def _get_valid_pairs(self, asset_info):
-        asset_markets_data = await self._get_html(self._assets_markets_url.format(asset_info.id),
-                                                  logger=self._logger, delay=5, json=True)
+        asset_markets_data = await self.get_data(self._assets_markets_url.format(asset_info.id),
+                                                 logger=self._logger, delay=5, json=True)
         pairs = list(map(lambda x: x[1].strip().split('/'), asset_markets_data))
         [await self._check_pair_on_valid(pair, asset_info.price) for pair in pairs]
 
     async def _get_valid_assets(self):
-        assets_data = await self._get_html(self._assets_url, self._logger, 2, json=True)
+        assets_data = await self.get_data(self._assets_url, self._logger, 2, json=True)
         AssetInfo = namedtuple('AssetsInfo', ['id', 'price'])
         assets = [
             AssetInfo(asset[2], asset[3]) for asset in assets_data

@@ -2,7 +2,7 @@
 import array
 import asyncio
 
-from decimal import Decimal, getcontext, ROUND_HALF_UP
+from decimal import Decimal, localcontext, ROUND_HALF_UP
 
 from libs.assetschainsmaker.chainscreator import ChainsCreator
 from libs.limitsandfees.vollimits import VolLimits
@@ -20,9 +20,9 @@ from datetime import datetime
 
 
 class BitsharesArbitrage:
-    context = getcontext()
-    context.prec = 12
-    context.rounding = ROUND_HALF_UP
+    # context = getcontext()
+    # context.prec = 12
+    # context.rounding = ROUND_HALF_UP
 
     def __init__(self, loop):
         self._ioloop = loop
@@ -36,29 +36,33 @@ class BitsharesArbitrage:
     async def run_chain_data_thorough_algo(arr):
         price0, quote0, base0, price1, quote1, base1, price2, quote2, base2 = arr
 
-        if quote0 > base1:
-            quote0 = base1
-            base0 = Decimal(quote0) * Decimal(price0)
+        with localcontext() as ctx:
+            ctx.prec = 12
+            ctx.rounding = ROUND_HALF_UP
 
-        elif quote0 < base1:
-            base1 = quote0
-            quote1 = Decimal(base1) / Decimal(price1)
+            if quote0 > base1:
+                quote0 = base1
+                base0 = Decimal(quote0) * Decimal(price0)
 
-        if quote1 > base2:
-            quote1 = base2
-            base1 = Decimal(quote1) * Decimal(price1)
-            quote0 = base1
-            base0 = Decimal(quote0) * Decimal(price0)
+            elif quote0 < base1:
+                base1 = quote0
+                quote1 = Decimal(base1) / Decimal(price1)
 
-        elif quote1 < base2:
-            base2 = quote1
-            quote2 = Decimal(base2) / Decimal(price2)
+            if quote1 > base2:
+                quote1 = base2
+                base1 = Decimal(quote1) * Decimal(price1)
+                quote0 = base1
+                base0 = Decimal(quote0) * Decimal(price0)
 
-        if base0 < quote2:
-            print(base0, quote2)
+            elif quote1 < base2:
+                base2 = quote1
+                quote2 = Decimal(base2) / Decimal(price2)
 
-            profit = Decimal(quote2) - Decimal(base0)
-            print(f'Profit = {profit}! Set orders!\n')
+            if base0 < quote2:
+                print(base0, quote2)
+
+                profit = Decimal(quote2) - Decimal(base0)
+                print(f'Profit = {profit}! Set orders!\n')
 
     @staticmethod
     async def _get_orders_data_for_chain(chain, gram_markets):

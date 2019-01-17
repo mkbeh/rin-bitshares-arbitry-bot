@@ -5,7 +5,6 @@ import logging
 import asyncio
 
 from libs.algorithms.bitsharesarbitrage import BitsharesArbitrage
-from libs.limitsandfees.vollimits import VolLimits
 
 logger = logging.getLogger('Rin')
 
@@ -17,7 +16,8 @@ class Rin:
 
         try:
             # BitsharesArbitrage(ioloop).start_arbitrage()
-            VolLimits(ioloop).run()
+            # DefaultBTSFee(ioloop).run()
+            pass
         finally:
             ioloop.close()
 

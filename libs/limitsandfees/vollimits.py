@@ -15,9 +15,9 @@ class VolLimits(BaseRin):
     _logger = logging.getLogger('VolLimits')
     _lock = asyncio.Lock()
     _url = 'http://185.208.208.184:5000/get_ticker?base={}&quote={}'
-    _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'vollimits'))
+    _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'vol_limits'))
     _date = utils.get_today_date()
-    _new_file = utils.get_file(WORK_DIR, f'vollimits-{_date}.lst')
+    _new_file = utils.get_file(WORK_DIR, f'vol_limits-{_date}.lst')
     _vol_limits = None
 
     def __init__(self, loop):
@@ -52,7 +52,7 @@ class VolLimits(BaseRin):
         self._vol_limits = '{}:{} {}:{} {}:{} {}:{}'\
             .format(*itertools.chain(*limits.items()))
 
-        await self._write_data(json.dumps(limits), self._new_file, self._lock)
+        await self.write_data(json.dumps(limits), self._new_file, self._lock)
 
     def run(self):
         tasks = [self._ioloop.create_task(self._get_limits())]

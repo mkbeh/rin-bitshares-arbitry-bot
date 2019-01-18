@@ -7,7 +7,7 @@ from libs.baserin import BaseRin
 from libs.parsers.cryptofreshparser import CryptofreshParser
 from libs.parsers.bitsharesexplorerparser import BitsharesExplorerParser
 from libs.aiopybitshares.asset import Asset
-from const import WORK_DIR, NODE
+from const import WORK_DIR, NODE_URI
 from libs import utils
 
 

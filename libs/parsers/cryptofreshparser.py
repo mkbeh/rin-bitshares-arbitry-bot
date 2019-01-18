@@ -55,7 +55,7 @@ class CryptofreshParser(BaseRin):
 
             if vol > min_volume:
                 if not find_asset:
-                    await self._write_data(data, self._new_file, self._lock)
+                    await self.write_data(data, self._new_file, self._lock)
                     self._pairs_count += 1
                     continue
 

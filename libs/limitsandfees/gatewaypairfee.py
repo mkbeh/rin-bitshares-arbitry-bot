@@ -1,25 +1,48 @@
 # -*- coding: utf-8 -*-
-"""
-Цель: создать отдельный файл с цепочками , где напротив каждой цепочки будут указаны %.
-Пример: <chain> <[1st %] [2nd %] [3rd %]>
-"""
 import logging
 import asyncio
+import itertools
+
+from decimal import Decimal
 
 from libs.baserin import BaseRin
+from libs.aiopybitshares.asset import Asset
 from libs.assetschainsmaker.chainscreator import ChainsCreator
-from pprint import pprint
+from libs import utils
+
+from const import WALLET_URI, WORK_DIR
 
 
-class GatewayPairFee:
+class GatewayPairFee(BaseRin):
     _url = 'https://wallet.bitshares.org/#/market/{}_{}'
-    _logger = logging.getLogger('ChainsCreator')
+    _logger = logging.getLogger('GatewayPairFee')
     _lock = asyncio.Lock()
+    _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'chains_with_fees'))
+    _date = utils.get_today_date()
+    _new_file = utils.get_file(WORK_DIR, f'chains_with_fees-{_date}.lst')
 
-    def __init__(self):
-        # self._file_with_chains = ChainsCreator(self._ioloop)
-        self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
-                                 'output/chains-05-01-2019-15-35-09.lst'
+    def __init__(self, loop):
+        self._ioloop = loop
+        self._file_with_chains = ChainsCreator(self._ioloop)
+        self._fees_count = 0
+        self._chains_num = None
+
+    async def foo(self, chain):
+        assets_objs = [Asset() for _ in range(len(chain))]
+        [await asset_obj.alternative_connect(WALLET_URI) for asset_obj in assets_objs]
+
+        raw_chain_fees = await asyncio.gather(
+            *[obj.get_asset_info(pair.split(':')[1]) for obj, pair in zip(assets_objs, chain)]
+        )
+
+        fees = [str(Decimal(fee['options']['market_fee_percent']) / Decimal(100))
+                for fee in raw_chain_fees]
+
+        data = '{} {} {} {} {} {}'.format(*itertools.chain(chain, fees))
+        await self.write_data(data, self._new_file, self._lock)
+        self._fees_count += 3
+
+        [await asset_obj.close() for asset_obj in assets_objs]
 
     @staticmethod
     def _split_chain_on_pairs(seq):
@@ -48,6 +71,15 @@ class GatewayPairFee:
 
     def get_chains_fees(self):
         chains = self._get_chains()
+        self._chains_num = len(chains)
+        tasks = [self._ioloop.create_task(self.foo(chain)) for chain in chains]
 
-        for chain in chains[:1]:
-            self._get_html(chain)
+        try:
+            self._ioloop.run_until_complete(asyncio.gather(*tasks))
+        except Exception as err:
+            self._actions_when_error(err, self._logger, self._old_file)
+        else:
+            utils.remove_file(self._old_file)
+            self._logger.info(f'Successfully got {self._fees_count} fees for {self._chains_num} chains.')
+
+            return self._new_file

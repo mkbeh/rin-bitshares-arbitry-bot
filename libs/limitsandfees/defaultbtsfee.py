@@ -45,7 +45,7 @@ class DefaultBTSFee(VolLimits):
         self._fees = '{}:{} {}:{} {}:{} {}:{}' \
             .format(*itertools.chain(*final_fees.items()))
 
-        await self._write_data(json.dumps(final_fees), self._new_file, self._lock)
+        await self.write_data(json.dumps(final_fees), self._new_file, self._lock)
 
     def run(self):
         tasks = [self._ioloop.create_task(self._get_converted_order_fee())]

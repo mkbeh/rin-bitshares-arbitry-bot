@@ -18,7 +18,7 @@ class Rin:
         try:
             # BitsharesArbitrage(ioloop).start_arbitrage()
             # DefaultBTSFee(ioloop).run()
-            GatewayPairFee().get_chains_fees()
+            GatewayPairFee(ioloop).get_chains_fees()
         finally:
             ioloop.close()
 

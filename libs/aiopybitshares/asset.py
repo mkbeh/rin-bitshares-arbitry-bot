@@ -20,7 +20,10 @@ class Asset(GramBitshares):
         except IndexError:
             raise Exception(f'Got error while getting {asset_name} id.')
 
-    async def get_asset(self, asset_name_or_id):
+    async def get_asset_info(self, asset_name_or_id):
         raw_data = await self._gram.call_method('get_asset', asset_name_or_id)
 
-        return raw_data
+        try:
+            return json.loads(raw_data)['result']
+        except IndexError:
+            raise Exception(f'Got error while getting data for {asset_name_or_id}.')

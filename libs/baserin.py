@@ -18,7 +18,7 @@ class BaseRin:
                         format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 
     @staticmethod
-    async def _write_data(data, file, lock):
+    async def write_data(data, file, lock):
         async with lock:
             async with aiofiles.open(file, 'a') as f:
                 await f.write(f'{data}\n')

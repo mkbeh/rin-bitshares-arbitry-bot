@@ -46,7 +46,7 @@ class BTSPriceParser(BaseRin):
             price = method()
 
             if price:
-                await self._write_data(str(price), self._new_file, self._lock)
+                await self.write_data(str(price), self._new_file, self._lock)
                 return price
 
         self._actions_when_error('Could not get BTS price in USD.', self._logger,

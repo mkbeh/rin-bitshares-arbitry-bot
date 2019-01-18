@@ -31,7 +31,7 @@ class BitsharesExplorerParser(BaseRin):
                                           logger=self._logger, delay=5, json=True)
 
         if float(market_data['base_volume']) * float(base_price) > PAIR_MIN_DAILY_VOLUME:
-            await self._write_data('{}:{}'.format(*pair), self._new_file, self._lock)
+            await self.write_data('{}:{}'.format(*pair), self._new_file, self._lock)
             self._pairs_count += 1
 
     async def _get_valid_pairs(self, asset_info):

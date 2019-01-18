@@ -66,7 +66,7 @@ class BitsharesExplorerParser(BaseRin):
             return FileData(self._new_file, True)
 
         except TypeError:
-            self._actions_when_error('JSON data retrieval error.', self._logger, self._old_file)
+            self.actions_when_error('JSON data retrieval error.', self._logger, self._old_file)
 
         except Exception as err:
-            self._actions_when_error(err, self._logger, self._old_file)
+            self.actions_when_error(err, self._logger, self._old_file)

@@ -114,4 +114,4 @@ class ChainsCreator(BaseRin):
             return self._new_file
 
         except Exception as err:
-            self._actions_when_error(err, self._logger, self._old_file)
+            self.actions_when_error(err, self._logger, self._old_file)

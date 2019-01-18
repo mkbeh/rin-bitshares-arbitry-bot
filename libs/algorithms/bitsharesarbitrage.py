@@ -4,8 +4,8 @@ import asyncio
 
 from decimal import Decimal, localcontext, ROUND_HALF_UP
 
-from libs.assetschainsmaker.chainscreator import ChainsCreator
-from libs.limitsandfees.vollimits import VolLimits
+from libs.baserin import BaseRin
+from libs.limitsandfees.limitsandfees import GatewayPairFee, VolLimits, DefaultBTSFee
 from libs.aiopybitshares.market import Market
 from libs import utils
 
@@ -19,14 +19,11 @@ from datetime import datetime
 # print(delta.microseconds / 1000000)
 
 
-class BitsharesArbitrage:
-    # context = getcontext()
-    # context.prec = 12
-    # context.rounding = ROUND_HALF_UP
-
+class BitsharesArbitrage(BaseRin):
     def __init__(self, loop):
         self._ioloop = loop
-        self.file = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/output/chains-05-01-2019-15-35-09.lst'
+        self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
+                                 'output/chains-05-01-2019-15-35-09.lst'
 
     @staticmethod
     async def split_pair_raw_on_assets(pair):
@@ -91,32 +88,7 @@ class BitsharesArbitrage:
 
         [await market.close() for market in markets]
 
-    @staticmethod
-    def _split_chain_on_pairs(seq):
-        for el in seq:
-            yield el.split(' ')
-
-    @staticmethod
-    def _clear_each_str_in_seq(seq):
-        for el in seq:
-            yield el.replace('\n', '').strip()
-
-    @staticmethod
-    def _read_file(file):
-        with open(file, 'r') as f:
-            for line in f:
-                yield line
-
-    def _get_chains(self):
-        return list(
-            self._split_chain_on_pairs(
-                self._clear_each_str_in_seq(
-                    self._read_file(self.file)
-                )
-            )
-        )
-
     def start_arbitrage(self):
-        chains = self._get_chains()
+        chains = self._get_chains(self._file_with_chains)
         tasks = [self._ioloop.create_task(self._algorithm_testing(chain)) for chain in chains]
         self._ioloop.run_until_complete(asyncio.gather(*tasks))

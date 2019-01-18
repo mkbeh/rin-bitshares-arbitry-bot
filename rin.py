@@ -5,7 +5,7 @@ import logging
 import asyncio
 
 from libs.algorithms.bitsharesarbitrage import BitsharesArbitrage
-from libs.limitsandfees.gatewaypairfee import GatewayPairFee
+
 
 logger = logging.getLogger('Rin')
 
@@ -18,7 +18,7 @@ class Rin:
         try:
             # BitsharesArbitrage(ioloop).start_arbitrage()
             # DefaultBTSFee(ioloop).run()
-            GatewayPairFee(ioloop).get_chains_fees()
+            pass
         finally:
             ioloop.close()
 

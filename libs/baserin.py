@@ -44,7 +44,7 @@ class BaseRin:
                 logger.warning(err)
 
     @staticmethod
-    def _actions_when_error(msg, logger, retrieve_file=None, value_from_file=False):
+    def actions_when_error(msg, logger, retrieve_file=None, value_from_file=False):
         logger.warning(msg)
 
         if retrieve_file:
@@ -52,4 +52,29 @@ class BaseRin:
                 return utils.read_file(retrieve_file)[0].replace('\n', '').strip()
 
             return retrieve_file
+
+    @staticmethod
+    def _split_chain_on_pairs(seq):
+        for el in seq:
+            yield el.split(' ')
+
+    @staticmethod
+    def _clear_each_str_in_seq(seq):
+        for el in seq:
+            yield el.replace('\n', '').strip()
+
+    @staticmethod
+    def _read_file(file):
+        with open(file, 'r') as f:
+            for line in f:
+                yield line
+
+    def _get_chains(self, file):
+        return list(
+            self._split_chain_on_pairs(
+                self._clear_each_str_in_seq(
+                    self._read_file(file)
+                )
+            )
+        )
 

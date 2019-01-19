@@ -111,7 +111,7 @@ class BitsharesArbitrage(BaseRin):
             2. Дефолтная комиссия за ордер 
             3. Объемы лимитов.
             """
-            chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_fees()
+            chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
             print(chains)
 
             break

@@ -137,17 +137,24 @@ class ChainsWithGatewayPairFees(BaseRin):
         self._fees_count = 0
         self._chains_num = None
 
-    async def _get_chain_fees(self, chain):
+    @staticmethod
+    async def _get_fees_for_chain(chain):
         assets_objs = [Asset() for _ in range(len(chain))]
         [await asset_obj.alternative_connect(WALLET_URI) for asset_obj in assets_objs]
 
         raw_chain_fees = await asyncio.gather(
-            *[obj.get_asset_info(pair.split(':')[1]) for obj, pair in zip(assets_objs, chain)]
+            *(obj.get_asset_info(pair.split(':')[1]) for obj, pair in zip(assets_objs, chain))
         )
         [await asset_obj.close() for asset_obj in assets_objs]
 
-        fees = [str(Decimal(fee['options']['market_fee_percent']) / Decimal(100))
-                for fee in raw_chain_fees]
+        fees = (str(Decimal(fee['options']['market_fee_percent']) / Decimal(100))
+                for fee in raw_chain_fees)
+
+        return fees
+
+    async def _get_chain_fees(self, chain):
+        fees = await self._get_fees_for_chain(chain)
+
         data = '{} {} {} {} {} {}'.format(*itertools.chain(chain, fees))
         await self.write_data(data, self._new_file, self._lock)
         self._fees_count += 3
@@ -158,7 +165,7 @@ class ChainsWithGatewayPairFees(BaseRin):
 
         return ChainAndFees
 
-    def get_chains_fees(self):
+    def get_chains_with_fees(self):
         chains = self._get_chains(self._file_with_chains)
         self._chains_num = len(chains)
         tasks = [self._ioloop.create_task(self._get_chain_fees(chain)) for chain in chains]

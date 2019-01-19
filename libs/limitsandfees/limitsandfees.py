@@ -5,6 +5,7 @@ import asyncio
 import itertools
 
 from decimal import Decimal, ROUND_HALF_UP
+from collections import namedtuple
 
 from libs.baserin import BaseRin
 from libs.assetschainsmaker.chainscreator import ChainsCreator
@@ -120,7 +121,7 @@ class DefaultBTSFee(VolLimits):
             return self._new_file
 
 
-class GatewayPairFee(BaseRin):
+class ChainsWithGatewayPairFees(BaseRin):
     _url = 'https://wallet.bitshares.org/#/market/{}_{}'
     _logger = logging.getLogger('GatewayPairFee')
     _lock = asyncio.Lock()
@@ -130,38 +131,44 @@ class GatewayPairFee(BaseRin):
 
     def __init__(self, loop):
         self._ioloop = loop
-        self._file_with_chains = ChainsCreator(self._ioloop)
+        # self._file_with_chains = ChainsCreator(self._ioloop)
+        self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
+                                 'output/chains-05-01-2019-15-35-09.lst'
         self._fees_count = 0
         self._chains_num = None
 
-    async def foo(self, chain):
+    async def _get_chain_fees(self, chain):
         assets_objs = [Asset() for _ in range(len(chain))]
         [await asset_obj.alternative_connect(WALLET_URI) for asset_obj in assets_objs]
 
         raw_chain_fees = await asyncio.gather(
             *[obj.get_asset_info(pair.split(':')[1]) for obj, pair in zip(assets_objs, chain)]
         )
+        [await asset_obj.close() for asset_obj in assets_objs]
 
         fees = [str(Decimal(fee['options']['market_fee_percent']) / Decimal(100))
                 for fee in raw_chain_fees]
-
         data = '{} {} {} {} {} {}'.format(*itertools.chain(chain, fees))
         await self.write_data(data, self._new_file, self._lock)
         self._fees_count += 3
 
-        [await asset_obj.close() for asset_obj in assets_objs]
+        ChainAndFees = namedtuple('ChainAndFees', ['chain', 'fees'])
+        ChainAndFees.chain = tuple(chain)
+        ChainAndFees.fees = tuple(fees)
+
+        return ChainAndFees
 
     def get_chains_fees(self):
         chains = self._get_chains(self._file_with_chains)
         self._chains_num = len(chains)
-        tasks = [self._ioloop.create_task(self.foo(chain)) for chain in chains]
+        tasks = [self._ioloop.create_task(self._get_chain_fees(chain)) for chain in chains]
 
         try:
-            self._ioloop.run_until_complete(asyncio.gather(*tasks))
+            chains_and_fees = self._ioloop.run_until_complete(asyncio.gather(*tasks))
         except Exception as err:
-            self.actions_when_error(err, self._logger, self._old_file)
+            self.actions_when_errors_with_read_data(err, self._logger, self._old_file)
         else:
             utils.remove_file(self._old_file)
             self._logger.info(f'Successfully got {self._fees_count} fees for {self._chains_num} chains.')
 
-            return self._new_file
+            return chains_and_fees

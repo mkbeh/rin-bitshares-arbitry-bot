@@ -54,6 +54,12 @@ class BaseRin:
             return retrieve_file
 
     @staticmethod
+    def actions_when_errors_with_read_data(msg, logger, file):
+        logger.warning(msg)
+
+        return utils.read_file(file)
+
+    @staticmethod
     def _split_chain_on_pairs(seq):
         for el in seq:
             yield el.split(' ')

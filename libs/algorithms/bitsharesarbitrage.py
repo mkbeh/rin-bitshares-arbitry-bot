@@ -2,15 +2,16 @@
 import array
 import asyncio
 
+from datetime import datetime as dt
 from decimal import Decimal, localcontext, ROUND_HALF_UP
 
 from libs.baserin import BaseRin
-from libs.limitsandfees.limitsandfees import GatewayPairFee, VolLimits, DefaultBTSFee
+from libs.limitsandfees.limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
 from libs.aiopybitshares.market import Market
+from const import DATA_UPDATE_TIME
 from libs import utils
 
 from pprint import pprint
-from datetime import datetime
 
 
 # start = datetime.now()
@@ -22,8 +23,12 @@ from datetime import datetime
 class BitsharesArbitrage(BaseRin):
     def __init__(self, loop):
         self._ioloop = loop
-        self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
-                                 'output/chains-05-01-2019-15-35-09.lst'
+        # self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
+        #                          'output/chains-05-01-2019-15-35-09.lst'
+        # self._file_with_bts_default_fee = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
+        #                                   'output/btsdefaultfee-17-01-2019-16-09-41.lst'
+        # self._file_with_vol_limits = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
+        #                              'output/vollimits-16-01-2019-21-35-01.lst'
 
     @staticmethod
     async def split_pair_raw_on_assets(pair):
@@ -73,6 +78,7 @@ class BitsharesArbitrage(BaseRin):
             return order_data
 
         pairs_orders_data = await asyncio.gather(
+            # здесь по идее можно вместо генератора списка использовать просто генераторное выражение.
             *[get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_markets)]
         )
 
@@ -81,6 +87,7 @@ class BitsharesArbitrage(BaseRin):
         return arr
 
     async def _algorithm_testing(self, chain):
+        # здесь по идее можно вместо генератора списка использовать просто генераторное выражение.
         markets = [Market() for _ in range(len(chain))]
         [await market.alternative_connect() for market in markets]
         arr = await self._get_orders_data_for_chain(chain, markets)
@@ -89,6 +96,30 @@ class BitsharesArbitrage(BaseRin):
         [await market.close() for market in markets]
 
     def start_arbitrage(self):
-        chains = self._get_chains(self._file_with_chains)
-        tasks = [self._ioloop.create_task(self._algorithm_testing(chain)) for chain in chains]
-        self._ioloop.run_until_complete(asyncio.gather(*tasks))
+        # TODO сделать сразу получение данных так как оно будет в проде.
+        # TODO бесконечный цикл со временем требуется перенести в метод algorithm testing.
+        # TODO передавать доп. параметром % по парам.
+        # TODO заменить в каждом модуле возвращение файла на возвращение значений.
+
+        while True:
+            # time_start = dt.now()
+            # time_delta = 0
+
+            """
+            Здесь выполняется следующее:
+            1. Получение цепочек с комиссиями.
+            2. Дефолтная комиссия за ордер 
+            3. Объемы лимитов.
+            """
+            chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_fees()
+            print(chains)
+
+            break
+            # chains = self._get_chains(self._file_with_chains)
+
+            # while time_delta < DATA_UPDATE_TIME:
+            #     tasks = [self._ioloop.create_task(self._algorithm_testing(chain)) for chain in chains]
+            #     self._ioloop.run_until_complete(asyncio.gather(*tasks))
+            #
+            #     time_end = dt.now()
+            #     time_delta = (time_end - time_start).seconds / 3600

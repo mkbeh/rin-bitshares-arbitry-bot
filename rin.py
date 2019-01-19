@@ -16,9 +16,7 @@ class Rin:
         ioloop = asyncio.get_event_loop()
 
         try:
-            # BitsharesArbitrage(ioloop).start_arbitrage()
-            # DefaultBTSFee(ioloop).run()
-            pass
+            BitsharesArbitrage(ioloop).start_arbitrage()
         finally:
             ioloop.close()
 

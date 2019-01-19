@@ -26,12 +26,6 @@ class BitsharesArbitrage(BaseRin):
 
     def __init__(self, loop):
         self._ioloop = loop
-        # self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
-        #                          'output/chains-05-01-2019-15-35-09.lst'
-        # self._file_with_bts_default_fee = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
-        #                                   'output/btsdefaultfee-17-01-2019-16-09-41.lst'
-        # self._file_with_vol_limits = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
-        #                              'output/vollimits-16-01-2019-21-35-01.lst'
 
     @staticmethod
     async def split_pair_raw_on_assets(pair):
@@ -115,8 +109,8 @@ class BitsharesArbitrage(BaseRin):
             3. Объемы лимитов.
             """
             chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
-            self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
-            print(self._vol_limits)
+            print(chains[0].chain, chains[0].fees)
+            # self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
 
             break
             # chains = self._get_chains(self._file_with_chains)

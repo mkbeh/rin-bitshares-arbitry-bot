@@ -158,8 +158,8 @@ class ChainsWithGatewayPairFees(BaseRin):
         )
         [await asset_obj.close() for asset_obj in assets_objs]
 
-        fees = (str(Decimal(fee['options']['market_fee_percent']) / Decimal(100))
-                for fee in raw_chain_fees)
+        fees = [str(Decimal(fee['options']['market_fee_percent']) / Decimal(100))
+                for fee in raw_chain_fees]
 
         return fees
 
@@ -171,10 +171,8 @@ class ChainsWithGatewayPairFees(BaseRin):
         self._fees_count += 3
 
         ChainAndFees = namedtuple('ChainAndFees', ['chain', 'fees'])
-        ChainAndFees.chain = tuple(chain)
-        ChainAndFees.fees = tuple(fees)
 
-        return ChainAndFees
+        return ChainAndFees(tuple(chain), tuple(fees))
 
     def get_chains_with_fees(self):
         chains = self._get_chains(self._file_with_chains)
@@ -184,7 +182,12 @@ class ChainsWithGatewayPairFees(BaseRin):
         try:
             chains_and_fees = self._ioloop.run_until_complete(asyncio.gather(*tasks))
         except Exception as err:
-            return self.actions_when_errors_with_read_data(err, self._logger, self._old_file)
+            str_chains_and_fees = self.actions_when_errors_with_read_data(err, self._logger, self._old_file)
+            chains_and_fees = str_chains_and_fees.split(' ')
+            ChainAndFees = namedtuple('ChainAndFees', ['chain', 'fees'])
+
+            return ChainAndFees(tuple(chains_and_fees[:3]), tuple(chains_and_fees[3:]))
+
         else:
             utils.remove_file(self._old_file)
             self._logger.info(f'Successfully got {self._fees_count} fees for {self._chains_num} chains.')

@@ -26,6 +26,20 @@ class VolLimits(BaseRin):
     def __init__(self, loop):
         self._ioloop = loop
 
+    @staticmethod
+    async def _calculate_limits(prices):
+        limits = {}
+
+        for i, (key, val) in enumerate(VOLS_LIMITS.items()):
+            if key == 'USD':
+                limits[key] = val
+                break
+
+            limits[key] = float(Decimal(val) * Decimal(prices[i]).
+                                quantize(Decimal('0.00000000'), rounding=ROUND_HALF_UP))
+
+        return limits
+
     async def _get_asset_price(self, base_asset, quote_asset, logger):
         response = await self.get_data(self._url.format(base_asset, quote_asset),
                                        logger=logger, delay=1, json=True)
@@ -37,38 +51,35 @@ class VolLimits(BaseRin):
 
     async def _get_limits(self):
         assets = VOLS_LIMITS.keys()
-
         prices = await asyncio.gather(
             *[self._get_asset_price(asset, 'USD', self._logger) for asset in assets if asset != 'USD']
         )
-
-        limits = {}
-
-        for i, (key, val) in enumerate(VOLS_LIMITS.items()):
-            if key == 'USD':
-                limits[key] = val
-                break
-
-            limits[key] = float(Decimal(val) * Decimal(prices[i]).
-                                quantize(Decimal('0.00'), rounding=ROUND_HALF_UP))
+        limits = await self._calculate_limits(prices)
 
         self._vol_limits = '{}:{} {}:{} {}:{} {}:{}'\
             .format(*itertools.chain(*limits.items()))
-
         await self.write_data(json.dumps(limits), self._new_file, self._lock)
 
-    def run(self):
+        VolumeLimits = namedtuple('VolLimits', ['BTS', 'CNY', 'BTC', 'USD'])
+
+        return VolumeLimits._make(limits.values())
+
+    def get_volume_limits(self):
         tasks = [self._ioloop.create_task(self._get_limits())]
 
         try:
-            self._ioloop.run_until_complete(asyncio.gather(*tasks))
+            vol_limits = self._ioloop.run_until_complete(asyncio.gather(*tasks))[0]
         except Exception as err:
-            self.actions_when_error(err, self._logger, self._old_file)
+            vol_limits = json.loads(self.actions_when_errors_with_read_data(err, self._logger, self._old_file))
+            VolumeLimits = namedtuple('VolLimits', ['BTS', 'CNY', 'BTC', 'USD'])
+
+            return VolumeLimits._make(vol_limits.values())
+
         else:
             utils.remove_file(self._old_file)
             self._logger.info(f'Successfully got prices and calculate limits: {self._vol_limits}')
 
-            return self._new_file
+            return vol_limits
 
 
 class DefaultBTSFee(VolLimits):
@@ -107,7 +118,7 @@ class DefaultBTSFee(VolLimits):
 
         await self.write_data(json.dumps(final_fees), self._new_file, self._lock)
 
-    def run(self):
+    def get_converted_default_bts_fee(self):
         tasks = [self._ioloop.create_task(self._get_converted_order_fee())]
 
         try:
@@ -173,7 +184,7 @@ class ChainsWithGatewayPairFees(BaseRin):
         try:
             chains_and_fees = self._ioloop.run_until_complete(asyncio.gather(*tasks))
         except Exception as err:
-            self.actions_when_errors_with_read_data(err, self._logger, self._old_file)
+            return self.actions_when_errors_with_read_data(err, self._logger, self._old_file)
         else:
             utils.remove_file(self._old_file)
             self._logger.info(f'Successfully got {self._fees_count} fees for {self._chains_num} chains.')

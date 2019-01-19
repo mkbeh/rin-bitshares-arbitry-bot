@@ -21,6 +21,9 @@ from pprint import pprint
 
 
 class BitsharesArbitrage(BaseRin):
+    _vol_limits = None
+    _bts_default_fee = None
+
     def __init__(self, loop):
         self._ioloop = loop
         # self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
@@ -107,12 +110,13 @@ class BitsharesArbitrage(BaseRin):
 
             """
             Здесь выполняется следующее:
-            1. Получение цепочек с комиссиями.
+            1. Получение цепочек с комиссиями (+)
             2. Дефолтная комиссия за ордер 
             3. Объемы лимитов.
             """
             chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
-            print(chains)
+            self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
+            print(self._vol_limits)
 
             break
             # chains = self._get_chains(self._file_with_chains)

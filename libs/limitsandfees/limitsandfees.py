@@ -188,8 +188,10 @@ class ChainsWithGatewayPairFees(BaseRin):
             chains_and_fees = str_chains_and_fees.split(' ')
             ChainAndFees = namedtuple('ChainAndFees', ['chain', 'fees'])
 
-            # TODO исправить картеж на array для fee.
-            return ChainAndFees(tuple(chains_and_fees[:3]), tuple(chains_and_fees[3:]))
+            arr = array.array('f')
+            arr.extend(map(lambda x: float(x), chains_and_fees[3:]))
+
+            return ChainAndFees(tuple(chains_and_fees[:3]), arr)
 
         else:
             utils.remove_file(self._old_file)

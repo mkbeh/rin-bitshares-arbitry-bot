@@ -106,10 +106,11 @@ class BitsharesArbitrage(BaseRin):
             Здесь выполняется следующее:
             1. Получение цепочек с комиссиями (+)
             2. Дефолтная комиссия за ордер 
-            3. Объемы лимитов.
+            3. Объемы лимитов (+)
             """
             chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
             print(chains[0].chain, chains[0].fees)
+
             # self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
 
             break

@@ -3,6 +3,7 @@ import logging
 import json
 import asyncio
 import itertools
+import array
 
 from decimal import Decimal, ROUND_HALF_UP
 from collections import namedtuple
@@ -158,10 +159,11 @@ class ChainsWithGatewayPairFees(BaseRin):
         )
         [await asset_obj.close() for asset_obj in assets_objs]
 
-        fees = [str(Decimal(fee['options']['market_fee_percent']) / Decimal(100))
-                for fee in raw_chain_fees]
+        arr = array.array('f')
+        [arr.append(float(fee['options']['market_fee_percent']) / float(100))
+         for fee in raw_chain_fees]
 
-        return fees
+        return arr
 
     async def _get_chain_fees(self, chain):
         fees = await self._get_fees_for_chain(chain)
@@ -172,7 +174,7 @@ class ChainsWithGatewayPairFees(BaseRin):
 
         ChainAndFees = namedtuple('ChainAndFees', ['chain', 'fees'])
 
-        return ChainAndFees(tuple(chain), tuple(fees))
+        return ChainAndFees(tuple(chain), fees)
 
     def get_chains_with_fees(self):
         chains = self._get_chains(self._file_with_chains)
@@ -186,6 +188,7 @@ class ChainsWithGatewayPairFees(BaseRin):
             chains_and_fees = str_chains_and_fees.split(' ')
             ChainAndFees = namedtuple('ChainAndFees', ['chain', 'fees'])
 
+            # TODO исправить картеж на array для fee.
             return ChainAndFees(tuple(chains_and_fees[:3]), tuple(chains_and_fees[3:]))
 
         else:

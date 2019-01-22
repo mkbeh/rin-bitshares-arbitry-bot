@@ -32,13 +32,13 @@ class BitsharesArbitrage(BaseRin):
         return pair.split(':')
 
     @staticmethod
-    async def run_chain_data_thorough_algo(arr, fees, vol_limit, bts_default_fee):
+    async def run_chain_data_thorough_algo(arr, fees, vol_limit, bts_default_fee, chain):
         price0, quote0, base0, price1, quote1, base1, price2, quote2, base2 = arr
         fee0, fee1, fee2 = fees
 
         if base0 > vol_limit:
             base0 = vol_limit
-            quote0 = Decimal(base1) / Decimal(price1)
+            quote0 = Decimal(base0) / Decimal(price0)
 
         if quote0 > base1:
             quote0 = base1
@@ -67,6 +67,7 @@ class BitsharesArbitrage(BaseRin):
         new_quote2 = Decimal(quote2) - Decimal(base2) / Decimal(price2) * Decimal(fee2) / Decimal(100)
 
         if base0 < (Decimal(new_quote2) - Decimal(bts_default_fee)):
+            print(chain)
             print(base0, (Decimal(new_quote2) - Decimal(bts_default_fee)))
 
             profit = Decimal(new_quote2) - Decimal(base0)
@@ -109,7 +110,7 @@ class BitsharesArbitrage(BaseRin):
 
         while time_delta < DATA_UPDATE_TIME:
             arr = await self._get_orders_data_for_chain(chain, markets)
-            await self.run_chain_data_thorough_algo(arr, assets_fees, asset_vol_limit, bts_default_fee)
+            await self.run_chain_data_thorough_algo(arr, assets_fees, asset_vol_limit, bts_default_fee, chain)
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600
@@ -124,7 +125,7 @@ class BitsharesArbitrage(BaseRin):
             self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
             self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
 
-            tasks = [self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains[:1]]
+            tasks = [self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains]
             self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
             break

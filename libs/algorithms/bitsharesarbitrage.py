@@ -3,7 +3,7 @@ import array
 import asyncio
 
 from datetime import datetime as dt
-from decimal import Decimal, localcontext, ROUND_HALF_UP
+from decimal import Decimal
 
 from libs.baserin import BaseRin
 from libs.limitsandfees.limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
@@ -22,7 +22,7 @@ from pprint import pprint
 
 class BitsharesArbitrage(BaseRin):
     _vol_limits = None
-    _bts_default_fee = None     # BTS |CNY | BRIDGE.BTC | USD
+    _bts_default_fee = None
 
     def __init__(self, loop):
         self._ioloop = loop
@@ -34,10 +34,11 @@ class BitsharesArbitrage(BaseRin):
     @staticmethod
     async def run_chain_data_thorough_algo(arr, fees, vol_limit, bts_default_fee):
         price0, quote0, base0, price1, quote1, base1, price2, quote2, base2 = arr
+        fee0, fee1, fee2 = fees
 
         if base0 > vol_limit:
             base0 = vol_limit
-            quote0 = base1 / price1
+            quote0 = Decimal(base1) / Decimal(price1)
 
         if quote0 > base1:
             quote0 = base1
@@ -57,10 +58,18 @@ class BitsharesArbitrage(BaseRin):
             base2 = quote1
             quote2 = Decimal(base2) / Decimal(price2)
 
-        if base0 < (quote2 - bts_default_fee):
-            print(base0, (quote2 - bts_default_fee))
+        new_quote0 = Decimal(quote0) - Decimal(quote0) * Decimal(fee0) / Decimal(100)
+        base1 = new_quote0
+        quote1 = Decimal(base1) / Decimal(price1)
+        new_quote1 = Decimal(quote1) - Decimal(base1) / Decimal(price1) * Decimal(fee1) / Decimal(100)
+        base2 = new_quote1
+        quote2 = Decimal(base2) / Decimal(price2)
+        new_quote2 = Decimal(quote2) - Decimal(base2) / Decimal(price2) * Decimal(fee2) / Decimal(100)
 
-            profit = Decimal(quote2) - Decimal(base0)
+        if base0 < (Decimal(new_quote2) - Decimal(bts_default_fee)):
+            print(base0, (Decimal(new_quote2) - Decimal(bts_default_fee)))
+
+            profit = Decimal(new_quote2) - Decimal(base0)
             print(f'Profit = {profit}! Set orders!\n')
 
     @staticmethod

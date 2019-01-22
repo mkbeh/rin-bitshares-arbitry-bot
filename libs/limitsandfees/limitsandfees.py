@@ -135,7 +135,7 @@ class DefaultBTSFee(VolLimits):
 
 class ChainsWithGatewayPairFees(BaseRin):
     _url = 'https://wallet.bitshares.org/#/market/{}_{}'
-    _logger = logging.getLogger('GatewayPairFee')
+    _logger = logging.getLogger('ChainsWithGatewayPairFees')
     _lock = asyncio.Lock()
     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'chains_with_fees'))
     _date = utils.get_today_date()

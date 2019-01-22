@@ -32,7 +32,7 @@ class VolLimits(BaseRin):
         limits = {}
 
         for i, (key, val) in enumerate(VOLS_LIMITS.items()):
-            if key == 'USD':
+            if key == '1.3.121':
                 limits[key] = val
                 break
 
@@ -53,15 +53,15 @@ class VolLimits(BaseRin):
     async def _get_limits(self):
         assets = VOLS_LIMITS.keys()
         prices = await asyncio.gather(
-            *[self._get_asset_price(asset, 'USD', self._logger) for asset in assets if asset != 'USD']
+            *[self._get_asset_price(asset, '1.3.121', self._logger) for asset in assets if asset != '1.3.121']
         )
-        limits = await self._calculate_limits(prices)
 
+        vol_limits = await self._calculate_limits(prices)
         self._vol_limits = '{}:{} {}:{} {}:{} {}:{}'\
-            .format(*itertools.chain(*limits.items()))
-        await self.write_data(json.dumps(limits), self._new_file, self._lock)
+            .format(*itertools.chain(*vol_limits.items()))
+        await self.write_data(json.dumps(vol_limits), self._new_file, self._lock)
 
-        return limits
+        return vol_limits
 
     def get_volume_limits(self):
         tasks = [self._ioloop.create_task(self._get_limits())]
@@ -70,7 +70,7 @@ class VolLimits(BaseRin):
             vol_limits = self._ioloop.run_until_complete(asyncio.gather(*tasks))[0]
         except Exception as err:
             return json.loads(
-                self.actions_when_errors_with_read_data(err, self._logger, self._old_file)
+                self.actions_when_errors_with_read_data(err, self._logger, self._old_file)[0]
             )
 
         else:

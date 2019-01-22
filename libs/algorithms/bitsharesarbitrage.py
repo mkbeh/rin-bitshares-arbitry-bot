@@ -32,8 +32,12 @@ class BitsharesArbitrage(BaseRin):
         return pair.split(':')
 
     @staticmethod
-    async def run_chain_data_thorough_algo(arr, fees):
+    async def run_chain_data_thorough_algo(arr, fees, vol_limit):
         price0, quote0, base0, price1, quote1, base1, price2, quote2, base2 = arr
+
+        if base0 > vol_limit:
+            base0 = vol_limit
+            quote0 = base1 / price1
 
         if quote0 > base1:
             quote0 = base1
@@ -78,6 +82,11 @@ class BitsharesArbitrage(BaseRin):
 
         return arr
 
+    async def _get_main_asset_vol_limit(self, pair):
+        return self._vol_limits.get(
+            pair.split(':')[0]
+        )
+
     async def _algorithm_testing(self, chain, assets_fees):
         markets = [Market() for _ in range(len(chain))]
         [await market.alternative_connect() for market in markets]
@@ -85,9 +94,11 @@ class BitsharesArbitrage(BaseRin):
         time_start = dt.now()
         time_delta = 0
 
+        asset_vol_limit = await self._get_main_asset_vol_limit(chain[0])
+
         while time_delta < DATA_UPDATE_TIME:
             arr = await self._get_orders_data_for_chain(chain, markets)
-            await self.run_chain_data_thorough_algo(arr, assets_fees)
+            await self.run_chain_data_thorough_algo(arr, assets_fees, asset_vol_limit)
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600

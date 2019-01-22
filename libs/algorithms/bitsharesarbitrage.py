@@ -21,7 +21,7 @@ from pprint import pprint
 
 
 class BitsharesArbitrage(BaseRin):
-    _vol_limits = None
+    _vol_limits = None          # BTS |CNY | BRIDGE.BTC | USD
     _bts_default_fee = None     # BTS |CNY | BRIDGE.BTC | USD
 
     def __init__(self, loop):

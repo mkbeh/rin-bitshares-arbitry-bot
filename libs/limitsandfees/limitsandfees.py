@@ -95,16 +95,15 @@ class DefaultBTSFee(VolLimits):
 
     async def _get_converted_order_fee(self):
         assets = VOLS_LIMITS.keys()
-
         prices = await asyncio.gather(
-            *[self._get_asset_price(asset, 'BTS', self._logger) for asset in assets if asset != 'BTS']
+            *[self._get_asset_price(asset, '1.3.0', self._logger) for asset in assets if asset != '1.3.0']
         )
-
         prices.insert(0, self._order_create_fee)
+
         final_fees = {}
 
         for asset, price in zip(assets, prices):
-            if asset == 'BTS':
+            if asset == '1.3.0':
                 final_fees[asset] = price
                 continue
 
@@ -115,22 +114,17 @@ class DefaultBTSFee(VolLimits):
             .format(*itertools.chain(*final_fees.items()))
         await self.write_data(json.dumps(final_fees), self._new_file, self._lock)
 
-        arr = array.array('f')
-        arr.extend(final_fees.values())
-
-        return arr
+        return final_fees
 
     def get_converted_default_bts_fee(self):
         tasks = [self._ioloop.create_task(self._get_converted_order_fee())]
 
         try:
-            converted_fees = self._ioloop.run_until_complete(asyncio.gather(*tasks))
+            converted_fees = self._ioloop.run_until_complete(asyncio.gather(*tasks))[0]
         except Exception as err:
-            converted_fees = json.loads(self.actions_when_errors_with_read_data(err, self._logger, self._old_file))
-            arr = array.array('f')
-            arr.extend(converted_fees.values())
-
-            return arr
+            return json.loads(
+                self.actions_when_errors_with_read_data(err, self._logger, self._old_file)[0]
+            )
 
         else:
             utils.remove_file(self._old_file)

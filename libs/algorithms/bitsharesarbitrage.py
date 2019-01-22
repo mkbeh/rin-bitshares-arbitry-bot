@@ -32,7 +32,7 @@ class BitsharesArbitrage(BaseRin):
         return pair.split(':')
 
     @staticmethod
-    async def run_chain_data_thorough_algo(arr, fees, vol_limit):
+    async def run_chain_data_thorough_algo(arr, fees, vol_limit, bts_default_fee):
         price0, quote0, base0, price1, quote1, base1, price2, quote2, base2 = arr
 
         if base0 > vol_limit:
@@ -57,8 +57,8 @@ class BitsharesArbitrage(BaseRin):
             base2 = quote1
             quote2 = Decimal(base2) / Decimal(price2)
 
-        if base0 < quote2:
-            print(base0, quote2)
+        if base0 < (quote2 - bts_default_fee):
+            print(base0, (quote2 - bts_default_fee))
 
             profit = Decimal(quote2) - Decimal(base0)
             print(f'Profit = {profit}! Set orders!\n')
@@ -82,8 +82,9 @@ class BitsharesArbitrage(BaseRin):
 
         return arr
 
-    async def _get_main_asset_vol_limit(self, pair):
-        return self._vol_limits.get(
+    @staticmethod
+    async def _get_fee_or_limit(data_dict, pair):
+        return data_dict.get(
             pair.split(':')[0]
         )
 
@@ -94,11 +95,12 @@ class BitsharesArbitrage(BaseRin):
         time_start = dt.now()
         time_delta = 0
 
-        asset_vol_limit = await self._get_main_asset_vol_limit(chain[0])
+        asset_vol_limit = await self._get_fee_or_limit(self._vol_limits, chain[0])
+        bts_default_fee = await self._get_fee_or_limit(self._bts_default_fee, chain[0])
 
         while time_delta < DATA_UPDATE_TIME:
             arr = await self._get_orders_data_for_chain(chain, markets)
-            await self.run_chain_data_thorough_algo(arr, assets_fees, asset_vol_limit)
+            await self.run_chain_data_thorough_algo(arr, assets_fees, asset_vol_limit, bts_default_fee)
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600
@@ -109,12 +111,11 @@ class BitsharesArbitrage(BaseRin):
 
     def start_arbitrage(self):
         while True:
-            # chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
-            # self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
+            chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
+            self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
             self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
-            print(self._bts_default_fee)
 
-            # tasks = [self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains[:1]]
-            # self._ioloop.run_until_complete(asyncio.gather(*tasks))
+            tasks = [self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains[:1]]
+            self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
             break

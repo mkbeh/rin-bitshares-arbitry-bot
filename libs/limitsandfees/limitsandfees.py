@@ -116,21 +116,30 @@ class DefaultBTSFee(VolLimits):
 
         self._fees = '{}:{} {}:{} {}:{} {}:{}' \
             .format(*itertools.chain(*final_fees.items()))
-
         await self.write_data(json.dumps(final_fees), self._new_file, self._lock)
+
+        arr = array.array('f')
+        arr.extend(final_fees.values())
+
+        return arr
 
     def get_converted_default_bts_fee(self):
         tasks = [self._ioloop.create_task(self._get_converted_order_fee())]
 
         try:
-            self._ioloop.run_until_complete(asyncio.gather(*tasks))
+            converted_fees = self._ioloop.run_until_complete(asyncio.gather(*tasks))
         except Exception as err:
-            self.actions_when_error(err, self._logger, self._old_file)
+            converted_fees = json.loads(self.actions_when_errors_with_read_data(err, self._logger, self._old_file))
+            arr = array.array('f')
+            arr.extend(converted_fees.values())
+
+            return arr
+
         else:
             utils.remove_file(self._old_file)
             self._logger.info(f'Successfully got prices and calculate fees: {self._fees}')
 
-            return self._new_file
+            return converted_fees
 
 
 class ChainsWithGatewayPairFees(BaseRin):

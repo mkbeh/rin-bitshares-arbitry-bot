@@ -22,7 +22,7 @@ from pprint import pprint
 
 class BitsharesArbitrage(BaseRin):
     _vol_limits = None
-    _bts_default_fee = None
+    _bts_default_fee = None     # BTS |CNY | BRIDGE.BTC | USD
 
     def __init__(self, loop):
         self._ioloop = loop
@@ -93,7 +93,6 @@ class BitsharesArbitrage(BaseRin):
         [await market.close() for market in markets]
 
     def start_arbitrage(self):
-        # TODO сделать сразу получение данных так как оно будет в проде.
         # TODO бесконечный цикл со временем требуется перенести в метод algorithm testing.
         # TODO передавать доп. параметром % по парам.
         # TODO заменить в каждом модуле возвращение файла на возвращение значений.
@@ -109,9 +108,8 @@ class BitsharesArbitrage(BaseRin):
             3. Объемы лимитов (+)
             """
             chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
-            print(chains[0].chain, chains[0].fees)
-
-            # self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
+            self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
+            self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
 
             break
             # chains = self._get_chains(self._file_with_chains)

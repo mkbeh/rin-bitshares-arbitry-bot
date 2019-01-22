@@ -61,10 +61,7 @@ class VolLimits(BaseRin):
             .format(*itertools.chain(*limits.items()))
         await self.write_data(json.dumps(limits), self._new_file, self._lock)
 
-        arr = array.array('f')
-        arr.extend(limits.values())
-
-        return arr
+        return limits
 
     def get_volume_limits(self):
         tasks = [self._ioloop.create_task(self._get_limits())]
@@ -72,11 +69,9 @@ class VolLimits(BaseRin):
         try:
             vol_limits = self._ioloop.run_until_complete(asyncio.gather(*tasks))[0]
         except Exception as err:
-            vol_limits = json.loads(self.actions_when_errors_with_read_data(err, self._logger, self._old_file))
-            arr = array.array('f')
-            arr.extend(vol_limits.values())
-
-            return arr
+            return json.loads(
+                self.actions_when_errors_with_read_data(err, self._logger, self._old_file)
+            )
 
         else:
             utils.remove_file(self._old_file)

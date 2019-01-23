@@ -108,10 +108,11 @@ class ChainsCreator(BaseRin):
                      for asset in self._main_assets]
             self._ioloop.run_until_complete(asyncio.wait(tasks))
 
+        except Exception as err:
+            self.actions_when_error(err, self._logger, self._old_file)
+
+        else:
             utils.remove_file(self._old_file)
             self._logger.info(f'Created: {self._chains_count} chains.\n')
 
             return self._new_file
-
-        except Exception as err:
-            self.actions_when_error(err, self._logger, self._old_file)

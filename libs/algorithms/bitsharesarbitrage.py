@@ -123,11 +123,11 @@ class BitsharesArbitrage(BaseRin):
         while True:
             try:
                 chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
-                # self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
-                # self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
-                #
-                # tasks = [self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains]
-                # self._ioloop.run_until_complete(asyncio.gather(*tasks))
+                self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
+                self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
+
+                tasks = [self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains]
+                self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
             except Exception as err:
                 pass

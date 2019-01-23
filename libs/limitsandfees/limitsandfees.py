@@ -143,11 +143,10 @@ class ChainsWithGatewayPairFees(BaseRin):
 
     def __init__(self, loop):
         self._ioloop = loop
-        self._file_with_chains = ChainsCreator(self._ioloop)
-        # self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
-        #                          'output/chains-05-01-2019-15-35-09.lst'
+        # self._file_with_chains = ChainsCreator(self._ioloop).start_creating_chains()
+        self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
+                                 'output/chains-23-01-2019-21-22-47.lst'
         self._fees_count = 0
-        self._chains_num = None
 
     @staticmethod
     async def _get_fees_for_chain(chain):
@@ -178,7 +177,7 @@ class ChainsWithGatewayPairFees(BaseRin):
 
     def get_chains_with_fees(self):
         chains = self._get_chains(self._file_with_chains)
-        self._chains_num = len(chains)
+        chains_num = len(chains)
         tasks = [self._ioloop.create_task(self._get_chain_fees(chain)) for chain in chains]
 
         try:
@@ -195,6 +194,6 @@ class ChainsWithGatewayPairFees(BaseRin):
 
         else:
             utils.remove_file(self._old_file)
-            self._logger.info(f'Successfully got {self._fees_count} fees for {self._chains_num} chains.')
+            self._logger.info(f'Successfully got {self._fees_count} fees for {chains_num} chains.')
 
             return chains_and_fees

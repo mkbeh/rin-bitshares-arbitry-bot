@@ -43,7 +43,7 @@ class BTSPriceParser(BaseRin):
         methods = [self._get_price_from_node, self._parse_price_from_site]
 
         for method in methods:
-            price = method()
+            price = await method()
 
             if price:
                 await self.write_data(str(price), self._new_file, self._lock)

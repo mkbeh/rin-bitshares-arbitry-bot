@@ -23,7 +23,7 @@ class BTSPriceParser(BaseRin):
         self.ioloop = loop
 
     async def _get_price_from_node(self):
-        response = await self.get_data(self._node_url, self._logger, delay=2)
+        response = await self.get_data(self._node_url, self._logger, delay=2, json=True)
 
         try:
             return float(response['latest'])

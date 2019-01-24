@@ -26,6 +26,7 @@ class BitsharesArbitrage(BaseRin):
 
     def __init__(self, loop):
         self._ioloop = loop
+        self.chains_count = 0
 
     @staticmethod
     async def split_pair_raw_on_assets(pair):
@@ -79,7 +80,12 @@ class BitsharesArbitrage(BaseRin):
 
         async def get_order_data_for_pair(pair, market_gram):
             base_asset, quote_asset = pair.split(':')
-            raw_order_data = (await market_gram.get_order_book(base_asset, quote_asset, 'bids'))[0]
+
+            try:
+                raw_order_data = (await market_gram.get_order_book(base_asset, quote_asset, 'bids'))[0]
+            except IndexError:
+                return
+
             order_data = (float(data) for data in raw_order_data.values())
 
             return order_data
@@ -88,7 +94,10 @@ class BitsharesArbitrage(BaseRin):
             *(get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_markets))
         )
 
-        [arr.extend(pairs_orders_data[i]) for i in range(len(chain))]
+        try:
+            [arr.extend(pairs_orders_data[i]) for i in range(len(chain))]
+        except TypeError:
+            return
 
         return arr
 
@@ -110,6 +119,10 @@ class BitsharesArbitrage(BaseRin):
 
         while time_delta < DATA_UPDATE_TIME:
             arr = await self._get_orders_data_for_chain(chain, markets)
+
+            if not arr:
+                break
+
             await self.run_chain_data_thorough_algo(arr, assets_fees, asset_vol_limit, bts_default_fee, chain)
 
             time_end = dt.now()
@@ -121,14 +134,11 @@ class BitsharesArbitrage(BaseRin):
 
     def start_arbitrage(self):
         while True:
-            try:
-                chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
-                self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
-                self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
+            chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
+            self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
+            self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
 
-                tasks = [self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains]
-                self._ioloop.run_until_complete(asyncio.gather(*tasks))
+            tasks = (self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains)
+            self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
-            except Exception as err:
-                pass
             break

@@ -176,7 +176,7 @@ class ChainsWithGatewayPairFees(BaseRin):
         return ChainAndFees(tuple(chain), fees)
 
     def get_chains_with_fees(self):
-        chains = self._get_chains(self._file_with_chains)
+        chains = self.get_chains(self._file_with_chains)
         chains_num = len(chains)
         tasks = [self._ioloop.create_task(self._get_chain_fees(chain)) for chain in chains]
 

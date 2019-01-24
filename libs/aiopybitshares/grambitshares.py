@@ -34,10 +34,7 @@ class GramBitshares:
 
     async def call_method(self, method, *args):
         message = json.dumps({'id': 0, 'method': '{}'.format(method), 'params': [*args]})
+        await self._ws.send(message)
 
-        try:
-            await self._ws.send(message)
-            return await self._ws.recv()
+        return await self._ws.recv()
 
-        except websockets.ConnectionClosed:
-            await self.reconnect()

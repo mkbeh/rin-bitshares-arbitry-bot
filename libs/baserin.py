@@ -75,7 +75,7 @@ class BaseRin:
             for line in f:
                 yield line
 
-    def _get_chains(self, file):
+    def get_chains(self, file):
         return list(
             self._split_chain_on_pairs(
                 self._clear_each_str_in_seq(

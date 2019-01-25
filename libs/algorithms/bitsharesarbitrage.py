@@ -82,7 +82,7 @@ class BitsharesArbitrage(BaseRin):
             base_asset, quote_asset = pair.split(':')
 
             try:
-                raw_order_data = (await market_gram.get_order_book(base_asset, quote_asset, 'bids'))[0]
+                raw_order_data = (await market_gram.get_order_book(base_asset, quote_asset, 'asks'))[0]
             except IndexError:
                 return
 

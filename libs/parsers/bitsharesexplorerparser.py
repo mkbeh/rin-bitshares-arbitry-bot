@@ -56,7 +56,7 @@ class BitsharesExplorerParser(BaseRin):
             task = self._ioloop.create_task(self._get_valid_assets())
             assets_info = (self._ioloop.run_until_complete(asyncio.gather(task)))[0]
 
-            tasks = [self._ioloop.create_task(self._get_valid_pairs(asset_info)) for asset_info in assets_info]
+            tasks = (self._ioloop.create_task(self._get_valid_pairs(asset_info)) for asset_info in assets_info)
             self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
             utils.remove_file(self._old_file)

@@ -50,7 +50,7 @@ class BTSPriceParser(BaseRin):
                 return price
 
         return self.actions_when_error('Could not get BTS price in USD.', self._logger,
-                                self._old_file, value_from_file=True)
+                                       self._old_file, value_from_file=True)
 
     def get_bts_price_in_usd(self):
         task = self.ioloop.create_task(self._get_price())

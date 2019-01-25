@@ -78,11 +78,12 @@ class CryptofreshParser(BaseRin):
             assets = self._ioloop.run_until_complete(asyncio.gather(task))[0]
 
             if assets:
-                tasks = [self._ioloop.create_task(self.get_data(self._assets_url.format(asset), self._logger, delay=30))
-                         for asset in assets]
+                tasks = (self._ioloop.create_task(self.get_data(self._assets_url.format(asset), self._logger, delay=30))
+                         for asset in assets)
                 htmls = self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
-                tasks = [self._ioloop.create_task(self._get_valid_data(html_, PAIR_MIN_DAILY_VOLUME)) for html_ in htmls]
+                tasks = (self._ioloop.create_task(self._get_valid_data(html_, PAIR_MIN_DAILY_VOLUME))
+                         for html_ in htmls)
                 self._ioloop.run_until_complete(asyncio.wait(tasks))
 
                 utils.remove_file(self._old_file)

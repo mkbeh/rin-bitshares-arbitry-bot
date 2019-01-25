@@ -36,9 +36,10 @@ class BitsharesArbitrage(BaseRin):
     async def run_chain_data_thorough_algo(arr, fees, vol_limit, bts_default_fee, chain):
         price0, quote0, base0, price1, quote1, base1, price2, quote2, base2 = arr
         fee0, fee1, fee2 = fees
+        volume_limit, order_fee = vol_limit, bts_default_fee
 
-        if base0 > vol_limit:
-            base0 = vol_limit
+        if base0 > volume_limit:
+            base0 = volume_limit
             quote0 = Decimal(base0) / Decimal(price0)
 
         if quote0 > base1:
@@ -67,9 +68,9 @@ class BitsharesArbitrage(BaseRin):
         quote2 = Decimal(base2) / Decimal(price2)
         new_quote2 = Decimal(quote2) - Decimal(base2) / Decimal(price2) * Decimal(fee2) / Decimal(100)
 
-        if base0 < (Decimal(new_quote2) - Decimal(bts_default_fee)):
+        if base0 < (Decimal(new_quote2) - Decimal(order_fee)):
             print(chain)
-            print(base0, (Decimal(new_quote2) - Decimal(bts_default_fee)))
+            print(base0, (Decimal(new_quote2) - Decimal(order_fee)))
 
             profit = Decimal(new_quote2) - Decimal(base0)
             print(f'Profit = {profit}! Set orders!\n')

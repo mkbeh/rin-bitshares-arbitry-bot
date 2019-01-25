@@ -49,7 +49,7 @@ class BTSPriceParser(BaseRin):
                 await self.write_data(str(price), self._new_file, self._lock)
                 return price
 
-        self.actions_when_error('Could not get BTS price in USD.', self._logger,
+        return self.actions_when_error('Could not get BTS price in USD.', self._logger,
                                 self._old_file, value_from_file=True)
 
     def get_bts_price_in_usd(self):
@@ -59,16 +59,16 @@ class BTSPriceParser(BaseRin):
             price = self.ioloop.run_until_complete(asyncio.gather(task))
 
         except ValueError:
-            self.actions_when_error('Could not convert parsed price to float.',
-                                    self._logger, self._old_file, value_from_file=True)
+            return self.actions_when_error('Could not convert parsed price to float.',
+                                           self._logger, self._old_file, value_from_file=True)
         except AttributeError:
-            self.actions_when_error('Could not get price from html.',
-                                    self._logger, self._old_file, value_from_file=True)
+            return self.actions_when_error('Could not get price from html.',
+                                           self._logger, self._old_file, value_from_file=True)
         except TypeError:
-            self.actions_when_error('HTML data retrieval error.',
-                                    self._logger, self._old_file, value_from_file=True)
+            return self.actions_when_error('HTML data retrieval error.',
+                                           self._logger, self._old_file, value_from_file=True)
         except Exception as err:
-            self.actions_when_error(err, self._logger, self._old_file, value_from_file=True)
+            return self.actions_when_error(err, self._logger, self._old_file, value_from_file=True)
         else:
             utils.remove_file(self._old_file)
             self._logger.info(f'BTS price is ${price[0]}.')

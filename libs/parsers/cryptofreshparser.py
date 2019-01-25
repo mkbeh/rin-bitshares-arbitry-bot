@@ -97,7 +97,7 @@ class CryptofreshParser(BaseRin):
                 return self._old_file
 
         except TypeError:
-            self.actions_when_error('HTML data retrieval error.', self._logger, self._old_file)
+            return self.actions_when_error('HTML data retrieval error.', self._logger, self._old_file)
 
         except Exception as err:
-            self.actions_when_error(err, self._logger, self._old_file)
+            return self.actions_when_error(err, self._logger, self._old_file)

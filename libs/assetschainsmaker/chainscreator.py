@@ -109,7 +109,7 @@ class ChainsCreator(BaseRin):
             self._ioloop.run_until_complete(asyncio.wait(tasks))
 
         except Exception as err:
-            self.actions_when_error(err, self._logger, self._old_file)
+            return self.actions_when_error(err, self._logger, self._old_file)
 
         else:
             utils.remove_file(self._old_file)

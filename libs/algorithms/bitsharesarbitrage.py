@@ -69,6 +69,7 @@ class BitsharesArbitrage(BaseRin):
         new_quote2 = Decimal(quote2) - Decimal(base2) / Decimal(price2) * Decimal(fee2) / Decimal(100)
 
         if base0 < (Decimal(new_quote2) - Decimal(order_fee)):
+            print(chain)
             print(base0, (Decimal(new_quote2) - Decimal(order_fee)))
 
             profit = Decimal(new_quote2) - Decimal(base0)
@@ -118,15 +119,12 @@ class BitsharesArbitrage(BaseRin):
         bts_default_fee = await self._get_fee_or_limit(self._bts_default_fee, chain[0])
 
         while time_delta < DATA_UPDATE_TIME:
-            # start = dt.now()
             arr = await self._get_orders_data_for_chain(chain, markets)
 
             if not arr:
                 break
 
             await self.run_chain_data_thorough_algo(arr, assets_fees, asset_vol_limit, bts_default_fee, chain)
-            # end = dt.now()
-            # print('TIME', start, end)
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600

@@ -4,9 +4,9 @@ import asyncio
 
 from bs4 import BeautifulSoup
 
-from libs.baserin import BaseRin
-from libs import utils
-from const import WORK_DIR
+from src.libs.baserin import BaseRin
+from src.libs import utils
+from src.const import WORK_DIR
 
 
 class BTSPriceParser(BaseRin):

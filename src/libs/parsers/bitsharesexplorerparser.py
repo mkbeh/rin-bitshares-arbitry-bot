@@ -4,10 +4,10 @@ import asyncio
 
 from collections import namedtuple
 
-from libs.baserin import BaseRin
-from libs.parsers.btspriceparser import BTSPriceParser
-from libs import utils
-from const import OVERALL_MIN_DAILY_VOLUME, PAIR_MIN_DAILY_VOLUME, WORK_DIR
+from src.libs.baserin import BaseRin
+from .btspriceparser import BTSPriceParser
+from src.libs import utils
+from src.const import OVERALL_MIN_DAILY_VOLUME, PAIR_MIN_DAILY_VOLUME, WORK_DIR
 
 
 class BitsharesExplorerParser(BaseRin):

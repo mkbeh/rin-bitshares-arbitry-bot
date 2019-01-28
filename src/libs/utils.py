@@ -43,7 +43,7 @@ def get_dir_file(dir_, regex):
 
 
 def get_proj_dir(cwd=''):
-    return os.path.join(os.path.dirname(sys.modules['__main__'].__file__), cwd)
+    return os.path.join(os.path.dirname(sys.modules['__main__'].__file__), f'../{cwd}')
 
 
 def read_file(file):

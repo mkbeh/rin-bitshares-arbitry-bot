@@ -6,8 +6,8 @@ import asyncio
 import aiohttp
 import aiofiles
 
-from libs import utils
-from const import LOG_DIR, WORK_DIR
+from src.libs import utils
+from src.const import LOG_DIR, WORK_DIR
 
 
 class BaseRin:
@@ -37,10 +37,10 @@ class BaseRin:
 
                         return await resp.text('utf-8')
 
-            except aiohttp.client_exceptions.ClientConnectionError as err:
+            except aiohttp.ClientConnectionError as err:
                 logger.warning(err)
 
-            except aiohttp.client_exceptions.ServerTimeoutError as err:
+            except aiohttp.ServerTimeoutError as err:
                 logger.warning(err)
 
     @staticmethod

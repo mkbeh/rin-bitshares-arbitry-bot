@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
-
 from .grambitshares import GramBitshares, default_node
 
 

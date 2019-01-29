@@ -4,6 +4,7 @@ async-timeout==3.0.1
 attrs==18.2.0
 beautifulsoup4==4.7.1
 chardet==3.0.4
+Cython==0.29.3
 idna==2.8
 lxml==4.3.0
 multidict==4.5.2

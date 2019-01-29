@@ -1,7 +1,10 @@
 <component name="ProjectDictionaryState">
   <dictionary name="cyberpunk">
     <words>
+      <w>aiofiles</w>
+      <w>aiohttp</w>
       <w>algo</w>
+      <w>beautifulsoup</w>
       <w>btsdefaultfee</w>
       <w>configparser</w>
       <w>cryptofresh</w>
@@ -21,6 +24,7 @@
       <w>vals</w>
       <w>vollimits</w>
       <w>websocket</w>
+      <w>websockets</w>
     </words>
   </dictionary>
 </component>

@@ -1,10 +1,9 @@
 import src
 
 from setuptools import setup, find_packages
+from Cython.Build import cythonize
+from Cython.Distutils import build_ext
 
-
-# TODO Add
-#   1) cython compile
 
 def readme():
     with open('src/README.md') as f:
@@ -32,6 +31,7 @@ setup(
         'lxml==4.3.0',
         'websockets==7.0',
         'markdown',
+        'uvloop',
     ],
     include_package_data=True,
     packages=find_packages(),
@@ -43,4 +43,6 @@ setup(
             ['rin = src.rin:main']
     },
     zip_save=False,
+    ext_modules=cythonize(['src/*/*.pyx']),
+    cmdclass={'build_ext': build_ext},
 )

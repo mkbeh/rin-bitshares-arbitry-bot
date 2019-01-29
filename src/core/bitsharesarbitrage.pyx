@@ -10,6 +10,7 @@ from src.core.limitsandfees import ChainsWithGatewayPairFees, VolLimits, Default
 from src.aiopybitshares.market import Market
 from src.const import DATA_UPDATE_TIME
 
+import cython
 
 # start = datetime.now()
 # end = datetime.now()
@@ -24,6 +25,7 @@ class BitsharesArbitrage(BaseRin):
     def __init__(self, loop):
         self._ioloop = loop
         self.chains_count = 0
+        print('COMPILED', cython.compiled)
 
     @staticmethod
     async def split_pair_raw_on_assets(pair):

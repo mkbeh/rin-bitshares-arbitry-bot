@@ -5,7 +5,9 @@
       <w>aiohttp</w>
       <w>algo</w>
       <w>beautifulsoup</w>
+      <w>bitsharesarbitrage</w>
       <w>btsdefaultfee</w>
+      <w>cmdclass</w>
       <w>configparser</w>
       <w>cryptofresh</w>
       <w>cython</w>
@@ -21,6 +23,7 @@
       <w>pygram</w>
       <w>substr</w>
       <w>tbody</w>
+      <w>uvloop</w>
       <w>vals</w>
       <w>vollimits</w>
       <w>websocket</w>

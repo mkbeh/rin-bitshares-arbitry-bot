@@ -13,7 +13,7 @@ logger = logging.getLogger('Rin')
 class Rin:
     @staticmethod
     def start_arbitrage():
-        from src.libs.algorithms.bitsharesarbitrage import BitsharesArbitrage
+        from .core.bitsharesarbitrage import BitsharesArbitrage
 
         ioloop = asyncio.get_event_loop()
 
@@ -23,9 +23,13 @@ class Rin:
             ioloop.close()
 
 
-if __name__ == '__main__':
+def main():
     Rin().start_arbitrage()
     # try:
     #     Rin().start_arbitrage()
     # except Exception as err:
     #     logger.warning(err)
+
+
+if __name__ == '__main__':
+    main()

@@ -1,4 +1,4 @@
-from src.libs import utils
+from .additional import utils
 
 WORK_DIR = utils.get_proj_dir('output')
 LOG_DIR = utils.get_proj_dir('logs')

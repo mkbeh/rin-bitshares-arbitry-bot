@@ -8,10 +8,10 @@ import array
 from decimal import Decimal, ROUND_HALF_UP
 from collections import namedtuple
 
-from src.libs.baserin import BaseRin
-from src.libs.aiopybitshares.asset import Asset
+from src.additional.baserin import BaseRin
+from src.aiopybitshares.asset import Asset
 from src.const import VOLS_LIMITS, WORK_DIR, WALLET_URI
-from src.libs import utils
+from src.additional import utils
 
 
 class VolLimits(BaseRin):

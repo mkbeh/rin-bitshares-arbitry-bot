@@ -6,7 +6,7 @@ import asyncio
 import aiohttp
 import aiofiles
 
-from src.libs import utils
+from . import utils
 from src.const import LOG_DIR, WORK_DIR
 
 

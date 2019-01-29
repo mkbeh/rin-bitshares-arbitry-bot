@@ -5,9 +5,9 @@ import asyncio
 from datetime import datetime as dt
 from decimal import Decimal
 
-from src.libs.baserin import BaseRin
-from src.libs.limitsandfees.limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
-from src.libs.aiopybitshares.market import Market
+from src.additional.baserin import BaseRin
+from src.core.limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
+from src.aiopybitshares.market import Market
 from src.const import DATA_UPDATE_TIME
 
 

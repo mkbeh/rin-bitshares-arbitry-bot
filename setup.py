@@ -15,11 +15,12 @@ setup(
     name='Rin',
     author='mkbeh',
     description='Bitshares arbitry bot.',
+    long_description=readme(),
+    long_description_content_type="text/markdown",
     classifiers=[
         'License :: MIT License',
         'Programming Language :: Python :: 3.7',
       ],
-    long_description=readme(),
     version=src.__version__,
     license='MIT',
     platforms=['Linux'],

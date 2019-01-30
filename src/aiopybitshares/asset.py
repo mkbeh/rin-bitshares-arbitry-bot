@@ -7,8 +7,10 @@ class Asset(GramBitshares):
         super().__init__()
         self._gram = None
 
-    async def alternative_connect(self, ws_node=default_node):
-        self._gram = await super().alternative_connect(ws_node)
+    async def connect(self, ws_node=default_node):
+        self._gram = await super().connect(ws_node)
+
+        return self
 
     async def convert_name_to_id(self, asset_name, limit=1):
         data = await self._gram.call_method('list_assets', asset_name.upper(), limit)
@@ -22,7 +24,6 @@ class Asset(GramBitshares):
 
     async def get_asset_info(self, asset_name_or_id):
         data = await self._gram.call_method('get_asset', asset_name_or_id)
-        print(data)
 
         try:
             return data['result']

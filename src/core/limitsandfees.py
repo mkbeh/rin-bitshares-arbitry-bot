@@ -150,7 +150,7 @@ class ChainsWithGatewayPairFees(BaseRin):
     @staticmethod
     async def _get_fees_for_chain(chain):
         assets_objs = [Asset() for _ in range(len(chain))]
-        [await asset_obj.alternative_connect(WALLET_URI) for asset_obj in assets_objs]
+        [await asset_obj.connect(WALLET_URI) for asset_obj in assets_objs]
 
         raw_chain_fees = await asyncio.gather(
             *(obj.get_asset_info(pair.split(':')[1]) for obj, pair in zip(assets_objs, chain))

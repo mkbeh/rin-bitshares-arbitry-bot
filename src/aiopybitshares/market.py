@@ -7,8 +7,10 @@ class Market(GramBitshares):
         super().__init__()
         self._gram = None
 
-    async def alternative_connect(self, ws_node=default_node):
-        self._gram = await super().alternative_connect(ws_node)
+    async def connect(self, ws_node=default_node):
+        self._gram = await super().connect(ws_node)
+
+        return self
 
     async def get_order_book(self, base, quote, order_type, limit=1):
         data = await self._gram.call_method('get_order_book', base.upper(), quote.upper(), limit)

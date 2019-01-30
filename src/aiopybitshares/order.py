@@ -21,8 +21,10 @@ class Order(GramBitshares):
         self.fillkill = fillkill
         self.broadcast = broadcast
 
-    async def alternative_connect(self, ws_node=default_node):
-        self._gram = await super().alternative_connect(ws_node)
+    async def connect(self, ws_node=default_node):
+        self._gram = await super().connect(ws_node)
+
+        return self
 
     async def create(self):
         if self.order_type == 'buy':

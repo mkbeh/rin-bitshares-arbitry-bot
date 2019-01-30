@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import array
 import asyncio
-import cython
+# import cython
 
 from datetime import datetime as dt
 from decimal import Decimal
@@ -15,7 +15,7 @@ from src.const import DATA_UPDATE_TIME
 # start = dt.now()
 # end = dt.now()
 # delta = end - start
-# print(delta.microseconds / 1000000)
+# print(delta.microseconds)
 
 
 class BitsharesArbitrage(BaseRin):
@@ -25,7 +25,7 @@ class BitsharesArbitrage(BaseRin):
     def __init__(self, loop):
         self._ioloop = loop
         self.chains_count = 0
-        print('COMPILED', cython.compiled)
+        # print('COMPILED', cython.compiled)
 
     @staticmethod
     async def split_pair_raw_on_assets(pair):
@@ -110,8 +110,7 @@ class BitsharesArbitrage(BaseRin):
         )
 
     async def _algorithm_testing(self, chain, assets_fees):
-        markets = [Market() for _ in range(len(chain))]
-        [await market.alternative_connect() for market in markets]
+        markets = [await Market().connect() for _ in range(len(chain))]
 
         time_start = dt.now()
         time_delta = 0
@@ -125,7 +124,15 @@ class BitsharesArbitrage(BaseRin):
             if not arr:
                 break
 
+            # -- checking speed
+            start = dt.now()
+
             await self.run_chain_data_thorough_algo(arr, assets_fees, asset_vol_limit, bts_default_fee, chain)
+
+            end = dt.now()
+            delta = end - start
+            # print(delta.microseconds)
+            # --\
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600
@@ -142,11 +149,11 @@ class BitsharesArbitrage(BaseRin):
 
             start = dt.now()
 
-            tasks = (self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains)
+            tasks = (self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains[:1])
             self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
             end = dt.now()
             delta = end - start
-            print(delta.microseconds / 1000000)
+            print('all chains', delta.microseconds / 1000000)
 
             break

@@ -7,8 +7,10 @@ class Account(GramBitshares):
         super().__init__()
         self._gram = None
 
-    async def alternative_connect(self, ws_node=default_node):
-        self._gram = await super().alternative_connect()
+    async def connect(self, ws_node=default_node):
+        self._gram = await super().connect()
+
+        return self
 
     def create_account(self):
         pass

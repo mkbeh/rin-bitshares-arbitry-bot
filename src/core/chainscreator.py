@@ -63,7 +63,7 @@ class ChainsCreator(BaseRin):
     async def _create_chains_for_asset(self, main_asset, pairs):
         chains = []
         pygram_asset = Asset()
-        await pygram_asset.alternative_connect()
+        await pygram_asset.connect()
 
         for pair in pairs:
             if main_asset in pair:

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
-
 from .grambitshares import GramBitshares, default_node
 
 
@@ -35,6 +33,6 @@ class Order(GramBitshares):
         raw_data = await self._gram.call_method('sell_asset', *attrs_vals)
 
         try:
-            return json.loads(raw_data)['result']
+            return raw_data['result']
         except Exception as err:
             raise Exception(f'Order for pair {self.sell_asset}:{self.receive_asset} failed with error.', err)

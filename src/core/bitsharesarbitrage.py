@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import array
 import asyncio
+import cython
 
 from datetime import datetime as dt
 from decimal import Decimal
@@ -10,10 +11,9 @@ from src.core.limitsandfees import ChainsWithGatewayPairFees, VolLimits, Default
 from src.aiopybitshares.market import Market
 from src.const import DATA_UPDATE_TIME
 
-import cython
 
-# start = datetime.now()
-# end = datetime.now()
+# start = dt.now()
+# end = dt.now()
 # delta = end - start
 # print(delta.microseconds / 1000000)
 
@@ -32,6 +32,8 @@ class BitsharesArbitrage(BaseRin):
         return pair.split(':')
 
     @staticmethod
+    # @cython.boundscheck(False)
+    # @cython.cdivision(True)
     async def run_chain_data_thorough_algo(arr, fees, vol_limit, bts_default_fee, chain):
         price0, quote0, base0, price1, quote1, base1, price2, quote2, base2 = arr
         fee0, fee1, fee2 = fees
@@ -138,7 +140,13 @@ class BitsharesArbitrage(BaseRin):
             self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
             self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
 
+            start = dt.now()
+
             tasks = (self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains)
             self._ioloop.run_until_complete(asyncio.gather(*tasks))
+
+            end = dt.now()
+            delta = end - start
+            print(delta.microseconds / 1000000)
 
             break

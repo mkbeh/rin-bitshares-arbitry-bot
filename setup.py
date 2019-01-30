@@ -43,6 +43,6 @@ setup(
             ['rin = src.rin:main']
     },
     zip_save=False,
-    ext_modules=cythonize(['src/*/*.pyx']),
+    ext_modules=cythonize(['src/*/*.pyx'], annotate=True),
     cmdclass={'build_ext': build_ext},
 )

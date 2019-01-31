@@ -32,6 +32,7 @@ setup(
         'websockets==7.0',
         'markdown',
         'uvloop',
+        'numpy',
     ],
     include_package_data=True,
     packages=find_packages(),

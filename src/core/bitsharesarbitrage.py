@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-import array
 import asyncio
+
 # import cython
+import numpy as np
 
 from datetime import datetime as dt
 from decimal import Decimal
@@ -10,6 +11,8 @@ from src.additional.baserin import BaseRin
 from src.core.limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
 from src.aiopybitshares.market import Market
 from src.const import DATA_UPDATE_TIME
+
+from pprint import pprint
 
 
 # start = dt.now()
@@ -26,6 +29,7 @@ class BitsharesArbitrage(BaseRin):
         self._ioloop = loop
         self.chains_count = 0
         # print('COMPILED', cython.compiled)
+        self.stat = []
 
     @staticmethod
     async def split_pair_raw_on_assets(pair):
@@ -78,30 +82,25 @@ class BitsharesArbitrage(BaseRin):
 
     @staticmethod
     async def _get_orders_data_for_chain(chain, gram_markets):
-        arr = array.array('d')
-
         async def get_order_data_for_pair(pair, market_gram):
             base_asset, quote_asset = pair.split(':')
+            raw_orders_data = await market_gram.get_order_book(base_asset, quote_asset, 'asks', limit=5)
+            order_data_lst = map(
+                lambda order_data: [Decimal(value) for value in order_data.values()], raw_orders_data
+            )
+            arr = np.array([*order_data_lst], Decimal)
 
-            try:
-                raw_order_data = (await market_gram.get_order_book(base_asset, quote_asset, 'asks'))[0]
-            except IndexError:
-                return
+            if len(arr[0]) > 0:
+                return arr
 
-            order_data = (float(data) for data in raw_order_data.values())
+            raise ValueError
 
-            return order_data
-
-        pairs_orders_data = await asyncio.gather(
+        pairs_orders_data_arrs = await asyncio.gather(
             *(get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_markets))
         )
+        pairs_orders_data_arr = np.array(pairs_orders_data_arrs, Decimal)
 
-        try:
-            [arr.extend(pairs_orders_data[i]) for i in range(len(chain))]
-        except TypeError:
-            return
-
-        return arr
+        return pairs_orders_data_arr
 
     @staticmethod
     async def _get_fee_or_limit(data_dict, pair):
@@ -119,23 +118,23 @@ class BitsharesArbitrage(BaseRin):
         bts_default_fee = await self._get_fee_or_limit(self._bts_default_fee, chain[0])
 
         while time_delta < DATA_UPDATE_TIME:
-            arr = await self._get_orders_data_for_chain(chain, markets)
-
-            if not arr:
+            try:
+                orders_arrs = await self._get_orders_data_for_chain(chain, markets)
+            except ValueError:
                 break
 
-            # -- checking speed
-            start = dt.now()
-
-            await self.run_chain_data_thorough_algo(arr, assets_fees, asset_vol_limit, bts_default_fee, chain)
-
-            end = dt.now()
-            delta = end - start
-            # print(delta.microseconds)
-            # --\
-
-            time_end = dt.now()
-            time_delta = (time_end - time_start).seconds / 3600
+            # # -- checking speed
+            # start = dt.now()
+            #
+            # await self.run_chain_data_thorough_algo(arr, assets_fees, asset_vol_limit, bts_default_fee, chain)
+            #
+            # end = dt.now()
+            # delta = end - start
+            # # print(delta.microseconds)
+            # # --\
+            #
+            # time_end = dt.now()
+            # time_delta = (time_end - time_start).seconds / 3600
 
             break
 

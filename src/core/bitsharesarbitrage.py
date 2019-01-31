@@ -88,7 +88,7 @@ class BitsharesArbitrage(BaseRin):
             order_data_lst = map(
                 lambda order_data: [Decimal(value) for value in order_data.values()], raw_orders_data
             )
-            arr = np.array([*order_data_lst], dtype=np.dtype(Decimal))
+            arr = np.array([*order_data_lst], dtype=Decimal)
 
             try:
                 arr[0]
@@ -100,7 +100,7 @@ class BitsharesArbitrage(BaseRin):
         pairs_orders_data_arrs = await asyncio.gather(
             *(get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_markets))
         )
-        pairs_orders_data_arr = np.array(pairs_orders_data_arrs, Decimal)
+        pairs_orders_data_arr = np.array(pairs_orders_data_arrs, dtype=Decimal)
 
         return pairs_orders_data_arr
 
@@ -150,7 +150,7 @@ class BitsharesArbitrage(BaseRin):
 
             start = dt.now()
 
-            tasks = (self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains)
+            tasks = (self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains[:1])
             self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
             end = dt.now()

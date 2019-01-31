@@ -88,12 +88,14 @@ class BitsharesArbitrage(BaseRin):
             order_data_lst = map(
                 lambda order_data: [Decimal(value) for value in order_data.values()], raw_orders_data
             )
-            arr = np.array([*order_data_lst], Decimal)
+            arr = np.array([*order_data_lst], dtype=np.dtype(Decimal))
 
-            if len(arr[0]) > 0:
-                return arr
+            try:
+                arr[0]
+            except IndexError:
+                raise
 
-            raise ValueError
+            return arr
 
         pairs_orders_data_arrs = await asyncio.gather(
             *(get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_markets))
@@ -120,7 +122,7 @@ class BitsharesArbitrage(BaseRin):
         while time_delta < DATA_UPDATE_TIME:
             try:
                 orders_arrs = await self._get_orders_data_for_chain(chain, markets)
-            except ValueError:
+            except IndexError:
                 break
 
             # # -- checking speed
@@ -148,7 +150,7 @@ class BitsharesArbitrage(BaseRin):
 
             start = dt.now()
 
-            tasks = (self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains[:1])
+            tasks = (self._ioloop.create_task(self._algorithm_testing(chain.chain, chain.fees)) for chain in chains)
             self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
             end = dt.now()

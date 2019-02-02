@@ -81,18 +81,22 @@ class BitsharesArbitrage(BaseRin):
             except IndexError:
                 break
 
-            # # -- checking speed
-            # start = dt.now()
-            #
-            # RUN ORDERS DATA THROUGH ALGO HERE
-            #
-            # end = dt.now()
-            # delta = end - start
-            # # print(delta.microseconds)
-            # # --\
-            #
-            # time_end = dt.now()
-            # time_delta = (time_end - time_start).seconds / 3600
+            # -- checking speed
+            start = dt.now()
+
+            order_placement_data = await ArbitrationAlgorithm(orders_arrs, asset_vol_limit,
+                                                              bts_default_fee, assets_fees)()
+
+            if order_placement_data.size > 0:
+                print('SET ORDERS HERE.')
+
+            end = dt.now()
+            delta = end - start
+            print(delta.microseconds)
+            # --\
+
+            time_end = dt.now()
+            time_delta = (time_end - time_start).seconds / 3600
 
             break
 

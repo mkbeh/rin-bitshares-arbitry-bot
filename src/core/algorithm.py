@@ -3,7 +3,6 @@ import numpy as np
 
 
 class ArbitrationAlgorithm:
-
     def __init__(self, orders_data, volume_limit, default_bts_fee, assets_fees, profit_limit=None):
         self.orders_data = orders_data
         self.vol_limit = volume_limit
@@ -17,7 +16,6 @@ class ArbitrationAlgorithm:
     @staticmethod
     async def _decide_order_placed(arr):
         if len(arr) == 3:
-            print('Set orders HERE!!!')
             return True
 
         return False
@@ -136,7 +134,7 @@ class ArbitrationAlgorithm:
         orders_placed = await self._decide_order_placed(algo_data)
 
         if orders_placed:
-            return
+            return algo_data[0]
 
         orders = algo_data[0]
 
@@ -151,6 +149,8 @@ class ArbitrationAlgorithm:
             orders_placed = await self._decide_order_placed(algo_data)
 
             if orders_placed:
-                return
+                return algo_data[0]
 
             orders += algo_data[0]
+
+        return algo_data

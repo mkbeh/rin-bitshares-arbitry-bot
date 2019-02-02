@@ -3,12 +3,14 @@ import numpy as np
 
 
 class ArbitrationAlgorithm:
-    def __init__(self, orders_data, volume_limit, default_bts_fee, assets_fees, profit_limit=None):
+    def __init__(self, chain, orders_data, volume_limit, default_bts_fee, assets_fees, profit_limit=None):
         self.orders_data = orders_data
         self.vol_limit = volume_limit
         self.bts_default_fee = default_bts_fee
         self.assets_fees = assets_fees
         self.profit_limit = profit_limit
+
+        self.chain = chain
 
     async def __call__(self):
         return await self._run_data_through_algo()
@@ -130,7 +132,6 @@ class ArbitrationAlgorithm:
         len_of_largest_arr = await self._get_max_len_of_arrs(self.orders_data)
         algo_data = await self._basic_algo(self.orders_data[0][0], self.orders_data[1][0], self.orders_data[2][0],
                                            self.vol_limit, self.bts_default_fee, self.assets_fees)
-
         orders_placed = await self._decide_order_placed(algo_data)
 
         if orders_placed:
@@ -139,6 +140,7 @@ class ArbitrationAlgorithm:
         orders = algo_data[0]
 
         for i in range(1, len_of_largest_arr):
+            print(self.chain, orders)
             algo_data = await self._ext_algo(algo_data[1], self.orders_data[0][i],
                                              self.orders_data[1][i], self.orders_data[2][i],
                                              self.vol_limit, self.bts_default_fee, self.assets_fees)
@@ -150,6 +152,9 @@ class ArbitrationAlgorithm:
 
             if orders_placed:
                 return algo_data[0]
+
+            if i == len_of_largest_arr - 1:
+                return np.delete(algo_data[0], np.s_[:])
 
             orders += algo_data[0]
 

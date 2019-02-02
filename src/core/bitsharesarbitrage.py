@@ -12,7 +12,9 @@ from src.const import DATA_UPDATE_TIME
 from .limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
 from .algorithm import ArbitrationAlgorithm
 
+# FOR TESTING ----
 from pprint import pprint
+import statistics
 
 
 # start = dt.now()
@@ -28,6 +30,8 @@ class BitsharesArbitrage(BaseRin):
     def __init__(self, loop):
         self._ioloop = loop
         self.chains_count = 0
+
+        # FOR TESTING ----
         # print('COMPILED', cython.compiled)
         self.stat = []
 
@@ -84,15 +88,15 @@ class BitsharesArbitrage(BaseRin):
             # -- checking speed
             start = dt.now()
 
-            order_placement_data = await ArbitrationAlgorithm(orders_arrs, asset_vol_limit,
+            order_placement_data = await ArbitrationAlgorithm(chain, orders_arrs, asset_vol_limit,
                                                               bts_default_fee, assets_fees)()
-
             if order_placement_data.size > 0:
                 print('SET ORDERS HERE.')
 
             end = dt.now()
             delta = end - start
-            print(delta.microseconds)
+            self.stat.append(delta.microseconds)
+            print('NEXT CHAIN\n')
             # --\
 
             time_end = dt.now()
@@ -108,13 +112,16 @@ class BitsharesArbitrage(BaseRin):
             self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
             self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
 
+            # -- checking speed
             start = dt.now()
 
-            tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains[:1])
+            tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains[:20])
             self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
             end = dt.now()
             delta = end - start
-            print('all chains', delta.microseconds / 1000000)
+            print('CHAINS + ALGO', delta.microseconds / 1000000)
+            print('ALGO MEAN', statistics.mean(self.stat), ' microseconds')
+            # --\
 
             break

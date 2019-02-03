@@ -52,7 +52,7 @@ class ArbitrationAlgorithm:
         if have_profit:
             return orders_arr
 
-        return orders_arr, vols_sum_copy
+        return vols_sum_copy
 
     @staticmethod
     async def _fill_prices_with_zero(arr):
@@ -134,10 +134,10 @@ class ArbitrationAlgorithm:
             return algo_data
 
         if len_any_arr < 2:
-            return np.delete(algo_data[0], np.s_[:])
+            return np.delete(algo_data, np.s_[:])
 
         for i in range(1, len_any_arr):
-            algo_data = await self._ext_algo(algo_data[1], self.orders_data[0][i],
+            algo_data = await self._ext_algo(algo_data, self.orders_data[0][i],
                                              self.orders_data[1][i], self.orders_data[2][i],
                                              self.vol_limit, self.bts_default_fee, self.assets_fees)
 
@@ -150,6 +150,6 @@ class ArbitrationAlgorithm:
                 return algo_data
 
             if i == len_any_arr - 1:
-                return np.delete(algo_data[0], np.s_[:])
+                return np.delete(algo_data, np.s_[:])
 
         return algo_data

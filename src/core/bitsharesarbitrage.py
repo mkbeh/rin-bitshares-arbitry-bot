@@ -100,16 +100,17 @@ class BitsharesArbitrage(BaseRin):
 
             # -- checking speed
             start = dt.now()
-
             order_placement_data = await ArbitrationAlgorithm(chain, orders_arrs, asset_vol_limit,
                                                               bts_default_fee, assets_fees)()
+
             if order_placement_data.size > 0:
-                print('SET ORDERS HERE.')
+                print('***')
+                print(f'SET ORDERS HERE -> {chain}.')
+                print('***')
 
             end = dt.now()
             delta = end - start
             self.stat.append(delta.microseconds)
-            # print('NEXT CHAIN\n')
             # --\
 
             time_end = dt.now()
@@ -128,12 +129,12 @@ class BitsharesArbitrage(BaseRin):
             # -- checking speed
             start = dt.now()
 
-            tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains[:20])
+            tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains)
             self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
             end = dt.now()
             delta = end - start
-            print('CHAINS + ALGO', delta.microseconds / 1000000)
+            print('CHAINS + ALGO', delta.microseconds / 1000000, ' ms')
             print('ALGO MEAN', statistics.mean(self.stat), ' microseconds')
             # --\
 

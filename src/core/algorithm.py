@@ -17,7 +17,7 @@ class ArbitrationAlgorithm:
 
     @staticmethod
     async def _decide_order_placed(arr):
-        if len(arr) == 3:
+        if len(arr) == 6:
             return True
 
         return False
@@ -131,7 +131,7 @@ class ArbitrationAlgorithm:
         orders_placed = await self._decide_order_placed(algo_data)
 
         if orders_placed:
-            return algo_data[0]
+            return algo_data
 
         if len_any_arr < 2:
             return np.delete(algo_data[0], np.s_[:])
@@ -147,7 +147,7 @@ class ArbitrationAlgorithm:
             orders_placed = await self._decide_order_placed(algo_data)
 
             if orders_placed:
-                return algo_data[0]
+                return algo_data
 
             if i == len_any_arr - 1:
                 return np.delete(algo_data[0], np.s_[:])

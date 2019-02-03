@@ -4,8 +4,8 @@ import asyncio
 
 from bs4 import BeautifulSoup
 
-from src.additional.baserin import BaseRin
-from src.additional import utils
+from src.extra.baserin import BaseRin
+from src.extra import utils
 from src.const import WORK_DIR
 
 

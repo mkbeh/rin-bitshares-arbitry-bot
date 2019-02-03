@@ -4,9 +4,9 @@ import asyncio
 
 from collections import namedtuple
 
-from src.additional.baserin import BaseRin
+from src.extra.baserin import BaseRin
 from .btspriceparser import BTSPriceParser
-from src.additional import utils
+from src.extra import utils
 from src.const import OVERALL_MIN_DAILY_VOLUME, PAIR_MIN_DAILY_VOLUME, WORK_DIR
 
 

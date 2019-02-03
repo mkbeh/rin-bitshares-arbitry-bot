@@ -7,9 +7,9 @@ from collections import namedtuple
 
 from bs4 import BeautifulSoup
 
-from src.additional.baserin import BaseRin
+from src.extra.baserin import BaseRin
 from src.const import OVERALL_MIN_DAILY_VOLUME, PAIR_MIN_DAILY_VOLUME, WORK_DIR
-from src.additional import utils
+from src.extra import utils
 
 
 class CryptofreshParser(BaseRin):

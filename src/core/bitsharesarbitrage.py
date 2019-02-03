@@ -6,7 +6,7 @@ import numpy as np
 from datetime import datetime as dt
 from decimal import Decimal
 
-from src.additional.baserin import BaseRin
+from src.extra.baserin import BaseRin
 from src.aiopybitshares.market import Market
 from src.const import DATA_UPDATE_TIME
 from .limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
@@ -60,7 +60,20 @@ class BitsharesArbitrage(BaseRin):
         pairs_orders_data_arrs = await asyncio.gather(
             *(get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_markets))
         )
-        pairs_orders_data_arr = np.array(pairs_orders_data_arrs, dtype=float)
+
+        async def get_size_of_smallest_arr(arrs_lst):
+            return min(map(lambda x: len(x), arrs_lst))
+
+        async def cut_off_extra_arrs_els(arrs_lst, required_nums_of_items):
+            arr = np.array([*map(lambda x: x[:required_nums_of_items], arrs_lst)], dtype=float)
+
+            return arr
+
+        try:
+            pairs_orders_data_arr = np.array(pairs_orders_data_arrs, dtype=float)
+        except ValueError:
+            len_of_smallest_arr = await get_size_of_smallest_arr(pairs_orders_data_arrs)
+            pairs_orders_data_arr = await cut_off_extra_arrs_els(pairs_orders_data_arrs, len_of_smallest_arr)
 
         return pairs_orders_data_arr
 
@@ -96,7 +109,7 @@ class BitsharesArbitrage(BaseRin):
             end = dt.now()
             delta = end - start
             self.stat.append(delta.microseconds)
-            print('NEXT CHAIN\n')
+            # print('NEXT CHAIN\n')
             # --\
 
             time_end = dt.now()

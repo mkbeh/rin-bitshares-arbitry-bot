@@ -4,27 +4,19 @@ import numpy as np
 
 class ArbitrationAlgorithm:
     def __init__(self, chain, orders_data, volume_limit, default_bts_fee, assets_fees, profit_limit=None):
+        self.chain = chain
         self.orders_data = orders_data
         self.vol_limit = volume_limit
         self.bts_default_fee = default_bts_fee
         self.assets_fees = assets_fees
         self.profit_limit = profit_limit
 
-        self.chain = chain
-
     async def __call__(self):
         return await self._run_data_through_algo()
 
     @staticmethod
-    async def _decide_order_placed(arr):
-        if len(arr) == 6:
-            return True
-
-        return False
-
-    @staticmethod
-    async def _is_profit(init_vol, final_vol, bts_default_fee):
-        return init_vol < (final_vol - bts_default_fee)
+    async def _is_profit_valid(profit):
+        return profit > 0
 
     @staticmethod
     async def _recalculate_vols_given_fees(pairs_arr, fees):
@@ -40,19 +32,15 @@ class ArbitrationAlgorithm:
 
         return pairs_arr, arr_with_final_vols
 
-    async def _final_part_of_algorithm(self, pairs_arr, vols_sum_copy, fees, bts_default_fee):
+    async def _final_part_of_algorithm(self, pairs_arr, orders_vols_copy, fees):
         pairs_arr_given_fees, arr_with_final_vols = await self._recalculate_vols_given_fees(pairs_arr, fees)
-        have_profit = await self._is_profit(*arr_with_final_vols, bts_default_fee)
         orders_arr = np.array([
             pairs_arr_given_fees[0][2], pairs_arr_given_fees[0][1],
             pairs_arr_given_fees[1][2], pairs_arr_given_fees[1][1],
             pairs_arr_given_fees[2][2], pairs_arr_given_fees[2][1],
         ], dtype=float)
 
-        if have_profit:
-            return orders_arr
-
-        return vols_sum_copy
+        return arr_with_final_vols, orders_arr, orders_vols_copy,
 
     @staticmethod
     async def _fill_prices_with_zero(arr):
@@ -107,13 +95,17 @@ class ArbitrationAlgorithm:
 
         return arr
 
-    async def _basic_algo(self, pair0_arr, pair1_arr, pair2_arr, vol_limit, bts_default_fee, fees):
+    @staticmethod
+    async def _get_profit(init_vol, final_vol, bts_default_fee):
+        return final_vol - init_vol - bts_default_fee
+
+    async def _basic_algo(self, pair0_arr, pair1_arr, pair2_arr, vol_limit, fees):
         pairs_arr = await self._recalculate_vols_within_fees(pair0_arr, pair1_arr, pair2_arr, vol_limit)
         pairs_arr_copy = await self._get_arr_copy(pairs_arr)
 
-        return await self._final_part_of_algorithm(pairs_arr, pairs_arr_copy, fees, bts_default_fee)
+        return await self._final_part_of_algorithm(pairs_arr, pairs_arr_copy, fees)
 
-    async def _ext_algo(self, arr, pair0_arr, pair1_arr, pair2_arr, vol_limit, bts_default_fee, fees):
+    async def _ext_algo(self, arr, pair0_arr, pair1_arr, pair2_arr, vol_limit, fees):
         if arr[0][2] >= vol_limit:
             return np.delete(arr, np.s_[:])
 
@@ -122,34 +114,27 @@ class ArbitrationAlgorithm:
         vols_sum = arr + pairs_arr
         vols_sum_copy = await self._get_arr_copy(vols_sum)
 
-        return await self._final_part_of_algorithm(pairs_arr, vols_sum_copy, fees, bts_default_fee)
+        return await self._final_part_of_algorithm(pairs_arr, vols_sum_copy, fees)
 
     async def _run_data_through_algo(self):
         len_any_arr = len(self.orders_data[0])
         algo_data = await self._basic_algo(self.orders_data[0][0], self.orders_data[1][0], self.orders_data[2][0],
-                                           self.vol_limit, self.bts_default_fee, self.assets_fees)
-        orders_placed = await self._decide_order_placed(algo_data)
-
-        if orders_placed:
-            return algo_data
-
-        if len_any_arr < 2:
-            return np.delete(algo_data, np.s_[:])
+                                           self.vol_limit, self.assets_fees)
+        profit = await self._get_profit(*algo_data[0], self.bts_default_fee)
 
         for i in range(1, len_any_arr):
-            algo_data = await self._ext_algo(algo_data, self.orders_data[0][i],
-                                             self.orders_data[1][i], self.orders_data[2][i],
-                                             self.vol_limit, self.bts_default_fee, self.assets_fees)
-
-            if len(algo_data) == 0:
+            new_algo_data = await self._ext_algo(algo_data[2], self.orders_data[0][i],
+                                                 self.orders_data[1][i], self.orders_data[2][i],
+                                                 self.vol_limit, self.assets_fees)
+            if len(new_algo_data) == 0:
                 break
 
-            orders_placed = await self._decide_order_placed(algo_data)
+            algo_data = new_algo_data
+            profit = await self._get_profit(*algo_data[0], self.bts_default_fee)
 
-            if orders_placed:
-                return algo_data
+        is_profit = await self._is_profit_valid(profit)
 
-            if i == len_any_arr - 1:
-                return np.delete(algo_data, np.s_[:])
+        if is_profit:
+            return algo_data[1]
 
-        return algo_data
+        return np.delete(algo_data[1], np.s_[:])

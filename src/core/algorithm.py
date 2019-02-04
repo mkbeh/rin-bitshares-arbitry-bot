@@ -129,8 +129,13 @@ class ArbitrationAlgorithm:
             if len(new_algo_data) == 0:
                 break
 
+            new_profit = await self._get_profit(*new_algo_data[0], self.bts_default_fee)
+
+            if profit > new_profit:
+                break
+
             algo_data = new_algo_data
-            profit = await self._get_profit(*algo_data[0], self.bts_default_fee)
+            profit = new_profit
 
         is_profit = await self._is_profit_valid(profit)
 

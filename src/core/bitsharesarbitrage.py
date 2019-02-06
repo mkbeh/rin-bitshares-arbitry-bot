@@ -100,6 +100,12 @@ class BitsharesArbitrage(BaseRin):
 
             # -- checking speed
             start = dt.now()
+
+            if chain == ('1.3.0:1.3.121', '1.3.121:1.3.2512', '1.3.2512:1.3.0'):
+                print()
+                print(orders_arrs, asset_vol_limit)
+                print()
+
             order_placement_data = await ArbitrationAlgorithm(chain, orders_arrs, asset_vol_limit,
                                                               bts_default_fee, assets_fees)()
 

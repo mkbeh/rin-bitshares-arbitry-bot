@@ -8,7 +8,7 @@ from decimal import Decimal
 
 from src.extra.baserin import BaseRin
 from src.aiopybitshares.market import Market
-from src.const import DATA_UPDATE_TIME, PROFIT_LIMITS
+from src.const import DATA_UPDATE_TIME, MIN_PROFIT_LIMITS
 from .limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
 from .algorithm import ArbitrationAlgorithm
 
@@ -29,7 +29,6 @@ class BitsharesArbitrage(BaseRin):
 
     def __init__(self, loop):
         self._ioloop = loop
-        self.chains_count = 0
 
         # FOR TESTING ----
         # print('COMPILED', cython.compiled)
@@ -95,7 +94,7 @@ class BitsharesArbitrage(BaseRin):
 
         asset_vol_limit = await self._get_fee_or_limit(self._vol_limits, chain[0])
         bts_default_fee = await self._get_fee_or_limit(self._bts_default_fee, chain[0])
-        profit_limit = await self._get_fee_or_limit(PROFIT_LIMITS, chain[0])
+        min_profit_limit = await self._get_fee_or_limit(MIN_PROFIT_LIMITS, chain[0])
 
         while time_delta < DATA_UPDATE_TIME:
             try:
@@ -104,7 +103,7 @@ class BitsharesArbitrage(BaseRin):
                 break
 
             order_placement_data = await ArbitrationAlgorithm(chain, orders_arrs, asset_vol_limit,
-                                                              bts_default_fee, assets_fees)()
+                                                              bts_default_fee, assets_fees, min_profit_limit)()
             await self.volumes_checker(order_placement_data, chain)
 
             time_end = dt.now()

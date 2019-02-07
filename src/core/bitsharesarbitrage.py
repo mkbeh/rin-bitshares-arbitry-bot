@@ -8,7 +8,7 @@ from decimal import Decimal
 
 from src.extra.baserin import BaseRin
 from src.aiopybitshares.market import Market
-from src.const import DATA_UPDATE_TIME
+from src.const import DATA_UPDATE_TIME, PROFIT_LIMITS
 from .limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
 from .algorithm import ArbitrationAlgorithm
 
@@ -35,8 +35,11 @@ class BitsharesArbitrage(BaseRin):
         # print('COMPILED', cython.compiled)
 
     @staticmethod
-    async def split_pair_raw_on_assets(pair):
-        return pair.split(':')
+    async def volumes_checker(order_placement_data, chain):
+        if order_placement_data.size:
+            print('***')
+            print(f'SET ORDERS HERE -> {chain}.')
+            print('***')
 
     @staticmethod
     async def _get_orders_data_for_chain(chain, gram_markets):
@@ -92,6 +95,7 @@ class BitsharesArbitrage(BaseRin):
 
         asset_vol_limit = await self._get_fee_or_limit(self._vol_limits, chain[0])
         bts_default_fee = await self._get_fee_or_limit(self._bts_default_fee, chain[0])
+        profit_limit = await self._get_fee_or_limit(PROFIT_LIMITS, chain[0])
 
         while time_delta < DATA_UPDATE_TIME:
             try:
@@ -101,10 +105,7 @@ class BitsharesArbitrage(BaseRin):
 
             order_placement_data = await ArbitrationAlgorithm(chain, orders_arrs, asset_vol_limit,
                                                               bts_default_fee, assets_fees)()
-            if order_placement_data.size:
-                print('***')
-                print(f'SET ORDERS HERE -> {chain}.')
-                print('***')
+            await self.volumes_checker(order_placement_data, chain)
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600

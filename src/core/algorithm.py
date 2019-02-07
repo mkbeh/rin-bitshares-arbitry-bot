@@ -4,13 +4,13 @@ import numpy as np
 
 
 class ArbitrationAlgorithm:
-    def __init__(self, chain, orders_data, volume_limit, default_bts_fee, assets_fees, profit_limit=None):
-        self.chain = chain
-        self.orders_data = orders_data
-        self.vol_limit = volume_limit
-        self.bts_default_fee = default_bts_fee
-        self.assets_fees = assets_fees
-        self.profit_limit = profit_limit
+    def __init__(self, chain, orders_data, volume_limit, default_bts_fee, assets_fees, profit_limit):
+        self._chain = chain
+        self._orders_data = orders_data
+        self._vol_limit = volume_limit
+        self._bts_default_fee = default_bts_fee
+        self._assets_fees = assets_fees
+        self._profit_limit = profit_limit
 
     async def __call__(self):
         return await self._run_data_through_algo()
@@ -24,9 +24,8 @@ class ArbitrationAlgorithm:
 
         return new_arr
 
-    @staticmethod
-    async def _is_profit_valid(profit):
-        return profit > 0
+    async def _is_profit_valid(self, profit):
+        return profit > self._profit_limit
 
     @staticmethod
     async def _recalculate_vols_given_fees(pairs_arr, fees):
@@ -119,19 +118,19 @@ class ArbitrationAlgorithm:
 
     async def _run_data_through_algo(self):
 
-        len_any_arr = len(self.orders_data[0])
-        algo_data = await self._basic_algo(self.orders_data[0][0], self.orders_data[1][0], self.orders_data[2][0],
-                                           self.vol_limit, self.assets_fees)
-        profit = await self._get_profit(*algo_data[0], self.bts_default_fee)
+        len_any_arr = len(self._orders_data[0])
+        algo_data = await self._basic_algo(self._orders_data[0][0], self._orders_data[1][0], self._orders_data[2][0],
+                                           self._vol_limit, self._assets_fees)
+        profit = await self._get_profit(*algo_data[0], self._bts_default_fee)
 
         for i in range(1, len_any_arr):
-            new_algo_data = await self._ext_algo(algo_data[1], self.orders_data[0][i],
-                                                 self.orders_data[1][i], self.orders_data[2][i],
-                                                 self.vol_limit, self.assets_fees)
+            new_algo_data = await self._ext_algo(algo_data[1], self._orders_data[0][i],
+                                                 self._orders_data[1][i], self._orders_data[2][i],
+                                                 self._vol_limit, self._assets_fees)
             if len(new_algo_data) == 0:
                 break
 
-            new_profit = await self._get_profit(*new_algo_data[0], self.bts_default_fee)
+            new_profit = await self._get_profit(*new_algo_data[0], self._bts_default_fee)
 
             if profit > new_profit:
                 break

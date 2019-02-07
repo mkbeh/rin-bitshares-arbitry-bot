@@ -33,7 +33,6 @@ class BitsharesArbitrage(BaseRin):
 
         # FOR TESTING ----
         # print('COMPILED', cython.compiled)
-        self.stat = []
 
     @staticmethod
     async def split_pair_raw_on_assets(pair):
@@ -65,7 +64,9 @@ class BitsharesArbitrage(BaseRin):
             return min(map(lambda x: len(x), arrs_lst))
 
         async def cut_off_extra_arrs_els(arrs_lst, required_nums_of_items):
-            arr = np.array([*map(lambda x: x[:required_nums_of_items], arrs_lst)], dtype=float)
+            arr = np.array([
+                *map(lambda x: x[:required_nums_of_items], arrs_lst)
+            ], dtype=float)
 
             return arr
 
@@ -98,26 +99,12 @@ class BitsharesArbitrage(BaseRin):
             except IndexError:
                 break
 
-            # -- checking speed
-            start = dt.now()
-
-            if chain == ('1.3.0:1.3.121', '1.3.121:1.3.2512', '1.3.2512:1.3.0'):
-                print()
-                print(orders_arrs, asset_vol_limit)
-                print()
-
             order_placement_data = await ArbitrationAlgorithm(chain, orders_arrs, asset_vol_limit,
                                                               bts_default_fee, assets_fees)()
-
-            if order_placement_data.size > 0:
+            if order_placement_data.size:
                 print('***')
                 print(f'SET ORDERS HERE -> {chain}.')
                 print('***')
-
-            end = dt.now()
-            delta = end - start
-            self.stat.append(delta.microseconds)
-            # --\
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600
@@ -141,7 +128,6 @@ class BitsharesArbitrage(BaseRin):
             end = dt.now()
             delta = end - start
             print('CHAINS + ALGO', delta.microseconds / 1000000, ' ms')
-            print('ALGO MEAN', statistics.mean(self.stat), ' microseconds')
             # --\
 
             break

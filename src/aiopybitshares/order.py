@@ -36,5 +36,7 @@ class Order(GramBitshares):
 
         try:
             return raw_data['result']
+        except KeyError:
+            return raw_data['error']
         except Exception as err:
             raise Exception(f'Order for pair {self.sell_asset}:{self.receive_asset} failed with error.', err)

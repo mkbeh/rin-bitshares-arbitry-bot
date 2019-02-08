@@ -4,17 +4,14 @@ import asyncio
 import numpy as np
 
 from datetime import datetime as dt
-from decimal import Decimal
 
 from src.extra.baserin import BaseRin
 from src.aiopybitshares.market import Market
 from src.const import DATA_UPDATE_TIME, MIN_PROFIT_LIMITS
 from .limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
-from .algorithm import ArbitrationAlgorithm
+from src.algorithms.arbitryalgorithm import ArbitrationAlgorithm
 
 # FOR TESTING ----
-from pprint import pprint
-import statistics
 
 
 # start = dt.now()
@@ -38,6 +35,7 @@ class BitsharesArbitrage(BaseRin):
         if order_placement_data.size:
             print('***')
             print(f'SET ORDERS HERE -> {chain}.')
+            print(order_placement_data)
             print('***')
 
     @staticmethod
@@ -127,7 +125,7 @@ class BitsharesArbitrage(BaseRin):
 
             end = dt.now()
             delta = end - start
-            print('CHAINS + ALGO', delta.microseconds / 1000000, ' ms')
+            print('CHAINS + ALGO', delta.microseconds / 1_000_000, ' ms')
             # --\
 
             break

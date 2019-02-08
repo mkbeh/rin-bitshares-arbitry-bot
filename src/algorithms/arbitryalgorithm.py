@@ -16,10 +16,9 @@ class ArbitrationAlgorithm:
 
     @staticmethod
     async def _prepare_orders_arr(arr):
-        orders = itertools.chain.from_iterable(
-            ((arr[2], arr[1]) for arr in arr)
-        )
-        new_arr = np.array([*orders])
+        new_arr = np.array([
+            *((el[2], el[1]) for el in arr)
+        ])
 
         return new_arr
 
@@ -139,6 +138,7 @@ class ArbitrationAlgorithm:
         is_profit = await self._is_profit_valid(profit)
 
         if is_profit:
+            print(algo_data[1])
             return await self._prepare_orders_arr(algo_data[1])
 
         return np.delete(algo_data[1], np.s_[:])

@@ -4,8 +4,7 @@ import numpy as np
 
 
 class ArbitrationAlgorithm:
-    def __init__(self, chain, orders_data, volume_limit, default_bts_fee, assets_fees, profit_limit):
-        self._chain = chain
+    def __init__(self, orders_data, volume_limit, default_bts_fee, assets_fees, profit_limit):
         self._orders_data = orders_data
         self._vol_limit = volume_limit
         self._bts_default_fee = default_bts_fee
@@ -117,7 +116,6 @@ class ArbitrationAlgorithm:
         return final_vols, vols_sum
 
     async def _run_data_through_algo(self):
-
         len_any_arr = len(self._orders_data[0])
         algo_data = await self._basic_algo(self._orders_data[0][0], self._orders_data[1][0], self._orders_data[2][0],
                                            self._vol_limit, self._assets_fees)

@@ -47,7 +47,7 @@ class BitsharesArbitrage(BaseRin):
             base_asset, quote_asset = pair.split(':')
             raw_orders_data = await market_gram.get_order_book(base_asset, quote_asset, 'asks', limit=5)
             order_data_lst = map(
-                lambda order_data: [Decimal(value) for value in order_data.values()], raw_orders_data
+                lambda order_data: [float(value) for value in order_data.values()], raw_orders_data
             )
             arr = np.array([*order_data_lst], dtype=float)
 
@@ -102,8 +102,8 @@ class BitsharesArbitrage(BaseRin):
             except IndexError:
                 break
 
-            order_placement_data = await ArbitrationAlgorithm(chain, orders_arrs, asset_vol_limit,
-                                                              bts_default_fee, assets_fees, min_profit_limit)()
+            order_placement_data = await ArbitrationAlgorithm(orders_arrs, asset_vol_limit, bts_default_fee,
+                                                              assets_fees, min_profit_limit)()
             await self.volumes_checker(order_placement_data, chain)
 
             time_end = dt.now()

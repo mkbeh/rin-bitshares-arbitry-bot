@@ -3,17 +3,13 @@ import src
 from setuptools import setup, find_packages
 from Cython.Build import cythonize
 from Cython.Distutils import build_ext
-from Cython.Compiler import Options
 
 
-# Options.cimport_from_pyx = True
-#
-#
-# compiler_directives = {
-#     'language_level': 3,
-#     'cdivision': True,
-#     'boundscheck': True,
-# }
+compiler_directives = {
+    'language_level': 3,
+    'cdivision': True,
+    'boundscheck': True,
+}
 
 
 def readme():
@@ -54,7 +50,7 @@ setup(
         'console_scripts':
             ['rin = src.rin:main']
     },
-    # zip_save=False,
-    # ext_modules=cythonize(['src/*/*.pyx'], annotate=True, compiler_directives=compiler_directives),
-    # cmdclass={'build_ext': build_ext},
+    zip_save=False,
+    ext_modules=cythonize(['src/*/*.pyx'], annotate=True, compiler_directives=compiler_directives),
+    cmdclass={'build_ext': build_ext},
 )

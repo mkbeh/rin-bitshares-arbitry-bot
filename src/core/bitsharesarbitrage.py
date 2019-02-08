@@ -33,6 +33,9 @@ class BitsharesArbitrage(BaseRin):
     @staticmethod
     async def volumes_checker(order_placement_data, chain):
         if order_placement_data.size:
+            for vols_arr in order_placement_data:
+                pass
+
             print('***')
             print(f'SET ORDERS HERE -> {chain}.')
             print(order_placement_data)

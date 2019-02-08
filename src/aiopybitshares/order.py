@@ -1,42 +1,31 @@
 # -*- coding: utf-8 -*-
 from .grambitshares import GramBitshares, default_node
+from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset
 
 
 class Order(GramBitshares):
-    __slots__ = ['seller', 'amount', 'sell_asset', 'min_to_receive', 'receive_asset',
-                 'order_type', 'timeout', 'fillkill', 'broadcast']
+    error_msgs = {
+        'unspecified: Assert Exception: !op.fill_or_kill || filled: ': OrderNotFilled,
+        'unspecified: Assert Exception: is_authorized_asset( d, *_seller, *_sell_asset ): ': AuthorizedAsset,
+    }
 
-    def __init__(self, seller, amount, sell_asset, min_to_receive, receive_asset,
-                 order_type, timeout=0, fillkill=True, broadcast=False):
+    def __init__(self):
         super().__init__()
         self._gram = None
-
-        self.seller = seller
-        self.amount = amount
-        self.sell_asset = sell_asset
-        self.min_to_receive = min_to_receive
-        self.receive_asset = receive_asset
-        self.order_type = order_type
-        self.timeout = timeout
-        self.fillkill = fillkill
-        self.broadcast = broadcast
 
     async def connect(self, ws_node=default_node):
         self._gram = await super().connect(ws_node)
 
         return self
 
-    async def create(self):
-        if self.order_type == 'buy':
-            self.sell_asset, self.receive_asset, self.amount, self.min_to_receive = \
-                self.receive_asset, self.sell_asset, self.min_to_receive, self.amount
-
-        attrs_vals = [self.__getattribute__(attr) for attr in self.__slots__ if attr != 'order_type']
-        raw_data = await self._gram.call_method('sell_asset', *attrs_vals)
+    async def create_order(self, *args):
+        raw_data = await self._gram.call_method('sell_asset', *args)
 
         try:
-            return raw_data['result']
+            raw_data['result']
+
         except KeyError:
-            return raw_data['error']
+            raise self.error_msgs.get(raw_data['error']['message'])()
+
         except Exception as err:
-            raise Exception(f'Order for pair {self.sell_asset}:{self.receive_asset} failed with error.', err)
+            raise Exception(f'Order for pair {args[2]}:{args[4]} failed with error.', err)

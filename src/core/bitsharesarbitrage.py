@@ -6,10 +6,18 @@ import numpy as np
 from datetime import datetime as dt
 
 from src.extra.baserin import BaseRin
+from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, MaxRetriesOrderFilledExceeded
+from src.extra import utils
+
 from src.aiopybitshares.market import Market
-from src.const import DATA_UPDATE_TIME, MIN_PROFIT_LIMITS
+from src.aiopybitshares.order import Order
+
+from src.const import WORK_DIR, DATA_UPDATE_TIME, MIN_PROFIT_LIMITS, ACCOUNT_NAME, WALLET_URI
+
 from .limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
 from src.algorithms.arbitryalgorithm import ArbitrationAlgorithm
+from src.algorithms.recalculatevols import RecalculateVols
+
 
 # FOR TESTING ----
 
@@ -23,6 +31,7 @@ from src.algorithms.arbitryalgorithm import ArbitrationAlgorithm
 class BitsharesArbitrage(BaseRin):
     _vol_limits = None
     _bts_default_fee = None
+    _assets_blacklist_file = utils.get_file(WORK_DIR, f'assets_blacklist.lst')
 
     def __init__(self, loop):
         self._ioloop = loop
@@ -30,37 +39,87 @@ class BitsharesArbitrage(BaseRin):
         # FOR TESTING ----
         # print('COMPILED', cython.compiled)
 
-    @staticmethod
-    async def volumes_checker(order_placement_data, chain):
-        if order_placement_data.size:
-            for vols_arr in order_placement_data:
-                pass
+    async def _sell_assets(self, pair, base_asset_vol):
+        order_obj = await Order().connect(ws_node=WALLET_URI)
+        order_filled = False
+        max_retries = 3
 
-            print('***')
-            print(f'SET ORDERS HERE -> {chain}.')
-            print(order_placement_data)
-            print('***')
+        while not order_filled:
+            if max_retries == 0:
+                raise MaxRetriesOrderFilledExceeded
 
-    @staticmethod
-    async def _get_orders_data_for_chain(chain, gram_markets):
-
-        async def get_order_data_for_pair(pair, market_gram):
-            base_asset, quote_asset = pair.split(':')
-            raw_orders_data = await market_gram.get_order_book(base_asset, quote_asset, 'asks', limit=5)
-            order_data_lst = map(
-                lambda order_data: [float(value) for value in order_data.values()], raw_orders_data
-            )
-            arr = np.array([*order_data_lst], dtype=float)
+            market_obj = await Market().connect()
+            orders_arr = await self.get_order_data_for_pair(pair, market_obj, order_type='asks')
+            vols_arr = await RecalculateVols(orders_arr, base_asset_vol)()
 
             try:
-                arr[0]
-            except IndexError:
+                order_obj.create_order(
+                    f'{ACCOUNT_NAME}', f'{vols_arr[0]}', f'{pair[0]}',
+                    f'{vols_arr[1]}', f'{pair[1]}', 0, True, True
+                )
+                order_filled = True
+
+            except OrderNotFilled:
+                pass
+
+            finally:
+                max_retries -= 1
+
+    async def _actions_when_err_authorized_asset(self, chain, count, order_placement_data):
+        await self.write_data(chain[count], self._assets_blacklist_file)
+
+        if count > 0:
+            for i in range(count - 1, -1, -1):
+                pair = chain[i].split()[::-1]
+                base_asset_vol = order_placement_data[i][1]
+
+                try:
+                    await self._sell_assets(pair, base_asset_vol)
+                except MaxRetriesOrderFilledExceeded:
+                    break
+
+    async def _orders_setter(self, order_placement_data, chain, orders_objs):
+        for i, vols_arr, order_obj in enumerate(zip(order_placement_data, orders_objs)):
+            splitted_pair = chain[i].split(':')
+
+            try:
+                order_obj.create_order(
+                    f'{ACCOUNT_NAME}', f'{vols_arr[0]}', f'{splitted_pair[0]}',
+                    f'{vols_arr[1]}', f'{splitted_pair[1]}', 0, True, True
+                )
+            except OrderNotFilled:
+                pass
+            except AuthorizedAsset:
+                await self._actions_when_err_authorized_asset(chain, i, order_placement_data)
                 raise
 
-            return arr
+            except Exception as err:
+                print(err)
+                pass
 
+    async def volumes_checker(self, order_placement_data, chain, orders_objs):
+        if order_placement_data.size:
+            await self._orders_setter(order_placement_data, chain, orders_objs)
+
+    @staticmethod
+    async def get_order_data_for_pair(pair, market_gram, order_type='asks', limit=5):
+        base_asset, quote_asset = pair.split(':')
+        raw_orders_data = await market_gram.get_order_book(base_asset, quote_asset, order_type, limit=limit)
+        order_data_lst = map(
+            lambda order_data: [float(value) for value in order_data.values()], raw_orders_data
+        )
+        arr = np.array([*order_data_lst], dtype=float)
+
+        try:
+            arr[0]
+        except IndexError:
+            raise
+
+        return arr
+
+    async def _get_orders_data_for_chain(self, chain, gram_markets):
         pairs_orders_data_arrs = await asyncio.gather(
-            *(get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_markets))
+            *(self.get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_markets))
         )
 
         async def get_size_of_smallest_arr(arrs_lst):
@@ -88,7 +147,8 @@ class BitsharesArbitrage(BaseRin):
         )
 
     async def _arbitrage_testing(self, chain, assets_fees):
-        markets = [await Market().connect() for _ in range(len(chain))]
+        markets_objs = [await Market().connect() for _ in range(len(chain))]
+        orders_objs = [await Order().connect(ws_node=WALLET_URI) for _ in range(len(chain))]
 
         time_start = dt.now()
         time_delta = 0
@@ -99,20 +159,21 @@ class BitsharesArbitrage(BaseRin):
 
         while time_delta < DATA_UPDATE_TIME:
             try:
-                orders_arrs = await self._get_orders_data_for_chain(chain, markets)
-            except IndexError:
+                orders_arrs = await self._get_orders_data_for_chain(chain, markets_objs)
+            except (IndexError, AuthorizedAsset):
                 break
 
             order_placement_data = await ArbitrationAlgorithm(orders_arrs, asset_vol_limit, bts_default_fee,
                                                               assets_fees, min_profit_limit)()
-            await self.volumes_checker(order_placement_data, chain)
+            await self.volumes_checker(order_placement_data, chain, orders_objs)
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600
 
             break
 
-        [await market.close() for market in markets]
+        [await market.close() for market in markets_objs]
+        [await order_obj.close() for order_obj in orders_objs]
 
     def start_arbitrage(self):
         while True:

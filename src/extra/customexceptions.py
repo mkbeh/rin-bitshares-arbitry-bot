@@ -11,3 +11,7 @@ class OrderNotFilled(OrderExceptions):
 
 class AuthorizedAsset(OrderExceptions):
     pass
+
+
+class MaxRetriesOrderFilledExceeded(OrderExceptions):
+    pass

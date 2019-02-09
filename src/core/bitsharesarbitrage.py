@@ -99,7 +99,7 @@ class BitsharesArbitrage(BaseRin):
             splitted_pair = chain[i].split(':')
 
             try:
-                order_obj.create_order(
+                await order_obj.create_order(
                     f'{ACCOUNT_NAME}', f'{vols_arr[0]}', f'{splitted_pair[0]}',
                     f'{vols_arr[1]}', f'{splitted_pair[1]}', 0, True, True
                 )

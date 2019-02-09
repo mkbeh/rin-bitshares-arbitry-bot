@@ -137,7 +137,6 @@ class ArbitrationAlgorithm:
         is_profit = await self._is_profit_valid(profit)
 
         if is_profit:
-            print(algo_data[1])
             return await self._prepare_orders_arr(algo_data[1])
 
         return np.delete(algo_data[1], np.s_[:])

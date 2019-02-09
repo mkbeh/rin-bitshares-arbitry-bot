@@ -58,6 +58,7 @@ class BitsharesArbitrage(BaseRin):
                     f'{vols_arr[1]}', f'{pair[1]}', 0, True, True
                 )
                 order_filled = True
+                print('Filled ok')
 
             except OrderNotFilled:
                 pass
@@ -88,10 +89,13 @@ class BitsharesArbitrage(BaseRin):
                 try:
                     await self._sell_assets(pair, base_asset_vol)
                 except MaxRetriesOrderFilledExceeded:
+                    print('in _order_err_action MaxRetriesOrderFilledExceeded')
                     break
 
     async def _orders_setter(self, order_placement_data, chain, orders_objs):
-        for i, vols_arr, order_obj in enumerate(zip(order_placement_data, orders_objs)):
+        print('profit chain: ', chain, order_placement_data)
+
+        for i, (vols_arr, order_obj) in enumerate(zip(order_placement_data, orders_objs)):
             splitted_pair = chain[i].split(':')
 
             try:
@@ -110,6 +114,7 @@ class BitsharesArbitrage(BaseRin):
                     break
 
             except AuthorizedAsset:
+                print('AuthorizedAsset')
                 await self._order_err_action(chain, i, order_placement_data)
                 raise
 

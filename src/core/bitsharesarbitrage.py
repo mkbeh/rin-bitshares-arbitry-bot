@@ -65,8 +65,20 @@ class BitsharesArbitrage(BaseRin):
             finally:
                 max_retries -= 1
 
-    async def _actions_when_err_authorized_asset(self, chain, count, order_placement_data):
-        await self.write_data(chain[count], self._assets_blacklist_file)
+    async def _actions_when_err_order_not_filled(self, chain, i, order_placement_data):
+        pair = chain[i].split()
+        base_asset_vol = order_placement_data[i][0]
+
+        try:
+            await self._sell_assets(pair, base_asset_vol)
+
+            return True
+        except MaxRetriesOrderFilledExceeded:
+            return False
+
+    async def _order_err_action(self, chain, count, order_placement_data, asset_blacklist=True):
+        if asset_blacklist:
+            await self.write_data(chain[count], self._assets_blacklist_file)
 
         if count > 0:
             for i in range(count - 1, -1, -1):
@@ -88,9 +100,17 @@ class BitsharesArbitrage(BaseRin):
                     f'{vols_arr[1]}', f'{splitted_pair[1]}', 0, True, True
                 )
             except OrderNotFilled:
-                pass
+                is_filled = await self._actions_when_err_order_not_filled(chain, i, order_placement_data)
+
+                if is_filled:
+                    continue
+
+                else:
+                    await self._order_err_action(chain, i, order_placement_data)
+                    break
+
             except AuthorizedAsset:
-                await self._actions_when_err_authorized_asset(chain, i, order_placement_data)
+                await self._order_err_action(chain, i, order_placement_data)
                 raise
 
             except Exception as err:

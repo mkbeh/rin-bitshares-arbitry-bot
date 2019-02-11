@@ -15,7 +15,7 @@ class ArbitrationAlgorithm:
         return await self._run_data_through_algo()
 
     @staticmethod
-    async def _round_vols_with_specific_prec(vols_arr, precisions_arr):
+    async def _round_vols_to_specific_prec(vols_arr, precisions_arr):
         flatten_vols_arr = vols_arr.flatten()
         vols_arr_with_precs = np.fromiter(
             (round(vol, prec) for vol, prec in zip(flatten_vols_arr, precisions_arr)), dtype=float
@@ -27,7 +27,7 @@ class ArbitrationAlgorithm:
         vols_arr_without_prices = np.array([
             *((el[2], el[1]) for el in arr)
         ], dtype=float)
-        rounded_vols_arr = await self._round_vols_with_specific_prec(vols_arr_without_prices, self._precisions_arr)
+        rounded_vols_arr = await self._round_vols_to_specific_prec(vols_arr_without_prices, self._precisions_arr)
 
         return rounded_vols_arr.reshape(3, 2)
 

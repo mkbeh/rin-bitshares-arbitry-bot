@@ -20,12 +20,13 @@ class Order(GramBitshares):
 
     async def create_order(self, *args):
         raw_data = await self._gram.call_method('sell_asset', *args)
+        print('raw data', raw_data)
 
         try:
             raw_data['result']
 
         except KeyError:
-            raise self.error_msgs.get(raw_data['error']['message'])()
+            raise self.error_msgs.get(raw_data['error']['message'], KeyError)()
 
         except Exception as err:
             raise Exception(f'Order for pair {args[2]}:{args[4]} failed with error.', err)

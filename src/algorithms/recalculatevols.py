@@ -8,27 +8,27 @@ class RecalculateVols:
         self._base_asset_vol = base_asset_vol
 
     async def __call__(self, *args, **kwargs):
-        return await self._run()
+        return await self._calc_vols()
 
     @staticmethod
-    async def _calc_vols(order_arr, base_asset_vol):
+    async def _re_calc_vols(order_arr, base_asset_vol):
         arr = np.array([
             base_asset_vol, (base_asset_vol / order_arr[0])
         ], dtype=float)
 
         return arr
 
-    async def _run(self):
+    async def _calc_vols(self):
         vols = np.array([0., 0.], dtype=float)
         vol_limit = self._base_asset_vol
 
         for order_arr in self._orders_arrs:
             if vol_limit < order_arr[2]:
-                vols += await self._calc_vols(order_arr, vol_limit)
+                vols += await self._re_calc_vols(order_arr, vol_limit)
                 break
 
             elif vol_limit > order_arr[2]:
-                vols += await self._calc_vols(order_arr, order_arr[2])
+                vols += await self._re_calc_vols(order_arr, order_arr[2])
                 vol_limit -= order_arr[2]
 
             elif vol_limit == 0:

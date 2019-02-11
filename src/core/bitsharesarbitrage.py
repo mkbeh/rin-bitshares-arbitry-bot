@@ -11,6 +11,7 @@ from src.extra import utils
 
 from src.aiopybitshares.market import Market
 from src.aiopybitshares.order import Order
+from src.aiopybitshares.asset import Asset
 
 from src.const import WORK_DIR, DATA_UPDATE_TIME, MIN_PROFIT_LIMITS, ACCOUNT_NAME, WALLET_URI
 
@@ -103,6 +104,7 @@ class BitsharesArbitrage(BaseRin):
                     f'{ACCOUNT_NAME}', f'{vols_arr[0]}', f'{splitted_pair[0]}',
                     f'{vols_arr[1]}', f'{splitted_pair[1]}', 0, True, True
                 )
+
             except OrderNotFilled:
                 is_filled = await self._actions_when_err_order_not_filled(chain, i, order_placement_data)
 
@@ -117,10 +119,6 @@ class BitsharesArbitrage(BaseRin):
                 print('AuthorizedAsset')
                 await self._order_err_action(chain, i, order_placement_data)
                 raise
-
-            except Exception as err:
-                print(err)
-                pass
 
     async def volumes_checker(self, order_placement_data, chain, orders_objs):
         if order_placement_data.size:

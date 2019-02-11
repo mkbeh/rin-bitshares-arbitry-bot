@@ -3,23 +3,33 @@ import numpy as np
 
 
 class ArbitrationAlgorithm:
-    def __init__(self, orders_data, volume_limit, default_bts_fee, assets_fees, profit_limit):
+    def __init__(self, orders_data, volume_limit, default_bts_fee, assets_fees, profit_limit, precisions_arr):
         self._orders_data = orders_data
         self._vol_limit = volume_limit
         self._bts_default_fee = default_bts_fee
         self._assets_fees = assets_fees
         self._profit_limit = profit_limit
+        self._precisions_arr = precisions_arr
 
     async def __call__(self):
         return await self._run_data_through_algo()
 
     @staticmethod
-    async def _prepare_orders_arr(arr):
-        new_arr = np.array([
-            *((el[2], el[1]) for el in arr)
-        ])
+    async def _round_vols_with_specific_prec(vols_arr, precisions_arr):
+        flatten_vols_arr = vols_arr.flatten()
+        vols_arr_with_precs = np.fromiter(
+            (round(vol, prec) for vol, prec in zip(flatten_vols_arr, precisions_arr)), dtype=float
+        )
 
-        return new_arr
+        return vols_arr_with_precs
+
+    async def _prepare_orders_arr(self, arr):
+        vols_arr_without_prices = np.array([
+            *((el[2], el[1]) for el in arr)
+        ], dtype=float)
+        rounded_vols_arr = await self._round_vols_with_specific_prec(vols_arr_without_prices, self._precisions_arr)
+
+        return rounded_vols_arr.reshape(3, 2)
 
     async def _is_profit_valid(self, profit):
         return profit > self._profit_limit

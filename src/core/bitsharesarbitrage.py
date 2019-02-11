@@ -110,7 +110,7 @@ class BitsharesArbitrage(BaseRin):
                 is_filled = await self._actions_when_err_order_not_filled(chain, i, order_placement_data)
 
                 if not is_filled:
-                    await self._order_err_action(chain, i, order_placement_data)
+                    await self._order_err_action(chain, i, order_placement_data, False)
                     break
 
                 continue

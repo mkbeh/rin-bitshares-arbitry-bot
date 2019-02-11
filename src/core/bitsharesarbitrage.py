@@ -181,11 +181,9 @@ class BitsharesArbitrage(BaseRin):
             precisions_arr[i] = (
                 (await obj.get_asset_info(el))['precision']
             )
-
-        precisions_arr = np.append(precisions_arr, (precisions_arr[3], precisions_arr[0]))
         await obj.close()
 
-        return precisions_arr
+        return np.append(precisions_arr, (precisions_arr[3], precisions_arr[0]))
 
     @staticmethod
     async def _get_fee_or_limit(data_dict, pair):

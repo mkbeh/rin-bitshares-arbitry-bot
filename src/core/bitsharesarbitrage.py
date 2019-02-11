@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import itertools
 
 import numpy as np
 
@@ -108,12 +109,11 @@ class BitsharesArbitrage(BaseRin):
             except OrderNotFilled:
                 is_filled = await self._actions_when_err_order_not_filled(chain, i, order_placement_data)
 
-                if is_filled:
-                    continue
-
-                else:
+                if not is_filled:
                     await self._order_err_action(chain, i, order_placement_data)
                     break
+
+                continue
 
             except AuthorizedAsset:
                 print('AuthorizedAsset')
@@ -164,6 +164,30 @@ class BitsharesArbitrage(BaseRin):
         return pairs_orders_data_arr
 
     @staticmethod
+    async def _get_precisions_arr(chain):
+        obj = await Asset().connect(ws_node=WALLET_URI)
+        assets_arr = np.array([
+            *(itertools.chain.from_iterable(
+                map(lambda x: x.split(':'), chain)
+            ))
+        ], dtype=str)
+        precisions_arr = np.array(range(4), dtype=int)
+
+        for i, el in enumerate(assets_arr[:4]):
+            if i == 2:
+                precisions_arr[i] = (precisions_arr[i - 1])
+                continue
+
+            precisions_arr[i] = (
+                (await obj.get_asset_info(el))['precision']
+            )
+
+        precisions_arr = np.append(precisions_arr, (precisions_arr[3], precisions_arr[0]))
+        await obj.close()
+
+        return precisions_arr
+
+    @staticmethod
     async def _get_fee_or_limit(data_dict, pair):
         return data_dict.get(
             pair.split(':')[0]
@@ -179,6 +203,7 @@ class BitsharesArbitrage(BaseRin):
         asset_vol_limit = await self._get_fee_or_limit(self._vol_limits, chain[0])
         bts_default_fee = await self._get_fee_or_limit(self._bts_default_fee, chain[0])
         min_profit_limit = await self._get_fee_or_limit(MIN_PROFIT_LIMITS, chain[0])
+        precisions_arr = await self._get_precisions_arr(chain)
 
         while time_delta < DATA_UPDATE_TIME:
             try:
@@ -187,7 +212,7 @@ class BitsharesArbitrage(BaseRin):
                 break
 
             order_placement_data = await ArbitrationAlgorithm(orders_arrs, asset_vol_limit, bts_default_fee,
-                                                              assets_fees, min_profit_limit)()
+                                                              assets_fees, min_profit_limit, precisions_arr)()
             await self.volumes_checker(order_placement_data, chain, orders_objs)
 
             time_end = dt.now()

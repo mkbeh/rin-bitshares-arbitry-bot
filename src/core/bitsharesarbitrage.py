@@ -206,12 +206,11 @@ class BitsharesArbitrage(BaseRin):
         while time_delta < DATA_UPDATE_TIME:
             try:
                 orders_arrs = await self._get_orders_data_for_chain(chain, markets_objs)
+                order_placement_data = await ArbitrationAlgorithm(orders_arrs, asset_vol_limit, bts_default_fee,
+                                                                  assets_fees, min_profit_limit, precisions_arr)()
+                await self.volumes_checker(order_placement_data, chain, orders_objs)
             except (IndexError, AuthorizedAsset):
                 break
-
-            order_placement_data = await ArbitrationAlgorithm(orders_arrs, asset_vol_limit, bts_default_fee,
-                                                              assets_fees, min_profit_limit, precisions_arr)()
-            await self.volumes_checker(order_placement_data, chain, orders_objs)
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600

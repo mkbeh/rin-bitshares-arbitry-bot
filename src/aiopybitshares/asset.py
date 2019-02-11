@@ -13,10 +13,10 @@ class Asset(GramBitshares):
         return self
 
     async def convert_name_to_id(self, asset_name, limit=1):
-        data = await self._gram.call_method('list_assets', asset_name.upper(), limit)
+        raw_data = await self._gram.call_method('list_assets', asset_name.upper(), limit)
 
         try:
-            return data['result'][0]['id']
+            return raw_data['result'][0]['id']
         except IndexError:
             raise Exception(f'Got error while getting {asset_name} id.')
         except KeyError:

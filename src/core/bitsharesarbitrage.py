@@ -173,13 +173,13 @@ class BitsharesArbitrage(BaseRin):
         ], dtype=str)
         precisions_arr = np.array(range(4), dtype=int)
 
-        for i, el in enumerate(assets_arr[:4]):
+        for i, asset in enumerate(assets_arr[:4]):
             if i == 2:
                 precisions_arr[i] = (precisions_arr[i - 1])
                 continue
 
             precisions_arr[i] = (
-                (await obj.get_asset_info(el))['precision']
+                (await obj.get_asset_info(asset))['precision']
             )
         await obj.close()
 

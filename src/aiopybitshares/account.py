@@ -12,13 +12,13 @@ class Account(GramBitshares):
 
         return self
 
-    async def get_account_balances(self, acc_id, *args):
+    async def get_account_balances(self, account_id, *args):
         """
-        :param acc_id: ID of the account to get balances for
+        :param account_id: ID of the account to get balances for
         :param args: IDs of the assets to get balances of; if empty, get all assets account has a balance in
         :return:
         """
-        raw_data = await self._gram.call_method('get_account_balances', acc_id, args)
+        raw_data = await self._gram.call_method('get_account_balances', account_id, args)
 
         try:
             return raw_data['result']

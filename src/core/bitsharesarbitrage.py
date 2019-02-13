@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+import contextlib
 import asyncio
 import itertools
 
 import numpy as np
 
 from datetime import datetime as dt
+
+from aiohttp.client_exceptions import ClientConnectionError
 
 from src.extra.baserin import BaseRin
 from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset
@@ -178,7 +181,9 @@ class BitsharesArbitrage(BaseRin):
             start = dt.now()
 
             tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains)
-            self._ioloop.run_until_complete(asyncio.gather(*tasks))
+
+            with contextlib.suppress(ClientConnectionError):
+                self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
             end = dt.now()
             delta = end - start

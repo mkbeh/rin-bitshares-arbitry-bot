@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import contextlib
 import asyncio
 import itertools
 
@@ -182,8 +181,11 @@ class BitsharesArbitrage(BaseRin):
 
             tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains)
 
-            with contextlib.suppress(ClientConnectionError):
+            try:
                 self._ioloop.run_until_complete(asyncio.gather(*tasks))
+            except ClientConnectionError:
+                # логировать данную ситуацию.
+                pass
 
             end = dt.now()
             delta = end - start

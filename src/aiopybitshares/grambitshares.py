@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import json
-import asyncio
 import aiohttp
+
+from aiohttp.client_exceptions import ClientConnectionError
 
 
 default_node = 'wss://bitshares.openledger.info/ws'
@@ -18,11 +19,11 @@ class GramBitshares:
 
         try:
             self._ws = await session.ws_connect(node)
-        except AssertionError:
-            await asyncio.sleep(10)
-            self._ws = await session.ws_connect(node)
-
-        return session
+        except ClientConnectionError:
+            await session.close()
+            raise
+        else:
+            return session
 
     async def connect(self, ws_node=default_node):
         gram = GramBitshares(ws_node)

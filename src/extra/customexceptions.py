@@ -13,5 +13,5 @@ class AuthorizedAsset(OrderExceptions):
     pass
 
 
-class MaxRetriesOrderFilledExceeded(OrderExceptions):
-    pass
+# class MaxRetriesOrderFilledExceeded(OrderExceptions):
+#     pass

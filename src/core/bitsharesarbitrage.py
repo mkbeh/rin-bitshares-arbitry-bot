@@ -7,7 +7,7 @@ import numpy as np
 from datetime import datetime as dt
 
 from src.extra.baserin import BaseRin
-from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, MaxRetriesOrderFilledExceeded
+from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset
 from src.extra import utils
 
 from src.aiopybitshares.market import Market
@@ -18,7 +18,6 @@ from src.const import WORK_DIR, DATA_UPDATE_TIME, MIN_PROFIT_LIMITS, ACCOUNT_NAM
 
 from .limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
 from src.algorithms.arbitryalgorithm import ArbitrationAlgorithm
-from src.algorithms.recalculatevols import RecalculateVols
 
 
 # FOR TESTING ----
@@ -41,58 +40,9 @@ class BitsharesArbitrage(BaseRin):
         # FOR TESTING ----
         # print('COMPILED', cython.compiled)
 
-    async def _sell_assets(self, pair, base_asset_vol):
-        order_obj = await Order().connect(ws_node=WALLET_URI)
-        order_filled = False
-        max_retries = 3
-
-        while not order_filled:
-            if max_retries == 0:
-                raise MaxRetriesOrderFilledExceeded
-
-            market_obj = await Market().connect()
-            orders_arr = await self.get_order_data_for_pair(pair, market_obj, order_type='asks')
-            vols_arr = await RecalculateVols(orders_arr, base_asset_vol)()
-
-            try:
-                order_obj.create_order(
-                    f'{ACCOUNT_NAME}', f'{vols_arr[0]}', f'{pair[0]}',
-                    f'{vols_arr[1]}', f'{pair[1]}', 0, True, True
-                )
-                order_filled = True
-                print('Filled ok')
-
-            except OrderNotFilled:
-                pass
-
-            finally:
-                max_retries -= 1
-
-    async def _actions_when_err_order_not_filled(self, chain, i, order_placement_data):
-        pair = chain[i].split()
-        base_asset_vol = order_placement_data[i][0]
-
-        try:
-            await self._sell_assets(pair, base_asset_vol)
-
-            return True
-        except MaxRetriesOrderFilledExceeded:
-            return False
-
-    async def _order_err_action(self, chain, count, order_placement_data, asset_blacklist=True):
+    async def _order_err_action(self, chain, count, asset_blacklist=True):
         if asset_blacklist:
             await self.write_data(chain[count], self._assets_blacklist_file)
-
-        if count > 0:
-            for i in range(count - 1, -1, -1):
-                pair = chain[i].split()[::-1]
-                base_asset_vol = order_placement_data[i][1]
-
-                try:
-                    await self._sell_assets(pair, base_asset_vol)
-                except MaxRetriesOrderFilledExceeded:
-                    print('in _order_err_action MaxRetriesOrderFilledExceeded')
-                    break
 
     async def _orders_setter(self, order_placement_data, chain, orders_objs):
         print('profit chain: ', chain, order_placement_data)
@@ -107,17 +57,10 @@ class BitsharesArbitrage(BaseRin):
                 )
 
             except OrderNotFilled:
-                is_filled = await self._actions_when_err_order_not_filled(chain, i, order_placement_data)
-
-                if not is_filled:
-                    await self._order_err_action(chain, i, order_placement_data, False)
-                    break
-
-                continue
+                break
 
             except AuthorizedAsset:
-                print('AuthorizedAsset')
-                await self._order_err_action(chain, i, order_placement_data)
+                await self._order_err_action(chain, i)
                 raise
 
     async def volumes_checker(self, order_placement_data, chain, orders_objs):

@@ -33,6 +33,7 @@ class BitsharesArbitrage(BaseRin):
     _vol_limits = None
     _bts_default_fee = None
     _assets_blacklist_file = utils.get_file(WORK_DIR, f'assets_blacklist.lst')
+    _is_orders_placing = False
 
     def __init__(self, loop):
         self._ioloop = loop
@@ -151,7 +152,11 @@ class BitsharesArbitrage(BaseRin):
                 orders_arrs = await self._get_orders_data_for_chain(chain, markets_objs)
                 order_placement_data = await ArbitrationAlgorithm(orders_arrs, asset_vol_limit, bts_default_fee,
                                                                   assets_fees, min_profit_limit, precisions_arr)()
-                await self.volumes_checker(order_placement_data, chain, orders_objs)
+                if self._is_orders_placing is False:
+                    self._is_orders_placing = True
+                    await self.volumes_checker(order_placement_data, chain, orders_objs)
+                    self._is_orders_placing = False
+
             except (IndexError, AuthorizedAsset):
                 break
 

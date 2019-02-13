@@ -8,10 +8,11 @@ import array
 from decimal import Decimal, ROUND_HALF_UP
 from collections import namedtuple
 
+from .chainscreator import ChainsCreator
 from src.extra.baserin import BaseRin
-from src.aiopybitshares.asset import Asset
-from src.const import VOLS_LIMITS, WORK_DIR, WALLET_URI
 from src.extra import utils
+from src.const import VOLS_LIMITS, WORK_DIR, WALLET_URI
+from src.aiopybitshares.asset import Asset
 
 
 class VolLimits(BaseRin):
@@ -144,7 +145,7 @@ class ChainsWithGatewayPairFees(BaseRin):
         self._ioloop = loop
         # self._file_with_chains = ChainsCreator(self._ioloop).start_creating_chains()
         self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
-                                 'output/chains-23-01-2019-21-22-47.lst'
+                                 'output/chains-13-02-2019-17-31-02.lst'
         self._fees_count = 0
 
     @staticmethod

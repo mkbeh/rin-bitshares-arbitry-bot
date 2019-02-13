@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 import asyncio
-import aiofiles
 
 from src.extra.baserin import BaseRin
 from src.parsers.cryptofreshparser import CryptofreshParser
@@ -9,6 +8,7 @@ from src.parsers.bitsharesexplorerparser import BitsharesExplorerParser
 from src.aiopybitshares.asset import Asset
 from src.const import WORK_DIR
 from src.extra import utils
+from src.extra.customexceptions import FileDoesNotExist
 
 
 class ChainsCreator(BaseRin):
@@ -22,7 +22,18 @@ class ChainsCreator(BaseRin):
 
     def __init__(self, loop):
         self._ioloop = loop
+        self._blacklisted_assets = self._get_blacklisted_assets()
         self._file_with_pairs = self._get_file_with_pairs()
+
+    def _get_blacklisted_assets(self):
+        blacklist_file = utils.get_file(WORK_DIR, f'blacklist.lst')
+
+        try:
+            blacklisted_assets = self._get_pairs_from_file(blacklist_file)
+        except (FileNotFoundError, FileDoesNotExist):
+            blacklisted_assets = []
+
+        return blacklisted_assets
 
     def _get_file_with_pairs(self):
         parsers = [BitsharesExplorerParser, CryptofreshParser]
@@ -39,10 +50,10 @@ class ChainsCreator(BaseRin):
 
         return file_with_pairs[0]
 
-    async def _write_chain(self, chain):
-        async with self._lock:
-            async with aiofiles.open(self._new_file, 'a') as f:
-                await f.write(f'{chain}\n')
+    async def _check_chain_on_entry_in_blacklist(self, chain):
+        for asset in chain:
+            if asset in self._blacklisted_assets:
+                return True
 
     @staticmethod
     async def _get_chain_with_ids(pygram_obj, *args):
@@ -51,7 +62,7 @@ class ChainsCreator(BaseRin):
         for i in range(0, len(args), 2):
             chains_with_ids[i] = chains_with_ids[i-1] = await pygram_obj.convert_name_to_id(args[i])
 
-        return '{}:{} {}:{} {}:{}'.format(*chains_with_ids)
+        return '{}:{} {}:{} {}:{}'.format(*chains_with_ids), chains_with_ids
 
     @staticmethod
     async def _adjust_asset_location_in_seq(asset, seq):
@@ -78,10 +89,12 @@ class ChainsCreator(BaseRin):
                                 tertiary = (await self._adjust_asset_location_in_seq(secondary[1], pair3)).copy()
                                 chain = await self._get_chain_with_ids(pygram_asset, *main, *secondary, *tertiary)
 
-                                if chain not in chains:
-                                    chains.append(chain)
+                                if chain[0] not in chains:
+                                    chains.append(chain[0])
                                     self._chains_count += 1
-                                    await self._write_chain(chain)
+
+                                    if not await self._check_chain_on_entry_in_blacklist(chain[1]):
+                                        await self.write_data(chain[0], self._new_file, lock=self._lock)
 
         await pygram_asset.close()
 
@@ -98,12 +111,13 @@ class ChainsCreator(BaseRin):
 
         return new_seq
 
-    def _get_pairs_from_file(self):
-        return utils.clear_each_str_in_seq(utils.read_file(self._file_with_pairs), '\n', ' ')
+    @staticmethod
+    def _get_pairs_from_file(file):
+        return utils.clear_each_str_in_seq(utils.read_file(file), '\n', ' ')
 
     def start_creating_chains(self):
         try:
-            pairs_lst = self._remove_pairs_duplicates_from_seq(self._get_pairs_from_file())
+            pairs_lst = self._remove_pairs_duplicates_from_seq(self._get_pairs_from_file(self._file_with_pairs))
             tasks = [self._ioloop.create_task(self._create_chains_for_asset(asset, pairs_lst))
                      for asset in self._main_assets]
             self._ioloop.run_until_complete(asyncio.wait(tasks))

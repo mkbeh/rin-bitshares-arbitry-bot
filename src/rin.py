@@ -1,5 +1,4 @@
 # -*- coding: utf-8
-# TODO 1. Разобраться с упаковкой проекта в файл
 # TODO 2. Сделать конфиг и использовать configparser (прежде подумать , нужен ли он :D)
 import logging
 import asyncio
@@ -13,7 +12,6 @@ class Rin:
     @staticmethod
     def start_arbitrage():
         from src.core.bitsharesarbitrage import BitsharesArbitrage
-
         ioloop = asyncio.get_event_loop()
 
         try:

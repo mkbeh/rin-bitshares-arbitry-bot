@@ -32,7 +32,7 @@ from src.algorithms.arbitryalgorithm import ArbitrationAlgorithm
 class BitsharesArbitrage(BaseRin):
     _vol_limits = None
     _bts_default_fee = None
-    _assets_blacklist_file = utils.get_file(WORK_DIR, f'assets_blacklist.lst')
+    _assets_blacklist_file = utils.get_file(WORK_DIR, f'blacklist.lst')
     _is_orders_placing = False
 
     def __init__(self, loop):
@@ -171,18 +171,18 @@ class BitsharesArbitrage(BaseRin):
     def start_arbitrage(self):
         while True:
             chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
-            self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
-            self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
-
-            # -- checking speed
-            start = dt.now()
-
-            tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains)
-            self._ioloop.run_until_complete(asyncio.gather(*tasks))
-
-            end = dt.now()
-            delta = end - start
-            print('CHAINS + ALGO', delta.microseconds / 1_000_000, ' ms')
-            # --\
+            # self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
+            # self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
+            #
+            # # -- checking speed
+            # start = dt.now()
+            #
+            # tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains)
+            # self._ioloop.run_until_complete(asyncio.gather(*tasks))
+            #
+            # end = dt.now()
+            # delta = end - start
+            # print('CHAINS + ALGO', delta.microseconds / 1_000_000, ' ms')
+            # # --\
 
             break

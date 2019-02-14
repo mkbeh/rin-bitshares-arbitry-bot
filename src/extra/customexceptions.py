@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
 
+class ReceivedDifferentOrdersAmount(ValueError):
+    pass
+
+
 """
 Order exceptions.
 """

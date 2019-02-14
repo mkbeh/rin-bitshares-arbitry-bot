@@ -11,7 +11,7 @@ from datetime import datetime as dt
 from aiohttp.client_exceptions import ClientConnectionError
 
 from src.extra.baserin import BaseRin
-from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset
+from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, ReceivedDifferentOrdersAmount
 from src.extra import utils
 
 from src.aiopybitshares.market import Market
@@ -108,7 +108,7 @@ class BitsharesArbitrage(BaseRin):
 
         try:
             pairs_orders_data_arr = np.array(pairs_orders_data_arrs, dtype=float)
-        except ValueError:
+        except ReceivedDifferentOrdersAmount:
             len_of_smallest_arr = await get_size_of_smallest_arr(pairs_orders_data_arrs)
             pairs_orders_data_arr = await cut_off_extra_arrs_els(pairs_orders_data_arrs, len_of_smallest_arr)
 

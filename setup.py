@@ -36,7 +36,6 @@ setup(
         'beautifulsoup4==4.7.1',
         'Cython==0.29.3',
         'lxml==4.3.0',
-        'websockets==7.0',
         'markdown',
         'uvloop',
         'numpy',

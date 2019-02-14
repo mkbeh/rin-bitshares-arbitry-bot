@@ -166,7 +166,7 @@ class BitsharesArbitrage(BaseRin):
                     self._is_orders_placing = False
 
             except (IndexError, AuthorizedAsset):
-                break
+                return
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600

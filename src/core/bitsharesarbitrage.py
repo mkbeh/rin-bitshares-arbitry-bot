@@ -11,7 +11,7 @@ from datetime import datetime as dt
 from aiohttp.client_exceptions import ClientConnectionError
 
 from src.extra.baserin import BaseRin
-from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, ReceivedDifferentOrdersAmount
+from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, ReceivedDifferentOrdersAmount, ClearOrdersList
 from src.extra import utils
 
 from src.aiopybitshares.market import Market
@@ -86,7 +86,7 @@ class BitsharesArbitrage(BaseRin):
 
         try:
             arr[0]
-        except IndexError:
+        except ClearOrdersList:
             raise
 
         return arr
@@ -165,7 +165,7 @@ class BitsharesArbitrage(BaseRin):
                     await self.volumes_checker(orders_vols, chain, orders_objs, profit)
                     self._is_orders_placing = False
 
-            except (IndexError, AuthorizedAsset):
+            except (ClearOrdersList, AuthorizedAsset):
                 return
 
             time_end = dt.now()

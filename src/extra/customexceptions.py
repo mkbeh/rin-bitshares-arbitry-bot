@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
 
+class ClearOrdersList(IndexError):
+    pass
+
+
 class ReceivedDifferentOrdersAmount(ValueError):
     pass
 

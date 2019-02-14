@@ -11,7 +11,7 @@ from src.const import OVERALL_MIN_DAILY_VOLUME, PAIR_MIN_DAILY_VOLUME, WORK_DIR
 
 
 class BitsharesExplorerParser(BaseRin):
-    _logger = logging.getLogger('BitsharesExplorerParser')
+    _logger = logging.getLogger('Rin.BitsharesExplorerParser')
     _assets_url = 'http://185.208.208.184:5000/assets'
     _assets_markets_url = 'http://185.208.208.184:5000/get_markets?asset_id={}'
     _market_data_url = 'http://185.208.208.184:5000/get_volume?base={}&quote={}'
@@ -44,7 +44,8 @@ class BitsharesExplorerParser(BaseRin):
         assets_data = await self.get_data(self._assets_url, self._logger, 2, json=True)
         AssetInfo = namedtuple('AssetsInfo', ['id', 'price'])
         assets = [
-            AssetInfo(asset[2], asset[3]) for asset in assets_data
+            AssetInfo(asset[2], asset[3])
+            for asset in assets_data
             if float(asset[4]) > self._overall_min_daily_vol
         ]
         self._logger.info(f'Parsed: {len(assets)} assets.')
@@ -66,7 +67,9 @@ class BitsharesExplorerParser(BaseRin):
             return FileData(self._new_file, True)
 
         except TypeError:
-            return self.actions_when_error('JSON data retrieval error.', self._logger, self._old_file)
+            self._logger.exception('JSON data retrieval error.')
+            return self.actions_when_error(self._old_file)
 
         except Exception as err:
-            return self.actions_when_error(err, self._logger, self._old_file)
+            self._logger.exception('Exception occurred while parsing.', err)
+            return self.actions_when_error(self._old_file)

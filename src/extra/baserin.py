@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 import random
 import logging
 import asyncio
@@ -13,9 +12,18 @@ from src.const import LOG_DIR, WORK_DIR
 class BaseRin:
     utils.dir_exists(WORK_DIR)
     utils.dir_exists(LOG_DIR)
-    logging.basicConfig(filename=os.path.join(LOG_DIR, 'rin.log'),
-                        level=logging.INFO,
-                        format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+
+    @staticmethod
+    def setup_logger(logger_name, log_file, level=logging.INFO):
+        logger = logging.getLogger(logger_name)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(formatter)
+
+        logger.setLevel(level)
+        logger.addHandler(file_handler)
+
+        return logger
 
     @staticmethod
     async def write_data(data, file, lock=None):
@@ -30,7 +38,7 @@ class BaseRin:
                 lock.release()
 
     @staticmethod
-    async def get_data(url, logger, delay, json=False):
+    async def get_data(url, delay, logger, json=False):
         await asyncio.sleep(random.randint(0, delay))
         timeout = aiohttp.ClientTimeout(total=30)
 
@@ -43,16 +51,14 @@ class BaseRin:
 
                         return await resp.text('utf-8')
 
-            except aiohttp.ClientConnectionError as err:
-                logger.warning(err)
+            except aiohttp.ClientConnectionError:
+                logger.exception('Error while getting data.')
 
-            except aiohttp.ServerTimeoutError as err:
-                logger.warning(err)
+            except aiohttp.ServerTimeoutError:
+                logger.exception('Error while getting data.')
 
     @staticmethod
-    def actions_when_error(msg, logger, retrieve_file=None, value_from_file=False):
-        logger.warning(msg)
-
+    def actions_when_error(retrieve_file=None, value_from_file=False):
         if retrieve_file:
             if value_from_file:
                 return utils.read_file(retrieve_file)[0].replace('\n', '').strip()
@@ -60,9 +66,7 @@ class BaseRin:
             return retrieve_file
 
     @staticmethod
-    def actions_when_errors_with_read_data(msg, logger, file):
-        logger.warning(msg)
-
+    def actions_when_errors_with_read_data(file):
         return utils.read_file(file)
 
     @staticmethod

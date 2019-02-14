@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-import asyncio
+import os
+import logging
 import itertools
+import asyncio
 
 import numpy as np
 
@@ -16,41 +18,33 @@ from src.aiopybitshares.market import Market
 from src.aiopybitshares.order import Order
 from src.aiopybitshares.asset import Asset
 
-from src.const import WORK_DIR, DATA_UPDATE_TIME, MIN_PROFIT_LIMITS, ACCOUNT_NAME, WALLET_URI
+from src.const import WORK_DIR, DATA_UPDATE_TIME, MIN_PROFIT_LIMITS, ACCOUNT_NAME, WALLET_URI, LOG_DIR
 
 from .limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
 from src.algorithms.arbitryalgorithm import ArbitrationAlgorithm
 
 
-# FOR TESTING ----
-
-
-# start = dt.now()
-# end = dt.now()
-# delta = end - start
-# print(delta.microseconds)
-
-
 class BitsharesArbitrage(BaseRin):
+    _logger = logging.getLogger('Rin.BitsharesArbitrage')
     _vol_limits = None
     _bts_default_fee = None
     _assets_blacklist_file = utils.get_file(WORK_DIR, f'blacklist.lst')
     _is_orders_placing = False
 
+    _client_conn_err_msg = 'Getting client connection error while arbitrage testing.'
+
     def __init__(self, loop):
         self._ioloop = loop
-
-        # FOR TESTING ----
-        # print('COMPILED', cython.compiled)
+        self._profit_logger = self.setup_logger('Profit', os.path.join(LOG_DIR, 'profit.log'))
 
     async def _order_err_action(self, chain, count, asset_blacklist=True):
         if asset_blacklist:
-            await self.write_data(chain[count], self._assets_blacklist_file)
+            await self.write_data(chain[count][1], self._assets_blacklist_file)
 
-    async def _orders_setter(self, order_placement_data, chain, orders_objs):
-        print('profit chain: ', chain, order_placement_data)
+    async def _orders_setter(self, orders_placement_data, chain, orders_objs):
+        filled_all = True
 
-        for i, (vols_arr, order_obj) in enumerate(zip(order_placement_data, orders_objs)):
+        for i, (vols_arr, order_obj) in enumerate(zip(orders_placement_data, orders_objs)):
             splitted_pair = chain[i].split(':')
 
             try:
@@ -60,15 +54,26 @@ class BitsharesArbitrage(BaseRin):
                 )
 
             except OrderNotFilled:
+                filled_all = False
+                self._logger.warning(f'Order for pair {chain[i]} in chain '
+                                     f'{chain} with volumes {vols_arr} not filled.')
                 break
 
             except AuthorizedAsset:
                 await self._order_err_action(chain, i)
+                self._logger.warning(f'Got Authorized asset {chain[i][1]} '
+                                     f'in chain {chain} while placing order.')
                 raise
 
-    async def volumes_checker(self, order_placement_data, chain, orders_objs):
-        if order_placement_data.size:
-            await self._orders_setter(order_placement_data, chain, orders_objs)
+        if filled_all:
+            self._logger.info(f'All orders for {chain} with volumes '
+                              f'- {orders_placement_data} successfully filed.')
+
+    async def volumes_checker(self, orders_vols, chain, orders_objs, profit):
+        if orders_vols.size:
+            # await self._orders_setter(order_placement_data, chain, orders_objs)
+            self._profit_logger.info(f'Profit = {profit} | Chain: {chain} | '
+                                     f'Volumes: {orders_vols[0][0], orders_vols[2][1]}')
 
     @staticmethod
     async def get_order_data_for_pair(pair, market_gram, order_type='asks', limit=5):
@@ -152,11 +157,12 @@ class BitsharesArbitrage(BaseRin):
         while time_delta < DATA_UPDATE_TIME:
             try:
                 orders_arrs = await self._get_orders_data_for_chain(chain, markets_objs)
-                order_placement_data = await ArbitrationAlgorithm(orders_arrs, asset_vol_limit, bts_default_fee,
-                                                                  assets_fees, min_profit_limit, precisions_arr)()
+                orders_vols, profit = await ArbitrationAlgorithm(orders_arrs, asset_vol_limit, bts_default_fee,
+                                                                 assets_fees, min_profit_limit, precisions_arr)()
+
                 if self._is_orders_placing is False:
                     self._is_orders_placing = True
-                    await self.volumes_checker(order_placement_data, chain, orders_objs)
+                    await self.volumes_checker(orders_vols, chain, orders_objs, profit)
                     self._is_orders_placing = False
 
             except (IndexError, AuthorizedAsset):
@@ -171,6 +177,8 @@ class BitsharesArbitrage(BaseRin):
         [await order_obj.close() for order_obj in orders_objs]
 
     def start_arbitrage(self):
+        cycle_counter = 0
+
         while True:
             chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
             self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
@@ -184,12 +192,15 @@ class BitsharesArbitrage(BaseRin):
             try:
                 self._ioloop.run_until_complete(asyncio.gather(*tasks))
             except ClientConnectionError:
-                # логировать данную ситуацию.
-                pass
+                self._logger.exception(self._client_conn_err_msg)
 
             end = dt.now()
             delta = end - start
             print('CHAINS + ALGO', delta.microseconds / 1_000_000, ' ms')
             # --\
+
+            # Test log.
+            self._logger.info(f'Success arbitrage cycle #{cycle_counter}.\n')
+            cycle_counter += 1
 
             break

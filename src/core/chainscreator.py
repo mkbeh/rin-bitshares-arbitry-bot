@@ -12,7 +12,7 @@ from src.extra.customexceptions import FileDoesNotExist
 
 
 class ChainsCreator(BaseRin):
-    _logger = logging.getLogger('ChainsCreator')
+    _logger = logging.getLogger('Rin.ChainsCreator')
     _lock = asyncio.Lock()
     _main_assets = ['BTS', 'BRIDGE.BTC', 'CNY', 'USD']
     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'chains'))
@@ -123,7 +123,8 @@ class ChainsCreator(BaseRin):
             self._ioloop.run_until_complete(asyncio.wait(tasks))
 
         except Exception as err:
-            return self.actions_when_error(err, self._logger, self._old_file)
+            self._logger.exception('Exception occurred while creating chains.', err)
+            return self.actions_when_error(self._old_file)
 
         else:
             utils.remove_file(self._old_file)

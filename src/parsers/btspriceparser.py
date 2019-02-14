@@ -10,7 +10,7 @@ from src.const import WORK_DIR
 
 
 class BTSPriceParser(BaseRin):
-    _logger = logging.getLogger('BTSPriceParser')
+    _logger = logging.getLogger('Rin.BTSPriceParser')
     _site_url = 'https://www.coingecko.com/ru/%D0%B4%D0%B8%D0%BD%D0%B0%D0%BC%D0%B8%D0%BA%D0%B0_%D1%86%D0%B5%D0%BD' \
                 '/bitshares/usd'
     _node_url = 'http://185.208.208.184:5000/get_ticker?base=USD&quote=BTS'
@@ -23,7 +23,7 @@ class BTSPriceParser(BaseRin):
         self.ioloop = loop
 
     async def _get_price_from_node(self):
-        response = await self.get_data(self._node_url, self._logger, delay=2, json=True)
+        response = await self.get_data(self._node_url, delay=2, logger=self._logger, json=True)
 
         try:
             return float(response['latest'])
@@ -31,7 +31,7 @@ class BTSPriceParser(BaseRin):
             self._logger.warning(response['detail'])
 
     async def _parse_price_from_site(self):
-        html = await self.get_data(self._site_url, self._logger, delay=2)
+        html = await self.get_data(self._site_url, delay=2, logger=self._logger)
 
         bs_obj = BeautifulSoup(html, 'lxml')
         price = bs_obj.find('span', {'data-coin-symbol': 'bts'}).get_text() \
@@ -49,8 +49,8 @@ class BTSPriceParser(BaseRin):
                 await self.write_data(str(price), self._new_file, self._lock)
                 return price
 
-        return self.actions_when_error('Could not get BTS price in USD.', self._logger,
-                                       self._old_file, value_from_file=True)
+        self._logger.warning('Could not get BTS price in USD.')
+        return self.actions_when_error(self._old_file, value_from_file=True)
 
     def get_bts_price_in_usd(self):
         task = self.ioloop.create_task(self._get_price())
@@ -59,16 +59,21 @@ class BTSPriceParser(BaseRin):
             price = self.ioloop.run_until_complete(asyncio.gather(task))
 
         except ValueError:
-            return self.actions_when_error('Could not convert parsed price to float.',
-                                           self._logger, self._old_file, value_from_file=True)
+            self._logger.exception('Could not convert parsed price to float.')
+            return self.actions_when_error(self._old_file, value_from_file=True)
+
         except AttributeError:
-            return self.actions_when_error('Could not get price from html.',
-                                           self._logger, self._old_file, value_from_file=True)
+            self._logger.exception('Could not get price from html.')
+            return self.actions_when_error(self._old_file, value_from_file=True)
+
         except TypeError:
-            return self.actions_when_error('HTML data retrieval error.',
-                                           self._logger, self._old_file, value_from_file=True)
+            self._logger.exception('HTML data retrieval error.')
+            return self.actions_when_error(self._old_file, value_from_file=True)
+
         except Exception as err:
-            return self.actions_when_error(err, self._logger, self._old_file, value_from_file=True)
+            self._logger.exception('Exception occurred while getting BTS price.', err)
+            return self.actions_when_error(self._old_file, value_from_file=True)
+
         else:
             utils.remove_file(self._old_file)
             self._logger.info(f'BTS price is ${price[0]}.')

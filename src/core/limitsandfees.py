@@ -16,8 +16,8 @@ from src.aiopybitshares.asset import Asset
 
 
 class VolLimits(BaseRin):
-    _logger = logging.getLogger('VolLimits')
     _lock = asyncio.Lock()
+    _logger = logging.getLogger('Rin.VolLimits')
     _url = 'http://185.208.208.184:5000/get_ticker?base={}&quote={}'
     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'vol_limits'))
     _date = utils.get_today_date()
@@ -41,19 +41,19 @@ class VolLimits(BaseRin):
 
         return limits
 
-    async def _get_asset_price(self, base_asset, quote_asset, logger):
+    async def _get_asset_price(self, base_asset, quote_asset):
         response = await self.get_data(self._url.format(base_asset, quote_asset),
-                                       logger=logger, delay=1, json=True)
+                                       logger=None, delay=1, json=True)
 
         try:
             return response['latest']
         except KeyError:
-            logger.warning(response['detail'])
+            self._logger.warning(response['detail'])
 
     async def _get_limits(self):
         assets = VOLS_LIMITS.keys()
         prices = await asyncio.gather(
-            *[self._get_asset_price(asset, '1.3.121', self._logger) for asset in assets if asset != '1.3.121']
+            *[self._get_asset_price(asset, '1.3.121') for asset in assets if asset != '1.3.121']
         )
 
         vol_limits = await self._calculate_limits(prices)
@@ -69,8 +69,9 @@ class VolLimits(BaseRin):
         try:
             vol_limits = self._ioloop.run_until_complete(asyncio.gather(*tasks))[0]
         except Exception as err:
+            self._logger.exception('Exception occurred while getting limits.', err)
             return json.loads(
-                self.actions_when_errors_with_read_data(err, self._logger, self._old_file)[0]
+                self.actions_when_errors_with_read_data(self._old_file)[0]
             )
 
         else:
@@ -81,7 +82,7 @@ class VolLimits(BaseRin):
 
 
 class DefaultBTSFee(VolLimits):
-    _logger = logging.getLogger('DefaultBTSFee')
+    _logger = logging.getLogger('Rin.DefaultBTSFee')
     _lock = asyncio.Lock()
     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'btsdefaultfee'))
     _date = utils.get_today_date()
@@ -96,7 +97,7 @@ class DefaultBTSFee(VolLimits):
     async def _get_converted_order_fee(self):
         assets = VOLS_LIMITS.keys()
         prices = await asyncio.gather(
-            *[self._get_asset_price(asset, '1.3.0', self._logger) for asset in assets if asset != '1.3.0']
+            *[self._get_asset_price(asset, '1.3.0') for asset in assets if asset != '1.3.0']
         )
         prices.insert(0, self._order_create_fee)
 
@@ -122,8 +123,9 @@ class DefaultBTSFee(VolLimits):
         try:
             converted_fees = self._ioloop.run_until_complete(asyncio.gather(*tasks))[0]
         except Exception as err:
+            self._logger.exception('Exception occurred while getting converted default bts fee', err)
             return json.loads(
-                self.actions_when_errors_with_read_data(err, self._logger, self._old_file)[0]
+                self.actions_when_errors_with_read_data(self._old_file)[0]
             )
 
         else:
@@ -135,7 +137,7 @@ class DefaultBTSFee(VolLimits):
 
 class ChainsWithGatewayPairFees(BaseRin):
     _url = 'https://wallet.bitshares.org/#/market/{}_{}'
-    _logger = logging.getLogger('ChainsWithGatewayPairFees')
+    _logger = logging.getLogger('Rin.ChainsWithGatewayPairFees')
     _lock = asyncio.Lock()
     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'chains_with_fees'))
     _date = utils.get_today_date()
@@ -145,7 +147,7 @@ class ChainsWithGatewayPairFees(BaseRin):
         self._ioloop = loop
         # self._file_with_chains = ChainsCreator(self._ioloop).start_creating_chains()
         self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
-                                 'output/chains-13-02-2019-17-31-02.lst'
+                                 'output/chains-13-02-2019-17-42-07.lst'
         self._fees_count = 0
 
     @staticmethod
@@ -183,7 +185,8 @@ class ChainsWithGatewayPairFees(BaseRin):
         try:
             chains_and_fees = self._ioloop.run_until_complete(asyncio.gather(*tasks))
         except Exception as err:
-            str_chains_and_fees = self.actions_when_errors_with_read_data(err, self._logger, self._old_file)
+            self._logger.exception('Exception occurred while getting chain fees.', err)
+            str_chains_and_fees = self.actions_when_errors_with_read_data(self._old_file)
             chains_and_fees = str_chains_and_fees.split(' ')
             ChainAndFees = namedtuple('ChainAndFees', ['chain', 'fees'])
 

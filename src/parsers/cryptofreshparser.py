@@ -13,7 +13,7 @@ from src.extra import utils
 
 
 class CryptofreshParser(BaseRin):
-    _logger = logging.getLogger('CryptofreshParser')
+    _logger = logging.getLogger('Rin.CryptofreshParser')
     _main_page_url = 'https://cryptofresh.com/assets'
     _assets_url = 'https://cryptofresh.com{}'
     _lock = asyncio.Lock()
@@ -71,14 +71,15 @@ class CryptofreshParser(BaseRin):
 
     def start_parsing(self):
         try:
-            task = self._ioloop.create_task(self.get_data(self._main_page_url, self._logger, delay=2))
+            task = self._ioloop.create_task(self.get_data(self._main_page_url, delay=2, logger=self._logger))
             assets_page_html = self._ioloop.run_until_complete(asyncio.gather(task))
 
             task = self._ioloop.create_task(self._get_valid_data(*assets_page_html, OVERALL_MIN_DAILY_VOLUME, True))
             assets = self._ioloop.run_until_complete(asyncio.gather(task))[0]
 
             if assets:
-                tasks = (self._ioloop.create_task(self.get_data(self._assets_url.format(asset), self._logger, delay=30))
+                tasks = (self._ioloop.create_task(self.get_data(self._assets_url.format(asset),
+                                                                delay=30, logger=self._logger))
                          for asset in assets)
                 htmls = self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
@@ -98,7 +99,9 @@ class CryptofreshParser(BaseRin):
                 return self._old_file
 
         except TypeError:
-            return self.actions_when_error('HTML data retrieval error.', self._logger, self._old_file)
+            self._logger.exception('HTML data retrieval error.')
+            return self.actions_when_error(self._old_file)
 
         except Exception as err:
-            return self.actions_when_error(err, self._logger, self._old_file)
+            self._logger.exception('Exception occurred.', err)
+            return self.actions_when_error(self._old_file)

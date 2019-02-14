@@ -23,13 +23,13 @@ class ArbitrationAlgorithm:
 
         return vols_arr_with_precs
 
-    async def _prepare_orders_arr(self, arr):
+    async def _prepare_orders_arr(self, arr, profit):
         vols_arr_without_prices = np.array([
             *((el[2], el[1]) for el in arr)
         ], dtype=float)
         rounded_vols_arr = await self._round_vols_to_specific_prec(vols_arr_without_prices, self._precisions_arr)
 
-        return rounded_vols_arr.reshape(3, 2)
+        return rounded_vols_arr.reshape(3, 2), profit
 
     async def _is_profit_valid(self, profit):
         return profit > self._profit_limit
@@ -147,6 +147,6 @@ class ArbitrationAlgorithm:
         is_profit = await self._is_profit_valid(profit)
 
         if is_profit:
-            return await self._prepare_orders_arr(algo_data[1])
+            return await self._prepare_orders_arr(algo_data[1], profit)
 
-        return np.delete(algo_data[1], np.s_[:])
+        return np.delete(algo_data[1], np.s_[:]), profit

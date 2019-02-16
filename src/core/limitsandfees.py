@@ -151,6 +151,19 @@ class ChainsWithGatewayPairFees(BaseRin):
         self._fees_count = 0
 
     @staticmethod
+    def _create_chains_and_fees_when_error(str_chains_and_fees):
+        ChainAndFees = namedtuple('ChainAndFees', ['chain', 'fees'])
+        final_lst = []
+
+        for str_chain_and_fee in str_chains_and_fees:
+            cleared_data = str_chain_and_fee.replace('\n', '').split(' ')
+            arr = array.array('f')
+            arr.extend(map(lambda x: float(x), cleared_data[3:]))
+            final_lst.append(ChainAndFees(tuple(cleared_data[:3]), arr))
+
+        return final_lst
+
+    @staticmethod
     async def _get_fees_for_chain(chain):
         assets_objs = [Asset() for _ in range(len(chain))]
         [await asset_obj.connect(WALLET_URI) for asset_obj in assets_objs]
@@ -186,14 +199,10 @@ class ChainsWithGatewayPairFees(BaseRin):
             chains_and_fees = self._ioloop.run_until_complete(asyncio.gather(*tasks))
         except Exception as err:
             self._logger.exception('Exception occurred while getting chain fees.', err)
-            str_chains_and_fees = self.actions_when_errors_with_read_data(self._old_file)
-            chains_and_fees = str_chains_and_fees.split(' ')
-            ChainAndFees = namedtuple('ChainAndFees', ['chain', 'fees'])
 
-            arr = array.array('f')
-            arr.extend(map(lambda x: float(x), chains_and_fees[3:]))
-
-            return ChainAndFees(tuple(chains_and_fees[:3]), arr)
+            return self._create_chains_and_fees_when_error(
+                self.actions_when_errors_with_read_data(self._old_file)
+            )
 
         else:
             utils.remove_file(self._old_file)

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import time
 import logging
 import itertools
 import asyncio
@@ -162,7 +163,7 @@ class BitsharesArbitrage(BaseRin):
 
                 if self._is_orders_placing is False:
                     self._is_orders_placing = True
-                    await self.volumes_checker(orders_vols, chain, orders_objs, profit)
+                    # await self.volumes_checker(orders_vols, chain, orders_objs, profit)
                     self._is_orders_placing = False
 
             except (ClearOrdersList, AuthorizedAsset):
@@ -180,27 +181,28 @@ class BitsharesArbitrage(BaseRin):
         cycle_counter = 0
 
         while True:
+            print('new cycle')
             chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
             self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
             self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
 
             # -- checking speed
             start = dt.now()
-
             tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains)
 
             try:
                 self._ioloop.run_until_complete(asyncio.gather(*tasks))
             except ClientConnectionError:
                 self._logger.exception(self._client_conn_err_msg)
+                print('err')
+                time.sleep(10)
+            else:
+                self._logger.info(f'Success arbitrage cycle #{cycle_counter}.\n')
+                cycle_counter += 1
 
             end = dt.now()
             delta = end - start
             print('CHAINS + ALGO', delta.microseconds / 1_000_000, ' ms')
             # --\
-
-            # Test log.
-            self._logger.info(f'Success arbitrage cycle #{cycle_counter}.\n')
-            cycle_counter += 1
 
             break

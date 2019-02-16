@@ -19,7 +19,8 @@ from src.aiopybitshares.market import Market
 from src.aiopybitshares.order import Order
 from src.aiopybitshares.asset import Asset
 
-from src.const import WORK_DIR, DATA_UPDATE_TIME, MIN_PROFIT_LIMITS, ACCOUNT_NAME, WALLET_URI, LOG_DIR
+from src.const import WORK_DIR, DATA_UPDATE_TIME, MIN_PROFIT_LIMITS, ACCOUNT_NAME, WALLET_URI, LOG_DIR, \
+    TIME_TO_RECONNECT
 
 from .limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
 from src.algorithms.arbitryalgorithm import ArbitrationAlgorithm
@@ -194,8 +195,7 @@ class BitsharesArbitrage(BaseRin):
                 self._ioloop.run_until_complete(asyncio.gather(*tasks))
             except ClientConnectionError:
                 self._logger.exception(self._client_conn_err_msg)
-                print('err')
-                time.sleep(10)
+                time.sleep(TIME_TO_RECONNECT)
             else:
                 self._logger.info(f'Success arbitrage cycle #{cycle_counter}.\n')
                 cycle_counter += 1

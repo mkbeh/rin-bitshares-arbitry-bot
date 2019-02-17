@@ -5,8 +5,12 @@ import asyncio
 import itertools
 import array
 
+import numpy as np
+
 from decimal import Decimal, ROUND_HALF_UP
 from collections import namedtuple
+
+from aiohttp.client_exceptions import ClientConnectionError
 
 from .chainscreator import ChainsCreator
 from src.extra.baserin import BaseRin
@@ -68,8 +72,8 @@ class VolLimits(BaseRin):
 
         try:
             vol_limits = self._ioloop.run_until_complete(asyncio.gather(*tasks))[0]
-        except Exception as err:
-            self._logger.exception('Exception occurred while getting limits.', err)
+        except ClientConnectionError:
+            self._logger.exception('Client connection error occurred while getting volume limits.')
             return json.loads(
                 self.actions_when_errors_with_read_data(self._old_file)[0]
             )
@@ -122,8 +126,8 @@ class DefaultBTSFee(VolLimits):
 
         try:
             converted_fees = self._ioloop.run_until_complete(asyncio.gather(*tasks))[0]
-        except Exception as err:
-            self._logger.exception('Exception occurred while getting converted default bts fee', err)
+        except ClientConnectionError:
+            self._logger.exception('Client connection error occurred while getting converted default bts fee')
             return json.loads(
                 self.actions_when_errors_with_read_data(self._old_file)[0]
             )
@@ -149,19 +153,6 @@ class ChainsWithGatewayPairFees(BaseRin):
         self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
                                  'output/chains-13-02-2019-17-42-07.lst'
         self._fees_count = 0
-
-    @staticmethod
-    def _create_chains_and_fees_when_error(str_chains_and_fees):
-        ChainAndFees = namedtuple('ChainAndFees', ['chain', 'fees'])
-        final_lst = []
-
-        for str_chain_and_fee in str_chains_and_fees:
-            cleared_data = str_chain_and_fee.replace('\n', '').split(' ')
-            arr = array.array('f')
-            arr.extend(map(lambda x: float(x), cleared_data[3:]))
-            final_lst.append(ChainAndFees(tuple(cleared_data[:3]), arr))
-
-        return final_lst
 
     @staticmethod
     async def _get_fees_for_chain(chain):
@@ -190,19 +181,28 @@ class ChainsWithGatewayPairFees(BaseRin):
 
         return ChainAndFees(tuple(chain), fees)
 
+    @staticmethod
+    def _final_data_preparation(data):
+        ChainAndFees = namedtuple('ChainAndFees', ['chain', 'fees'])
+
+        for el in data:
+            arr = np.array([*itertools.islice(el, 3, None)], dtype=float)
+
+            yield ChainAndFees(tuple(itertools.islice(el, 0, 3)), arr)
+
     def get_chains_with_fees(self):
-        chains = self.get_chains(self._file_with_chains)
+        chains = self.get_transformed_data(self._file_with_chains)
         chains_num = len(chains)
         tasks = [self._ioloop.create_task(self._get_chain_fees(chain)) for chain in chains]
 
         try:
             chains_and_fees = self._ioloop.run_until_complete(asyncio.gather(*tasks))
-        except Exception as err:
-            self._logger.exception('Exception occurred while getting chain fees.', err)
+        except ClientConnectionError:
+            self._logger.error('Client connection error occurred while getting chain fees.')
 
-            return self._create_chains_and_fees_when_error(
-                self.actions_when_errors_with_read_data(self._old_file)
-            )
+            return self._final_data_preparation(
+                        self.get_transformed_data(self._old_file, generator=True)
+                    )
 
         else:
             utils.remove_file(self._old_file)

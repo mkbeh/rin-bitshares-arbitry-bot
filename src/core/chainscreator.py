@@ -8,7 +8,6 @@ from src.parsers.bitsharesexplorerparser import BitsharesExplorerParser
 from src.aiopybitshares.asset import Asset
 from src.const import WORK_DIR
 from src.extra import utils
-from src.extra.customexceptions import FileDoesNotExist
 
 
 class ChainsCreator(BaseRin):
@@ -30,7 +29,7 @@ class ChainsCreator(BaseRin):
 
         try:
             blacklisted_assets = self._get_pairs_from_file(blacklist_file)
-        except (FileNotFoundError, FileDoesNotExist):
+        except FileNotFoundError:
             blacklisted_assets = []
 
         return blacklisted_assets
@@ -117,7 +116,9 @@ class ChainsCreator(BaseRin):
 
     def start_creating_chains(self):
         try:
-            pairs_lst = self._remove_pairs_duplicates_from_seq(self._get_pairs_from_file(self._file_with_pairs))
+            pairs_lst = self._remove_pairs_duplicates_from_seq(
+                self._get_pairs_from_file(self._file_with_pairs)
+            )
             tasks = [self._ioloop.create_task(self._create_chains_for_asset(asset, pairs_lst))
                      for asset in self._main_assets]
             self._ioloop.run_until_complete(asyncio.wait(tasks))

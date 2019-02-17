@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .grambitshares import GramBitshares, default_node
-from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset
+from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, UnknownOrderError
 
 
 class Order(GramBitshares):
@@ -27,5 +27,5 @@ class Order(GramBitshares):
         except KeyError:
             raise self.error_msgs.get(raw_data['error']['message'], KeyError)()
 
-        except Exception as err:
-            raise Exception(f'Order for pair {args[2]}:{args[4]} failed with error.', err)
+        except Exception:
+            raise UnknownOrderError

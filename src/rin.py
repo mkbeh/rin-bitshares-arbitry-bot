@@ -18,17 +18,19 @@ class Rin:
         ioloop = asyncio.get_event_loop()
 
         try:
-            BitsharesArbitrage(ioloop).start_arbitrage()
+            from src.core.chainscreator import ChainsCreator
+            ChainsCreator(ioloop).start_creating_chains()
+            # BitsharesArbitrage(ioloop).start_arbitrage()
         finally:
             ioloop.close()
 
 
 def main():
     Rin().start_arbitrage()
-    try:
-        Rin().start_arbitrage()
-    except Exception as err:
-        logger.exception('Got unhandled exception.', err)
+    # try:
+    #     Rin().start_arbitrage()
+    # except Exception as err:
+    #     logger.exception('Got unhandled exception.', err)
 
 
 if __name__ == '__main__':

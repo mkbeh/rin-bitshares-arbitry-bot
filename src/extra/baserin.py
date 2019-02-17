@@ -70,12 +70,12 @@ class BaseRin:
         return utils.read_file(file)
 
     @staticmethod
-    def _split_chain_on_pairs(seq):
+    def split_str_on_elements(seq):
         for el in seq:
             yield el.split(' ')
 
     @staticmethod
-    def _clear_each_str_in_seq(seq):
+    def clear_each_str_in_seq(seq):
         for el in seq:
             yield el.replace('\n', '').strip()
 
@@ -85,12 +85,14 @@ class BaseRin:
             for line in f:
                 yield line
 
-    def get_chains(self, file):
-        return list(
-            self._split_chain_on_pairs(
-                self._clear_each_str_in_seq(
-                    self._read_file(file)
-                )
-            )
-        )
+    def get_transformed_data(self, file, generator=False):
+        transformed_data = self.split_str_on_elements(
+                                self.clear_each_str_in_seq(
+                                    self._read_file(file)
+                                )
+                            )
 
+        if generator:
+            return transformed_data
+
+        return tuple(transformed_data)

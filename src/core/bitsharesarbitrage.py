@@ -12,7 +12,7 @@ from datetime import datetime as dt
 from aiohttp.client_exceptions import ClientConnectionError
 
 from src.extra.baserin import BaseRin
-from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, ReceivedDifferentOrdersAmount, ClearOrdersList
+from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, EmptyOrdersList, UnknownOrderError
 from src.extra import utils
 
 from src.aiopybitshares.market import Market
@@ -67,6 +67,9 @@ class BitsharesArbitrage(BaseRin):
                                      f'in chain {chain} while placing order.')
                 raise
 
+            except UnknownOrderError:
+                raise
+
         if filled_all:
             self._logger.info(f'All orders for {chain} with volumes '
                               f'- {orders_placement_data} successfully filed.')
@@ -88,8 +91,8 @@ class BitsharesArbitrage(BaseRin):
 
         try:
             arr[0]
-        except ClearOrdersList:
-            raise
+        except IndexError:
+            raise EmptyOrdersList
 
         return arr
 
@@ -110,7 +113,7 @@ class BitsharesArbitrage(BaseRin):
 
         try:
             pairs_orders_data_arr = np.array(pairs_orders_data_arrs, dtype=float)
-        except ReceivedDifferentOrdersAmount:
+        except ValueError:
             len_of_smallest_arr = await get_size_of_smallest_arr(pairs_orders_data_arrs)
             pairs_orders_data_arr = await cut_off_extra_arrs_els(pairs_orders_data_arrs, len_of_smallest_arr)
 
@@ -145,6 +148,10 @@ class BitsharesArbitrage(BaseRin):
         )
 
     async def _arbitrage_testing(self, chain, assets_fees):
+        # print(chain)
+        # print(assets_fees)
+        # print('\n')
+
         markets_objs = [await Market().connect() for _ in range(len(chain))]
         orders_objs = [await Order().connect(ws_node=WALLET_URI) for _ in range(len(chain))]
 
@@ -167,7 +174,9 @@ class BitsharesArbitrage(BaseRin):
                     # await self.volumes_checker(orders_vols, chain, orders_objs, profit)
                     self._is_orders_placing = False
 
-            except (ClearOrdersList, AuthorizedAsset):
+            except (EmptyOrdersList, AuthorizedAsset, UnknownOrderError):
+                [await market.close() for market in markets_objs]
+                [await order_obj.close() for order_obj in orders_objs]
                 return
 
             time_end = dt.now()
@@ -182,8 +191,9 @@ class BitsharesArbitrage(BaseRin):
         cycle_counter = 0
 
         while True:
-            print('new cycle')
             chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
+            print(chains)
+            time.sleep(20)
             self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
             self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
 

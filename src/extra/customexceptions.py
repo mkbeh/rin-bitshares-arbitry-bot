@@ -1,14 +1,6 @@
 # -*- coding: utf-8 -*-
 
 
-class ClearOrdersList(IndexError):
-    pass
-
-
-class ReceivedDifferentOrdersAmount(ValueError):
-    pass
-
-
 """
 Order exceptions.
 """
@@ -26,10 +18,9 @@ class AuthorizedAsset(OrderExceptions):
     pass
 
 
-"""
-Other exceptions.
-"""
+class EmptyOrdersList(OrderExceptions):
+    pass
 
 
-class FileDoesNotExist(TypeError):
+class UnknownOrderError(OrderExceptions):
     pass

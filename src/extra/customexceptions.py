@@ -22,6 +22,10 @@ class EmptyOrdersList(OrderExceptions):
     pass
 
 
+class UnknownOrderException(OrderExceptions):
+    pass
+
+
 """
 Other exceptions.
 """

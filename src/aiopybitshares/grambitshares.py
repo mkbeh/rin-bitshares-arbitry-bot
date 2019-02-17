@@ -32,6 +32,9 @@ class GramBitshares:
         self._session = await gram.ws_connect(ws_node)
         self._ws = gram._ws
 
+        if ws_node != default_node and await self.is_wallet_locked():
+            await self.unlock_wallet()
+
         return gram
 
     async def call_method(self, method, *args):
@@ -39,6 +42,9 @@ class GramBitshares:
         await self._ws.send_str(message)
 
         return await self._ws.receive_json()
+
+    async def is_wallet_locked(self):
+        return (await self.call_method('is_locked'))['result']
 
     async def unlock_wallet(self):
         await self.call_method('unlock', WALLET_PWD)

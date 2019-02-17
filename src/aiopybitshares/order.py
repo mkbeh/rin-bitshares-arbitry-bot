@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from .grambitshares import GramBitshares, default_node
-from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, WalletIsLocked
+from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, UnknownOrderException
 
 
 class Order(GramBitshares):
     error_msgs = {
         'unspecified: Assert Exception: !op.fill_or_kill || filled: ': OrderNotFilled,
         'unspecified: Assert Exception: is_authorized_asset( d, *_seller, *_sell_asset ): ': AuthorizedAsset,
-        'unspecified: missing required active authority:': WalletIsLocked
     }
 
     def __init__(self):
@@ -26,12 +25,7 @@ class Order(GramBitshares):
             raw_data['result']
 
         except KeyError:
-            err_msg = raw_data['error']['message']
+            raise self.error_msgs.get(raw_data['error']['message'], KeyError)()
 
-            for key, value in self.error_msgs.items():
-                if err_msg.startswith(key):
-                    try:
-                        raise value
-                    except WalletIsLocked:
-                        await self._gram.unlock_wallet()
-                        await self.create_order(*args)
+        except UnknownOrderException:
+            raise

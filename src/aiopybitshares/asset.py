@@ -13,6 +13,9 @@ class Asset(GramBitshares):
         return self
 
     async def convert_name_to_id(self, asset_name, limit=1):
+        """
+        Wallet method.
+        """
         raw_data = await self._gram.call_method('list_assets', asset_name.upper(), limit)
 
         try:
@@ -23,6 +26,9 @@ class Asset(GramBitshares):
             raise Exception(f'Got error while getting {asset_name} id.')
 
     async def get_asset_info(self, asset_name_or_id):
+        """
+        Wallet method.
+        """
         data = await self._gram.call_method('get_asset', asset_name_or_id)
 
         try:

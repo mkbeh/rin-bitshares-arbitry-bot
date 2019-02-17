@@ -12,7 +12,7 @@ from datetime import datetime as dt
 from aiohttp.client_exceptions import ClientConnectionError
 
 from src.extra.baserin import BaseRin
-from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, EmptyOrdersList, UnknownOrderError
+from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, EmptyOrdersList, UnknownOrderException
 from src.extra import utils
 
 from src.aiopybitshares.market import Market
@@ -67,7 +67,7 @@ class BitsharesArbitrage(BaseRin):
                                      f'in chain {chain} while placing order.')
                 raise
 
-            except UnknownOrderError:
+            except UnknownOrderException:
                 raise
 
         if filled_all:
@@ -174,7 +174,7 @@ class BitsharesArbitrage(BaseRin):
                     # await self.volumes_checker(orders_vols, chain, orders_objs, profit)
                     self._is_orders_placing = False
 
-            except (EmptyOrdersList, AuthorizedAsset, UnknownOrderError):
+            except (EmptyOrdersList, AuthorizedAsset, UnknownOrderException):
                 [await market.close() for market in markets_objs]
                 [await order_obj.close() for order_obj in orders_objs]
                 return

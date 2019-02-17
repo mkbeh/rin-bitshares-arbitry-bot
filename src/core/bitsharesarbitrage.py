@@ -192,8 +192,6 @@ class BitsharesArbitrage(BaseRin):
 
         while True:
             chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
-            print(chains)
-            time.sleep(20)
             self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
             self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
 

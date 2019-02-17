@@ -22,5 +22,10 @@ class EmptyOrdersList(OrderExceptions):
     pass
 
 
-class UnknownOrderError(OrderExceptions):
+"""
+Other exceptions.
+"""
+
+
+class WalletIsLocked(Exception):
     pass

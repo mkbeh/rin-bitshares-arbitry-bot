@@ -11,3 +11,4 @@ WALLET_URI = 'ws://127.0.0.1:8093/ws'
 DATA_UPDATE_TIME = 3                                                    # hours
 ACCOUNT_NAME = 'mkbehforever007'
 TIME_TO_RECONNECT = 350
+WALLET_PWD = '<set_here_u_pwd>'

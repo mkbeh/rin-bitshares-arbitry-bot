@@ -4,6 +4,8 @@ import aiohttp
 
 from aiohttp.client_exceptions import ClientConnectionError
 
+from src.const import WALLET_PWD
+
 
 default_node = 'wss://bitshares.openledger.info/ws'
 
@@ -37,6 +39,9 @@ class GramBitshares:
         await self._ws.send_str(message)
 
         return await self._ws.receive_json()
+
+    async def unlock_wallet(self):
+        await self.call_method('unlock', WALLET_PWD)
 
     async def close(self):
         await self._session.close()

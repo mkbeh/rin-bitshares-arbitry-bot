@@ -42,6 +42,7 @@ class BitsharesArbitrage(BaseRin):
 
     async def _add_asset_to_blacklist(self, chain, count):
         if chain[count][1] not in self._blacklisted_assets:
+            self._blacklisted_assets.append(chain[count][1])
             await self.write_data(chain[count][1], self._blacklisted_assets_file)
 
     async def _orders_setter(self, orders_placement_data, chain, orders_objs):

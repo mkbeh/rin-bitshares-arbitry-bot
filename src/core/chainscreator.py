@@ -21,18 +21,8 @@ class ChainsCreator(BaseRin):
 
     def __init__(self, loop):
         self._ioloop = loop
-        self._blacklisted_assets = self._get_blacklisted_assets()
+        self._blacklisted_assets = self.get_blacklisted_assets()
         self._file_with_pairs = self._get_file_with_pairs()
-
-    def _get_blacklisted_assets(self):
-        blacklist_file = utils.get_file(WORK_DIR, f'blacklist.lst')
-
-        try:
-            blacklisted_assets = self._get_pairs_from_file(blacklist_file)
-        except FileNotFoundError:
-            blacklisted_assets = []
-
-        return blacklisted_assets
 
     def _get_file_with_pairs(self):
         parsers = [BitsharesExplorerParser, CryptofreshParser]
@@ -110,14 +100,10 @@ class ChainsCreator(BaseRin):
 
         return new_seq
 
-    @staticmethod
-    def _get_pairs_from_file(file):
-        return utils.clear_each_str_in_seq(utils.read_file(file), '\n', ' ')
-
     def start_creating_chains(self):
         try:
             pairs_lst = self._remove_pairs_duplicates_from_seq(
-                self._get_pairs_from_file(self._file_with_pairs)
+                self.get_data_from_file(self._file_with_pairs)
             )
             tasks = [self._ioloop.create_task(self._create_chains_for_asset(asset, pairs_lst))
                      for asset in self._main_assets]

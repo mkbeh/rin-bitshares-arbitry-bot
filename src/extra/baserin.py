@@ -96,3 +96,18 @@ class BaseRin:
             return transformed_data
 
         return tuple(transformed_data)
+
+    @staticmethod
+    def get_data_from_file(file):
+        return utils.clear_each_str_in_seq(utils.read_file(file), '\n', ' ')
+
+    def get_blacklisted_assets(self):
+        blacklist_file = utils.get_file(WORK_DIR, f'blacklist.lst')
+
+        try:
+            blacklisted_assets = self.get_data_from_file(blacklist_file)
+        except FileNotFoundError:
+            blacklisted_assets = []
+
+        return blacklisted_assets
+

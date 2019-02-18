@@ -30,7 +30,7 @@ class BitsharesArbitrage(BaseRin):
     _logger = logging.getLogger('Rin.BitsharesArbitrage')
     _vol_limits = None
     _bts_default_fee = None
-    _assets_blacklist_file = utils.get_file(WORK_DIR, f'blacklist.lst')
+    _blacklisted_assets_file = utils.get_file(WORK_DIR, f'blacklist.lst')
     _is_orders_placing = False
 
     _client_conn_err_msg = 'Getting client connection error while arbitrage testing.'
@@ -38,10 +38,11 @@ class BitsharesArbitrage(BaseRin):
     def __init__(self, loop):
         self._ioloop = loop
         self._profit_logger = self.setup_logger('Profit', os.path.join(LOG_DIR, 'profit.log'))
+        self._blacklisted_assets = self.get_blacklisted_assets()
 
-    async def _order_err_action(self, chain, count, asset_blacklist=True):
-        if asset_blacklist:
-            await self.write_data(chain[count][1], self._assets_blacklist_file)
+    async def _add_asset_to_blacklist(self, chain, count):
+        if chain[count][1] not in self._blacklisted_assets:
+            await self.write_data(chain[count][1], self._blacklisted_assets_file)
 
     async def _orders_setter(self, orders_placement_data, chain, orders_objs):
         filled_all = True
@@ -62,7 +63,7 @@ class BitsharesArbitrage(BaseRin):
                 break
 
             except AuthorizedAsset:
-                await self._order_err_action(chain, i)
+                await self._add_asset_to_blacklist(chain, i)
                 self._logger.warning(f'Got Authorized asset {chain[i][1]} '
                                      f'in chain {chain} while placing order.')
                 raise

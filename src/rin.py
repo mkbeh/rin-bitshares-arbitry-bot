@@ -18,9 +18,7 @@ class Rin:
         ioloop = asyncio.get_event_loop()
 
         try:
-            from src.core.chainscreator import ChainsCreator
-            ChainsCreator(ioloop).start_creating_chains()
-            # BitsharesArbitrage(ioloop).start_arbitrage()
+            BitsharesArbitrage(ioloop).start_arbitrage()
         finally:
             ioloop.close()
 

@@ -149,10 +149,6 @@ class BitsharesArbitrage(BaseRin):
         )
 
     async def _arbitrage_testing(self, chain, assets_fees):
-        # print(chain)
-        # print(assets_fees)
-        # print('\n')
-
         markets_objs = [await Market().connect() for _ in range(len(chain))]
         orders_objs = [await Order().connect(ws_node=WALLET_URI) for _ in range(len(chain))]
 
@@ -172,7 +168,7 @@ class BitsharesArbitrage(BaseRin):
 
                 if self._is_orders_placing is False:
                     self._is_orders_placing = True
-                    # await self.volumes_checker(orders_vols, chain, orders_objs, profit)
+                    await self.volumes_checker(orders_vols, chain, orders_objs, profit)
                     self._is_orders_placing = False
 
             except (EmptyOrdersList, AuthorizedAsset, UnknownOrderException):

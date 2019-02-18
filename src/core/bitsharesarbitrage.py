@@ -20,7 +20,7 @@ from src.aiopybitshares.order import Order
 from src.aiopybitshares.asset import Asset
 
 from src.const import WORK_DIR, DATA_UPDATE_TIME, MIN_PROFIT_LIMITS, ACCOUNT_NAME, WALLET_URI, LOG_DIR, \
-    TIME_TO_RECONNECT
+    TIME_TO_RECONNECT, ORDERS_DEPTH
 
 from .limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
 from src.algorithms.arbitryalgorithm import ArbitrationAlgorithm
@@ -83,7 +83,7 @@ class BitsharesArbitrage(BaseRin):
                                      f'Volumes: {orders_vols[0][0], orders_vols[2][1]}')
 
     @staticmethod
-    async def get_order_data_for_pair(pair, market_gram, order_type='asks', limit=5):
+    async def get_order_data_for_pair(pair, market_gram, order_type='asks', limit=ORDERS_DEPTH):
         base_asset, quote_asset = pair.split(':')
         raw_orders_data = await market_gram.get_order_book(base_asset, quote_asset, order_type, limit=limit)
         order_data_lst = map(

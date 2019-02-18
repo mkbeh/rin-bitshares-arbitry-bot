@@ -17,10 +17,13 @@ class Rin:
         from src.core.bitsharesarbitrage import BitsharesArbitrage
         ioloop = asyncio.get_event_loop()
 
-        try:
-            BitsharesArbitrage(ioloop).start_arbitrage()
-        finally:
-            ioloop.close()
+        from src.parsers.bitsharesexplorerparser import BitsharesExplorerParser
+        BitsharesExplorerParser(ioloop).start_parsing()
+
+        # try:
+        #     BitsharesArbitrage(ioloop).start_arbitrage()
+        # finally:
+        #     ioloop.close()
 
 
 def main():

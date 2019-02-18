@@ -28,7 +28,7 @@ class BitsharesExplorerParser(BaseRin):
 
     async def _check_pair_on_valid(self, pair, base_price):
         market_data = await self.get_data(self._market_data_url.format(*pair),
-                                          logger=self._logger, delay=5, json=True)
+                                          delay=5, logger=self._logger, json=True)
 
         if float(market_data['base_volume']) * float(base_price) > PAIR_MIN_DAILY_VOLUME:
             await self.write_data('{}:{}'.format(*pair), self._new_file, self._lock)
@@ -36,12 +36,12 @@ class BitsharesExplorerParser(BaseRin):
 
     async def _get_valid_pairs(self, asset_info):
         asset_markets_data = await self.get_data(self._assets_markets_url.format(asset_info.id),
-                                                 logger=self._logger, delay=5, json=True)
+                                                 delay=5, logger=self._logger, json=True)
         pairs = list(map(lambda x: x[1].strip().split('/'), asset_markets_data))
         [await self._check_pair_on_valid(pair, asset_info.price) for pair in pairs]
 
     async def _get_valid_assets(self):
-        assets_data = await self.get_data(self._assets_url, self._logger, 2, json=True)
+        assets_data = await self.get_data(self._assets_url, delay=2, logger=self._logger, json=True)
         AssetInfo = namedtuple('AssetsInfo', ['id', 'price'])
         assets = [
             AssetInfo(asset[2], asset[3])

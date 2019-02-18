@@ -29,10 +29,10 @@ class Asset(GramBitshares):
         """
         Wallet method.
         """
-        data = await self._gram.call_method('get_asset', asset_name_or_id)
+        raw_data = await self._gram.call_method('get_asset', asset_name_or_id)
 
         try:
-            return data['result']
+            return raw_data['result']
         except IndexError:
             raise Exception(f'Got error while getting data for {asset_name_or_id}.')
         except KeyError:

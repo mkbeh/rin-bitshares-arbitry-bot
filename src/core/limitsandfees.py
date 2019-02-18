@@ -16,7 +16,9 @@ from .chainscreator import ChainsCreator
 from src.extra.baserin import BaseRin
 from src.extra import utils
 from src.const import VOLS_LIMITS, WORK_DIR, WALLET_URI
+
 from src.aiopybitshares.asset import Asset
+from src.aiopybitshares.blockchain import Blockchain
 
 
 class VolLimits(BaseRin):
@@ -91,7 +93,7 @@ class DefaultBTSFee(VolLimits):
     _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'btsdefaultfee'))
     _date = utils.get_today_date()
     _new_file = utils.get_file(WORK_DIR, f'btsdefaultfee-{_date}.lst')
-    _order_create_fee = 0.00116 * 3
+    _lifetime_member_percent = 0.2
     _fees = None
 
     def __init__(self, ioloop):
@@ -103,7 +105,12 @@ class DefaultBTSFee(VolLimits):
         prices = await asyncio.gather(
             *[self._get_asset_price(asset, '1.3.0') for asset in assets if asset != '1.3.0']
         )
-        prices.insert(0, self._order_create_fee)
+
+        blockchain_obj = await Blockchain().connect(ws_node=WALLET_URI)
+        order_create_fee = \
+            blockchain_obj.get_global_properties(create_order_fee=True) * self._lifetime_member_percent * 3
+
+        prices.insert(0, order_create_fee)
 
         final_fees = {}
 
@@ -112,7 +119,7 @@ class DefaultBTSFee(VolLimits):
                 final_fees[asset] = price
                 continue
 
-            final_fees[asset] = float((Decimal(self._order_create_fee) * Decimal(price)).
+            final_fees[asset] = float((Decimal(order_create_fee) * Decimal(price)).
                                       quantize(Decimal('0.00000000'), rounding=ROUND_HALF_UP))
 
         self._fees = '{}:{} {}:{} {}:{} {}:{}' \

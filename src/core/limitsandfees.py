@@ -108,10 +108,10 @@ class DefaultBTSFee(VolLimits):
 
         blockchain_obj = await Blockchain().connect(ws_node=WALLET_URI)
         order_create_fee = \
-            blockchain_obj.get_global_properties(create_order_fee=True) * self._lifetime_member_percent * 3
+            await blockchain_obj.get_global_properties(create_order_fee=True) * self._lifetime_member_percent * 3
+        await blockchain_obj.close()
 
         prices.insert(0, order_create_fee)
-
         final_fees = {}
 
         for asset, price in zip(assets, prices):

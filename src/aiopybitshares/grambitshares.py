@@ -4,13 +4,15 @@ import aiohttp
 
 from aiohttp.client_exceptions import ClientConnectionError
 
-from src.const import WALLET_PWD
+from src.extra.baserin import BaseRin
 
 
 default_node = 'wss://bitshares.openledger.info/ws'
 
 
 class GramBitshares:
+    _wallet_pwd = BaseRin.wallet_pwd
+
     def __init__(self, node=default_node):
         self._node = node
         self._ws = None
@@ -47,7 +49,7 @@ class GramBitshares:
         return (await self.call_method('is_locked'))['result']
 
     async def unlock_wallet(self):
-        await self.call_method('unlock', WALLET_PWD)
+        await self.call_method('unlock', self._wallet_pwd)
 
     async def close(self):
         await self._session.close()

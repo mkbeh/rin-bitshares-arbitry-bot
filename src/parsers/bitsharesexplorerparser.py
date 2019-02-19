@@ -7,7 +7,6 @@ from collections import namedtuple
 from src.extra.baserin import BaseRin
 from .btspriceparser import BTSPriceParser
 from src.extra import utils
-from src.const import OVERALL_MIN_DAILY_VOLUME, PAIR_MIN_DAILY_VOLUME, WORK_DIR
 
 
 class BitsharesExplorerParser(BaseRin):
@@ -17,20 +16,20 @@ class BitsharesExplorerParser(BaseRin):
     _market_data_url = 'http://185.208.208.184:5000/get_volume?base={}&quote={}'
     _lock = asyncio.Lock()
     _date = utils.get_today_date()
-    _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'pairs'))
-    _new_file = utils.get_file(WORK_DIR, f'pairs-{_date}.lst')
+    _old_file = utils.get_file(BaseRin.output_dir, utils.get_dir_file(BaseRin.output_dir, 'pairs'))
+    _new_file = utils.get_file(BaseRin.output_dir, f'pairs-{_date}.lst')
     _pairs_count = 0
 
     def __init__(self, loop):
         self._ioloop = loop
         self._bts_price_in_usd = BTSPriceParser(loop).get_bts_price_in_usd()
-        self._overall_min_daily_vol = OVERALL_MIN_DAILY_VOLUME / self._bts_price_in_usd
+        self._overall_min_daily_vol = self.overall_min_daily_volume / self._bts_price_in_usd
 
     async def _check_pair_on_valid(self, pair, base_price):
         market_data = await self.get_data(self._market_data_url.format(*pair),
                                           delay=5, logger=self._logger, json=True)
 
-        if float(market_data['base_volume']) * float(base_price) > PAIR_MIN_DAILY_VOLUME:
+        if float(market_data['base_volume']) * float(base_price) > self.pair_min_daily_volume:
             await self.write_data('{}:{}'.format(*pair), self._new_file, self._lock)
             self._pairs_count += 1
 

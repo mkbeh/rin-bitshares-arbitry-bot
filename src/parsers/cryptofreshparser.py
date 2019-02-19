@@ -8,7 +8,6 @@ from collections import namedtuple
 from bs4 import BeautifulSoup
 
 from src.extra.baserin import BaseRin
-from src.const import OVERALL_MIN_DAILY_VOLUME, PAIR_MIN_DAILY_VOLUME, WORK_DIR
 from src.extra import utils
 
 
@@ -18,8 +17,8 @@ class CryptofreshParser(BaseRin):
     _assets_url = 'https://cryptofresh.com{}'
     _lock = asyncio.Lock()
     _date = utils.get_today_date()
-    _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'pairs'))
-    _new_file = utils.get_file(WORK_DIR, f'pairs-{_date}.lst')
+    _old_file = utils.get_file(BaseRin.output_dir, utils.get_dir_file(BaseRin.output_dir, 'pairs'))
+    _new_file = utils.get_file(BaseRin.output_dir, f'pairs-{_date}.lst')
     _pairs_count = 0
 
     def __init__(self, loop):
@@ -71,10 +70,14 @@ class CryptofreshParser(BaseRin):
 
     def start_parsing(self):
         try:
-            task = self._ioloop.create_task(self.get_data(self._main_page_url, delay=2, logger=self._logger))
+            task = self._ioloop.create_task(
+                self.get_data(self._main_page_url, delay=2, logger=self._logger)
+            )
             assets_page_html = self._ioloop.run_until_complete(asyncio.gather(task))
 
-            task = self._ioloop.create_task(self._get_valid_data(*assets_page_html, OVERALL_MIN_DAILY_VOLUME, True))
+            task = self._ioloop.create_task(
+                self._get_valid_data(*assets_page_html, self.overall_min_daily_volume, True)
+            )
             assets = self._ioloop.run_until_complete(asyncio.gather(task))[0]
 
             if assets:
@@ -83,7 +86,7 @@ class CryptofreshParser(BaseRin):
                          for asset in assets)
                 htmls = self._ioloop.run_until_complete(asyncio.gather(*tasks))
 
-                tasks = (self._ioloop.create_task(self._get_valid_data(html_, PAIR_MIN_DAILY_VOLUME))
+                tasks = (self._ioloop.create_task(self._get_valid_data(html_, self.pair_min_daily_volume))
                          for html_ in htmls)
                 self._ioloop.run_until_complete(asyncio.wait(tasks))
 

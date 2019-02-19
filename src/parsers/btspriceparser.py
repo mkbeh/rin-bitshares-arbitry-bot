@@ -6,7 +6,6 @@ from bs4 import BeautifulSoup
 
 from src.extra.baserin import BaseRin
 from src.extra import utils
-from src.const import WORK_DIR
 
 
 class BTSPriceParser(BaseRin):
@@ -16,8 +15,8 @@ class BTSPriceParser(BaseRin):
     _node_url = 'http://185.208.208.184:5000/get_ticker?base=USD&quote=BTS'
     _lock = asyncio.Lock()
     _date = utils.get_today_date()
-    _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'bst_price'))
-    _new_file = utils.get_file(WORK_DIR, f'bst_price-{_date}.lst')
+    _old_file = utils.get_file(BaseRin.output_dir, utils.get_dir_file(BaseRin.output_dir, 'bst_price'))
+    _new_file = utils.get_file(BaseRin.output_dir, f'bst_price-{_date}.lst')
 
     def __init__(self, loop):
         self.ioloop = loop

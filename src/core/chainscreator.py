@@ -6,7 +6,6 @@ from src.extra.baserin import BaseRin
 from src.parsers.cryptofreshparser import CryptofreshParser
 from src.parsers.bitsharesexplorerparser import BitsharesExplorerParser
 from src.aiopybitshares.asset import Asset
-from src.const import WORK_DIR
 from src.extra import utils
 
 
@@ -14,9 +13,9 @@ class ChainsCreator(BaseRin):
     _logger = logging.getLogger('Rin.ChainsCreator')
     _lock = asyncio.Lock()
     _main_assets = ['BTS', 'BRIDGE.BTC', 'CNY', 'USD']
-    _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'chains'))
+    _old_file = utils.get_file(BaseRin.output_dir, utils.get_dir_file(BaseRin.output_dir, 'chains'))
     _date = utils.get_today_date()
-    _new_file = utils.get_file(WORK_DIR, f'chains-{_date}.lst')
+    _new_file = utils.get_file(BaseRin.output_dir, f'chains-{_date}.lst')
     _chains_count = 0
 
     def __init__(self, loop):

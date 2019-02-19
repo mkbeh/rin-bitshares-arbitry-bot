@@ -15,7 +15,6 @@ from aiohttp.client_exceptions import ClientConnectionError
 from .chainscreator import ChainsCreator
 from src.extra.baserin import BaseRin
 from src.extra import utils
-from src.const import VOLS_LIMITS, WORK_DIR, WALLET_URI
 
 from src.aiopybitshares.asset import Asset
 from src.aiopybitshares.blockchain import Blockchain
@@ -25,19 +24,18 @@ class VolLimits(BaseRin):
     _lock = asyncio.Lock()
     _logger = logging.getLogger('Rin.VolLimits')
     _url = 'http://185.208.208.184:5000/get_ticker?base={}&quote={}'
-    _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'vol_limits'))
+    _old_file = utils.get_file(BaseRin.output_dir, utils.get_dir_file(BaseRin.output_dir, 'vol_limits'))
     _date = utils.get_today_date()
-    _new_file = utils.get_file(WORK_DIR, f'vol_limits-{_date}.lst')
-    _vol_limits = None
+    _new_file = utils.get_file(BaseRin.output_dir, f'vol_limits-{_date}.lst')
+    _vol_limits_pattern = None
 
     def __init__(self, loop):
         self._ioloop = loop
 
-    @staticmethod
-    async def _calculate_limits(prices):
+    async def _calculate_limits(self, prices):
         limits = {}
 
-        for i, (key, val) in enumerate(VOLS_LIMITS.items()):
+        for i, (key, val) in enumerate(self.volume_limits.items()):
             if key == '1.3.121':
                 limits[key] = val
                 break
@@ -57,13 +55,13 @@ class VolLimits(BaseRin):
             self._logger.warning(response['detail'])
 
     async def _get_limits(self):
-        assets = VOLS_LIMITS.keys()
+        assets = self.volume_limits.keys()
         prices = await asyncio.gather(
             *[self._get_asset_price(asset, '1.3.121') for asset in assets if asset != '1.3.121']
         )
 
         vol_limits = await self._calculate_limits(prices)
-        self._vol_limits = '{}:{} {}:{} {}:{} {}:{}'\
+        self._vol_limits_pattern = '{}:{} {}:{} {}:{} {}:{}'\
             .format(*itertools.chain(*vol_limits.items()))
         await self.write_data(json.dumps(vol_limits), self._new_file, self._lock)
 
@@ -82,7 +80,7 @@ class VolLimits(BaseRin):
 
         else:
             utils.remove_file(self._old_file)
-            self._logger.info(f'Successfully got prices and calculate limits: {self._vol_limits}')
+            self._logger.info(f'Successfully got prices and calculate limits: {self._vol_limits_pattern}')
 
             return vol_limits
 
@@ -90,9 +88,9 @@ class VolLimits(BaseRin):
 class DefaultBTSFee(VolLimits):
     _logger = logging.getLogger('Rin.DefaultBTSFee')
     _lock = asyncio.Lock()
-    _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'btsdefaultfee'))
+    _old_file = utils.get_file(VolLimits.output_dir, utils.get_dir_file(VolLimits.output_dir, 'btsdefaultfee'))
     _date = utils.get_today_date()
-    _new_file = utils.get_file(WORK_DIR, f'btsdefaultfee-{_date}.lst')
+    _new_file = utils.get_file(VolLimits.output_dir, f'btsdefaultfee-{_date}.lst')
     _lifetime_member_percent = 0.2
     _fees = None
 
@@ -101,12 +99,12 @@ class DefaultBTSFee(VolLimits):
         super().__init__(self._ioloop)
 
     async def _get_converted_order_fee(self):
-        assets = VOLS_LIMITS.keys()
+        assets = VolLimits.volume_limits.keys()
         prices = await asyncio.gather(
             *[self._get_asset_price(asset, '1.3.0') for asset in assets if asset != '1.3.0']
         )
 
-        blockchain_obj = await Blockchain().connect(ws_node=WALLET_URI)
+        blockchain_obj = await Blockchain().connect(ws_node=VolLimits.wallet_uri)
         order_create_fee = \
             await blockchain_obj.get_global_properties(create_order_fee=True) * self._lifetime_member_percent * 3
         await blockchain_obj.close()
@@ -150,21 +148,20 @@ class ChainsWithGatewayPairFees(BaseRin):
     _url = 'https://wallet.bitshares.org/#/market/{}_{}'
     _logger = logging.getLogger('Rin.ChainsWithGatewayPairFees')
     _lock = asyncio.Lock()
-    _old_file = utils.get_file(WORK_DIR, utils.get_dir_file(WORK_DIR, 'chains_with_fees'))
+    _old_file = utils.get_file(BaseRin.output_dir, utils.get_dir_file(BaseRin.output_dir, 'chains_with_fees'))
     _date = utils.get_today_date()
-    _new_file = utils.get_file(WORK_DIR, f'chains_with_fees-{_date}.lst')
+    _new_file = utils.get_file(BaseRin.output_dir, f'chains_with_fees-{_date}.lst')
 
     def __init__(self, loop):
         self._ioloop = loop
         # self._file_with_chains = ChainsCreator(self._ioloop).start_creating_chains()
         self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
-                                 'output/chains-13-02-2019-17-42-07.lst'
+                                 'output/chains-18-02-2019-21-46-32.lst'
         self._fees_count = 0
 
-    @staticmethod
-    async def _get_fees_for_chain(chain):
+    async def _get_fees_for_chain(self, chain):
         assets_objs = [Asset() for _ in range(len(chain))]
-        [await asset_obj.connect(WALLET_URI) for asset_obj in assets_objs]
+        [await asset_obj.connect(self.wallet_uri) for asset_obj in assets_objs]
 
         raw_chain_fees = await asyncio.gather(
             *(obj.get_asset_info(pair.split(':')[1]) for obj, pair in zip(assets_objs, chain))

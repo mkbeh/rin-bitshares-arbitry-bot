@@ -6,12 +6,33 @@ import aiohttp
 import aiofiles
 
 from . import utils
-from src.const import LOG_DIR, WORK_DIR
+from .configcreator import ConfigCreator
 
 
 class BaseRin:
-    utils.dir_exists(WORK_DIR)
-    utils.dir_exists(LOG_DIR)
+    cfg_data = ConfigCreator().get_cfg_data()
+
+    output_dir = cfg_data.get('output dir')
+    log_dir = cfg_data.get('log dir')
+
+    overall_min_daily_volume = cfg_data.get('overall min daily volume')
+    pair_min_daily_volume = cfg_data.get('pair min daily volume')
+
+    volume_limits = cfg_data.get('volume limits')
+    min_profit_limits = cfg_data.get('min profit limits')
+
+    node_uri = cfg_data.get('node uri')
+    wallet_uri = cfg_data.get('wallet uri')
+
+    account_name = cfg_data.get('account name')
+    wallet_pwd = cfg_data.get('wallet password')
+
+    data_update_time = cfg_data.get('data update time')
+    time_to_reconnect = cfg_data.get('time to reconnect')
+    orders_depth = cfg_data.get('orders depth')
+
+    utils.dir_exists(cfg_data.get('output dir'))
+    utils.dir_exists(cfg_data.get('log dir'))
 
     @staticmethod
     def setup_logger(logger_name, log_file, level=logging.INFO):
@@ -102,7 +123,7 @@ class BaseRin:
         return utils.clear_each_str_in_seq(utils.read_file(file), '\n', ' ')
 
     def get_blacklisted_assets(self):
-        blacklist_file = utils.get_file(WORK_DIR, f'blacklist.lst')
+        blacklist_file = utils.get_file(self.cfg_data.get('output dir'), f'blacklist.lst')
 
         try:
             blacklisted_assets = self.get_data_from_file(blacklist_file)

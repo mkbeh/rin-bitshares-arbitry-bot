@@ -7,7 +7,7 @@ from . import utils
 
 
 class ConfigCreator:
-    cfg_file = 'config.ini'
+    _cfg_file = 'config.ini'
     _data = (
         {'DIRS': {
             'output dir': utils.get_proj_dir('output'),
@@ -38,7 +38,7 @@ class ConfigCreator:
     )
 
     def _is_empty_fields(self, config):
-        config.read(self.cfg_file)
+        config.read(self._cfg_file)
 
         for el in self._data:
             section, options = tuple(*el.items())
@@ -47,8 +47,8 @@ class ConfigCreator:
                 if config.get(section, option) == '':
                     return True
 
-    def create_config(self, config):
-        if not os.path.exists(self.cfg_file):
+    def _create_config(self, config):
+        if not os.path.exists(self._cfg_file):
             for el in self._data:
                 section, options = tuple(*el.items())
                 config.add_section(section)
@@ -56,7 +56,7 @@ class ConfigCreator:
                 for option, value in options.items():
                     config.set(section, option, value)
 
-            with open(self.cfg_file, 'w') as cfg:
+            with open(self._cfg_file, 'w') as cfg:
                 config.write(cfg)
 
         if self._is_empty_fields(config):
@@ -64,8 +64,8 @@ class ConfigCreator:
 
     def get_cfg_data(self):
         config = configparser.ConfigParser()
-        self.create_config(config)
-        config.read(self.cfg_file)
+        self._create_config(config)
+        config.read(self._cfg_file)
         data = {}
 
         for el in self._data:

@@ -11,8 +11,6 @@ default_node = 'wss://bitshares.openledger.info/ws'
 
 
 class GramBitshares:
-    _wallet_pwd = BaseRin.wallet_pwd
-
     def __init__(self, node=default_node):
         self._node = node
         self._ws = None
@@ -49,7 +47,7 @@ class GramBitshares:
         return (await self.call_method('is_locked'))['result']
 
     async def unlock_wallet(self):
-        await self.call_method('unlock', self._wallet_pwd)
+        await self.call_method('unlock', BaseRin.wallet_pwd)
 
     async def close(self):
         await self._session.close()

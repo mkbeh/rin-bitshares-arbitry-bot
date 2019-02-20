@@ -1,3 +1,4 @@
+import numpy as np
 import src
 
 from setuptools import setup, find_packages
@@ -9,6 +10,7 @@ compiler_directives = {
     'language_level': 3,
     'cdivision': True,
     'boundscheck': True,
+    'wraparound': False,
 }
 
 
@@ -50,6 +52,7 @@ setup(
             ['rin = src.rin:main']
     },
     zip_save=False,
-    ext_modules=cythonize(['src/*/*.pyx'], annotate=True, compiler_directives=compiler_directives),
+    include_dirs=[np.get_include()],
+    ext_modules=cythonize(['src/*/*.pyx'], compiler_directives=compiler_directives, annotate=True),
     cmdclass={'build_ext': build_ext},
 )

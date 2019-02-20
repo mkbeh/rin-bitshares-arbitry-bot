@@ -2,6 +2,9 @@
 import numpy as np
 
 
+DTYPE = np.float64
+
+
 class ArbitrationAlgorithm:
     def __init__(self, orders_data, volume_limit, default_bts_fee, assets_fees, profit_limit, precisions_arr):
         self._orders_data = orders_data
@@ -14,11 +17,10 @@ class ArbitrationAlgorithm:
     async def __call__(self):
         return await self._run_data_through_algo()
 
-    @staticmethod
-    async def _round_vols_to_specific_prec(vols_arr, precisions_arr):
+    async def _round_vols_to_specific_prec(self, vols_arr):
         flatten_vols_arr = vols_arr.flatten()
         vols_arr_with_precs = np.fromiter(
-            (round(vol, prec) for vol, prec in zip(flatten_vols_arr, precisions_arr)), dtype=float
+            (round(vol, prec) for vol, prec in zip(flatten_vols_arr, self.precisions_arr)), dtype=DTYPE
         )
 
         return vols_arr_with_precs
@@ -26,7 +28,7 @@ class ArbitrationAlgorithm:
     async def _prepare_orders_arr(self, arr, profit):
         vols_arr_without_prices = np.array([
             *((el[2], el[1]) for el in arr)
-        ], dtype=float)
+        ], dtype=DTYPE)
         rounded_vols_arr = await self._round_vols_to_specific_prec(vols_arr_without_prices, self._precisions_arr)
 
         return rounded_vols_arr.reshape(3, 2), profit
@@ -44,7 +46,7 @@ class ArbitrationAlgorithm:
         pairs_arr[2][1] = pairs_arr[2][2] / pairs_arr[2][0]
         new_quote2 = pairs_arr[2][1] - pairs_arr[2][2] / pairs_arr[2][0] * fees[2] / 100
 
-        arr_with_final_vols = np.array([pairs_arr[0][2], new_quote2])
+        arr_with_final_vols = np.array([pairs_arr[0][2], new_quote2], dtype=DTYPE)
 
         return pairs_arr, arr_with_final_vols
 
@@ -97,7 +99,7 @@ class ArbitrationAlgorithm:
         pair0_arr = await self._compare_base_vol_and_vol_limit(pair0_arr, vol_limit)
         pair0_arr, pair1_arr = await self._compare_vols_first_step(pair0_arr, pair1_arr)
         pair0_arr, pair1_arr, pair2_arr = await self._compare_vols_second_step(pair0_arr, pair1_arr, pair2_arr)
-        arr = np.array([pair0_arr, pair1_arr, pair2_arr], dtype=float)
+        arr = np.array([pair0_arr, pair1_arr, pair2_arr], dtype=DTYPE)
 
         return arr
 

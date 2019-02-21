@@ -168,9 +168,10 @@ class ChainsWithGatewayPairFees(BaseRin):
         )
         [await asset_obj.close() for asset_obj in assets_objs]
 
-        arr = array.array('f')
-        [arr.append(float(fee['options']['market_fee_percent']) / float(100))
-         for fee in raw_chain_fees]
+        arr = np.array([
+            *(float(fee['options']['market_fee_percent']) / float(100)
+              for fee in raw_chain_fees)
+        ], dtype=self.dtype_float64)
 
         return arr
 

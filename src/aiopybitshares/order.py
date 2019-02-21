@@ -4,6 +4,8 @@ from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, UnknownO
 
 
 class Order(GramBitshares):
+    __slots__ = ['_gram']
+
     error_msgs = {
         'unspecified: Assert Exception: !op.fill_or_kill || filled: ': OrderNotFilled,
         'unspecified: Assert Exception: is_authorized_asset( d, *_seller, *_sell_asset ): ': AuthorizedAsset,

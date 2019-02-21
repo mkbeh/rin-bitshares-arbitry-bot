@@ -124,7 +124,7 @@ class BitsharesArbitrage(BaseRin):
             *(itertools.chain.from_iterable(
                 map(lambda x: x.split(':'), chain)
             ))
-        ], dtype=str)
+        ], dtype=self.dtype_str)
         precisions_arr = np.array(range(4), dtype=self.dtype_int16)
 
         for i, asset in enumerate(assets_arr[:4]):
@@ -198,7 +198,7 @@ class BitsharesArbitrage(BaseRin):
 
             # -- checking speed
             start = dt.now()
-            tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains)
+            tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains[:1])
 
             try:
                 self._ioloop.run_until_complete(asyncio.gather(*tasks))

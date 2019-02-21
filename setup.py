@@ -54,6 +54,6 @@ setup(
     },
     zip_save=False,
     include_dirs=[np.get_include()],
-    ext_modules=cythonize(['src/*/*.pyx'], compiler_directives=compiler_directives, annotate=True),
+    ext_modules=cythonize(['src/*/*.pyx'], compiler_directives=compiler_directives),
     cmdclass={'build_ext': build_ext},
 )

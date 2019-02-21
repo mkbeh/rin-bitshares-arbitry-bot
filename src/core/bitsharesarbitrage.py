@@ -80,14 +80,13 @@ class BitsharesArbitrage(BaseRin):
             self._profit_logger.info(f'Profit = {profit} | Chain: {chain} | '
                                      f'Volumes: {orders_vols[0][0], orders_vols[2][1]}')
 
-    @staticmethod
-    async def get_order_data_for_pair(pair, market_gram, order_type='asks', limit=BaseRin.orders_depth):
+    async def get_order_data_for_pair(self, pair, market_gram, order_type='asks', limit=BaseRin.orders_depth):
         base_asset, quote_asset = pair.split(':')
         raw_orders_data = await market_gram.get_order_book(base_asset, quote_asset, order_type, limit=limit)
         order_data_lst = map(
             lambda order_data: [float(value) for value in order_data.values()], raw_orders_data
         )
-        arr = np.array([*order_data_lst], dtype=float)
+        arr = np.array([*order_data_lst], dtype=self.dtype_float64)
 
         try:
             arr[0]
@@ -107,12 +106,12 @@ class BitsharesArbitrage(BaseRin):
         async def cut_off_extra_arrs_els(arrs_lst, required_nums_of_items):
             arr = np.array([
                 *map(lambda x: x[:required_nums_of_items], arrs_lst)
-            ], dtype=float)
+            ], dtype=self.dtype_float64)
 
             return arr
 
         try:
-            pairs_orders_data_arr = np.array(pairs_orders_data_arrs, dtype=float)
+            pairs_orders_data_arr = np.array(pairs_orders_data_arrs, dtype=self.dtype_float64)
         except ValueError:
             len_of_smallest_arr = await get_size_of_smallest_arr(pairs_orders_data_arrs)
             pairs_orders_data_arr = await cut_off_extra_arrs_els(pairs_orders_data_arrs, len_of_smallest_arr)
@@ -126,7 +125,7 @@ class BitsharesArbitrage(BaseRin):
                 map(lambda x: x.split(':'), chain)
             ))
         ], dtype=str)
-        precisions_arr = np.array(range(4), dtype=int)
+        precisions_arr = np.array(range(4), dtype=self.dtype_int16)
 
         for i, asset in enumerate(assets_arr[:4]):
             if i == 2:

@@ -4,6 +4,7 @@ import logging
 import asyncio
 import aiohttp
 import aiofiles
+import numpy as np
 
 from . import utils
 from .configcreator import ConfigCreator
@@ -33,6 +34,8 @@ class BaseRin:
 
     utils.dir_exists(cfg_data.get('output dir'))
     utils.dir_exists(cfg_data.get('log dir'))
+    dtype_float64 = np.float64
+    dtype_int16 = np.int16
 
     @staticmethod
     def setup_logger(logger_name, log_file, level=logging.INFO):

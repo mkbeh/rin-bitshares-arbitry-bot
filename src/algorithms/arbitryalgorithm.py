@@ -4,7 +4,7 @@ import numpy as np
 from dataclasses import dataclass
 
 
-DTYPE = np.float64
+DTYPE_FLOAT64 = np.float64
 
 
 @dataclass(repr=False, eq=False)
@@ -12,10 +12,10 @@ class ArbitrationAlgorithm:
     __slots__ = ['_orders_data', '_vol_limit', '_bts_default_fee', '_assets_fees', '_profit_limit', '_precisions_arr']
 
     _orders_data: np.ndarray
-    _vol_limit: DTYPE
-    _bts_default_fee: DTYPE
+    _vol_limit: DTYPE_FLOAT64
+    _bts_default_fee: DTYPE_FLOAT64
     _assets_fees: np.ndarray
-    _profit_limit: DTYPE
+    _profit_limit: DTYPE_FLOAT64
     _precisions_arr: np.ndarray
 
     async def __call__(self):
@@ -24,20 +24,20 @@ class ArbitrationAlgorithm:
     async def _round_vols_to_specific_prec(self, vols_arr: np.ndarray) -> np.ndarray:
         flatten_vols_arr = vols_arr.flatten()
         vols_arr_with_precs = np.fromiter(
-            (round(vol, prec) for vol, prec in zip(flatten_vols_arr, self._precisions_arr)), dtype=DTYPE
+            (round(vol, prec) for vol, prec in zip(flatten_vols_arr, self._precisions_arr)), dtype=DTYPE_FLOAT64
         )
 
         return vols_arr_with_precs
 
-    async def _prepare_orders_arr(self, arr: np.ndarray, profit: DTYPE) -> tuple:
+    async def _prepare_orders_arr(self, arr: np.ndarray, profit: DTYPE_FLOAT64) -> tuple:
         vols_arr_without_prices = np.array([
             *((el[2], el[1]) for el in arr)
-        ], dtype=DTYPE)
+        ], dtype=DTYPE_FLOAT64)
         rounded_vols_arr = await self._round_vols_to_specific_prec(vols_arr_without_prices)
 
         return rounded_vols_arr.reshape(3, 2), profit
 
-    async def _is_profit_valid(self, profit: DTYPE) -> bool:
+    async def _is_profit_valid(self, profit: DTYPE_FLOAT64) -> bool:
         return profit > self._profit_limit
 
     async def _recalculate_vols_given_fees(self, pairs_arr: np.ndarray) -> tuple:
@@ -49,7 +49,7 @@ class ArbitrationAlgorithm:
         pairs_arr[2][1] = pairs_arr[2][2] / pairs_arr[2][0]
         new_quote2 = pairs_arr[2][1] - pairs_arr[2][2] / pairs_arr[2][0] * self._assets_fees[2] / 100
 
-        arr_with_final_vols = np.array([pairs_arr[0][2], new_quote2], dtype=DTYPE)
+        arr_with_final_vols = np.array([pairs_arr[0][2], new_quote2], dtype=DTYPE_FLOAT64)
 
         return arr_with_final_vols, pairs_arr
 
@@ -87,7 +87,7 @@ class ArbitrationAlgorithm:
         return pair0_arr, pair1_arr
 
     @staticmethod
-    async def _compare_base_vol_and_vol_limit(pair0_arr: np.ndarray, vol_limit: DTYPE) -> np.ndarray:
+    async def _compare_base_vol_and_vol_limit(pair0_arr: np.ndarray, vol_limit: DTYPE_FLOAT64) -> np.ndarray:
         if pair0_arr[2] > vol_limit:
             pair0_arr[2] = vol_limit
             pair0_arr[1] = pair0_arr[2] / pair0_arr[0]
@@ -95,11 +95,11 @@ class ArbitrationAlgorithm:
         return pair0_arr
 
     async def _recalculate_vols_within_fees(self, pair0_arr: np.ndarray, pair1_arr: np.ndarray,
-                                            pair2_arr: np.ndarray, vol_limit: DTYPE) -> np.ndarray:
+                                            pair2_arr: np.ndarray, vol_limit: DTYPE_FLOAT64) -> np.ndarray:
         pair0_arr = await self._compare_base_vol_and_vol_limit(pair0_arr, vol_limit)
         pair0_arr, pair1_arr = await self._compare_vols_first_step(pair0_arr, pair1_arr)
         pair0_arr, pair1_arr, pair2_arr = await self._compare_vols_second_step(pair0_arr, pair1_arr, pair2_arr)
-        arr = np.array([pair0_arr, pair1_arr, pair2_arr], dtype=DTYPE)
+        arr = np.array([pair0_arr, pair1_arr, pair2_arr], dtype=DTYPE_FLOAT64)
 
         return arr
 

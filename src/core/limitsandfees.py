@@ -185,12 +185,11 @@ class ChainsWithGatewayPairFees(BaseRin):
 
         return ChainAndFees(tuple(chain), fees)
 
-    @staticmethod
-    def _final_data_preparation(data):
+    def _final_data_preparation(self, data):
         ChainAndFees = namedtuple('ChainAndFees', ['chain', 'fees'])
 
         for el in data:
-            arr = np.array([*itertools.islice(el, 3, None)], dtype=float)
+            arr = np.array([*itertools.islice(el, 3, None)], dtype=self.dtype_float64)
 
             yield ChainAndFees(tuple(itertools.islice(el, 0, 3)), arr)
 

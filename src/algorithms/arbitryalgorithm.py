@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
+from dataclasses import dataclass
+
 
 DTYPE = np.float64
 
 
+@dataclass(repr=False, eq=False)
 class ArbitrationAlgorithm:
-    def __init__(self, orders_data, volume_limit, default_bts_fee, assets_fees, profit_limit, precisions_arr):
-        self._orders_data = orders_data
-        self._vol_limit = volume_limit
-        self._bts_default_fee = default_bts_fee
-        self._assets_fees = assets_fees
-        self._profit_limit = profit_limit
-        self._precisions_arr = precisions_arr
+    __slots__ = ['_orders_data', '_vol_limit', '_bts_default_fee', '_assets_fees', '_profit_limit', '_precisions_arr']
+
+    _orders_data: np.ndarray
+    _vol_limit: DTYPE
+    _bts_default_fee: DTYPE
+    _assets_fees: np.ndarray
+    _profit_limit: DTYPE
+    _precisions_arr: np.ndarray
 
     async def __call__(self):
         return await self._run_data_through_algo()
@@ -20,7 +24,7 @@ class ArbitrationAlgorithm:
     async def _round_vols_to_specific_prec(self, vols_arr):
         flatten_vols_arr = vols_arr.flatten()
         vols_arr_with_precs = np.fromiter(
-            (round(vol, prec) for vol, prec in zip(flatten_vols_arr, self.precisions_arr)), dtype=DTYPE
+            (round(vol, prec) for vol, prec in zip(flatten_vols_arr, self._precisions_arr)), dtype=DTYPE
         )
 
         return vols_arr_with_precs
@@ -29,7 +33,7 @@ class ArbitrationAlgorithm:
         vols_arr_without_prices = np.array([
             *((el[2], el[1]) for el in arr)
         ], dtype=DTYPE)
-        rounded_vols_arr = await self._round_vols_to_specific_prec(vols_arr_without_prices, self._precisions_arr)
+        rounded_vols_arr = await self._round_vols_to_specific_prec(vols_arr_without_prices)
 
         return rounded_vols_arr.reshape(3, 2), profit
 
@@ -48,12 +52,7 @@ class ArbitrationAlgorithm:
 
         arr_with_final_vols = np.array([pairs_arr[0][2], new_quote2], dtype=DTYPE)
 
-        return pairs_arr, arr_with_final_vols
-
-    async def _final_part_of_algorithm(self, pairs_arr, fees):
-        pairs_arr_given_fees, arr_with_final_vols = await self._recalculate_vols_given_fees(pairs_arr, fees)
-
-        return arr_with_final_vols, pairs_arr_given_fees
+        return arr_with_final_vols, pairs_arr
 
     @staticmethod
     async def _fill_prices_with_zero(arr):
@@ -103,42 +102,39 @@ class ArbitrationAlgorithm:
 
         return arr
 
-    @staticmethod
-    async def _get_profit(init_vol, final_vol, bts_default_fee):
-        return final_vol - init_vol - bts_default_fee
+    async def _get_profit(self, init_vol, final_vol):
+        return final_vol - init_vol - self._bts_default_fee
 
-    async def _basic_algo(self, pair0_arr, pair1_arr, pair2_arr, vol_limit, fees):
-        pairs_arr = await self._recalculate_vols_within_fees(pair0_arr, pair1_arr, pair2_arr, vol_limit)
-        final_vols, pairs_arrs_given_fees = await self._final_part_of_algorithm(pairs_arr, fees)
+    async def _basic_algo(self, pair0_arr, pair1_arr, pair2_arr):
+        pairs_arr = await self._recalculate_vols_within_fees(pair0_arr, pair1_arr, pair2_arr, self._vol_limit)
+        final_vols, pairs_arrs_given_fees = await self._recalculate_vols_given_fees(pairs_arr, self._assets_fees)
         pairs_arrs_given_fees = await self._fill_prices_with_zero(pairs_arrs_given_fees)
 
         return final_vols, pairs_arrs_given_fees
 
-    async def _ext_algo(self, arr, pair0_arr, pair1_arr, pair2_arr, vol_limit, fees):
-        if arr[0][2] >= vol_limit:
+    async def _ext_algo(self, arr, pair0_arr, pair1_arr, pair2_arr):
+        if arr[0][2] >= self._vol_limit:
             return np.delete(arr, np.s_[:])
 
-        new_vol_limit = vol_limit - arr[0][2]
+        new_vol_limit = self._vol_limit - arr[0][2]
         pairs_arr = await self._recalculate_vols_within_fees(pair0_arr, pair1_arr, pair2_arr, new_vol_limit)
-        final_vols, pairs_arrs_given_fees = await self._final_part_of_algorithm(pairs_arr, fees)
+        final_vols, pairs_arrs_given_fees = await self._recalculate_vols_given_fees(pairs_arr, self._assets_fees)
         vols_sum = await self._fill_prices_with_zero(arr + pairs_arrs_given_fees)
 
         return final_vols, vols_sum
 
     async def _run_data_through_algo(self):
         len_any_arr = len(self._orders_data[0])
-        algo_data = await self._basic_algo(self._orders_data[0][0], self._orders_data[1][0], self._orders_data[2][0],
-                                           self._vol_limit, self._assets_fees)
-        profit = await self._get_profit(*algo_data[0], self._bts_default_fee)
+        algo_data = await self._basic_algo(self._orders_data[0][0], self._orders_data[1][0], self._orders_data[2][0])
+        profit = await self._get_profit(*algo_data[0])
 
         for i in range(1, len_any_arr):
             new_algo_data = await self._ext_algo(algo_data[1], self._orders_data[0][i],
-                                                 self._orders_data[1][i], self._orders_data[2][i],
-                                                 self._vol_limit, self._assets_fees)
+                                                 self._orders_data[1][i], self._orders_data[2][i])
             if len(new_algo_data) == 0:
                 break
 
-            new_profit = await self._get_profit(*new_algo_data[0], self._bts_default_fee)
+            new_profit = await self._get_profit(*new_algo_data[0])
 
             if profit > new_profit:
                 break

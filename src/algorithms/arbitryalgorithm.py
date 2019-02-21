@@ -40,7 +40,7 @@ class ArbitrationAlgorithm:
     async def _is_profit_valid(self, profit: DTYPE) -> bool:
         return profit > self._profit_limit
 
-    async def _recalculate_vols_given_fees(self, pairs_arr: np.ndarray):
+    async def _recalculate_vols_given_fees(self, pairs_arr: np.ndarray) -> tuple:
         new_quote0 = pairs_arr[0][1] - pairs_arr[0][1] * self._assets_fees[0] / 100
         pairs_arr[1][2] = new_quote0
         pairs_arr[1][1] = pairs_arr[1][2] / pairs_arr[1][0]

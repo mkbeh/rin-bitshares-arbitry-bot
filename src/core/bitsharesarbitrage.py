@@ -163,6 +163,10 @@ class BitsharesArbitrage(BaseRin):
         time_start = dt.now()
         time_delta = 0
 
+        async def close_connections():
+            [await market.close() for market in markets_objs]
+            [await order_obj.close() for order_obj in orders_objs]
+
         while time_delta < self.data_update_time:
             try:
                 orders_arrs = await self._get_orders_data_for_chain(chain, markets_objs)
@@ -175,8 +179,7 @@ class BitsharesArbitrage(BaseRin):
                     self._is_orders_placing = False
 
             except (EmptyOrdersList, AuthorizedAsset, UnknownOrderException):
-                [await market.close() for market in markets_objs]
-                [await order_obj.close() for order_obj in orders_objs]
+                await close_connections()
                 return
 
             time_end = dt.now()
@@ -184,8 +187,7 @@ class BitsharesArbitrage(BaseRin):
 
             break
 
-        [await market.close() for market in markets_objs]
-        [await order_obj.close() for order_obj in orders_objs]
+        await close_connections()
 
     def start_arbitrage(self):
         cycle_counter = 0

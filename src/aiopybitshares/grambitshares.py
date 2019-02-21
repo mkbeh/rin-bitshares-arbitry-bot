@@ -11,8 +11,6 @@ default_node = 'wss://bitshares.openledger.info/ws'
 
 
 class GramBitshares:
-    __slots__ = ['_node', '_ws', '_session']
-
     def __init__(self, node=default_node):
         self._node = node
         self._ws = None

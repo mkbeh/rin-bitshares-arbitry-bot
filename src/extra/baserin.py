@@ -36,8 +36,7 @@ class BaseRin:
     utils.dir_exists(cfg_data.get('log dir'))
 
     dtype_float64 = np.float64
-    dtype_int16 = np.int64
-    dtype_str = np.string_
+    dtype_int64 = np.int64
 
     @staticmethod
     def setup_logger(logger_name, log_file, level=logging.INFO):

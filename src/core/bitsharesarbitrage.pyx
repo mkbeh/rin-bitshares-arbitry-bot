@@ -120,12 +120,12 @@ class BitsharesArbitrage(BaseRin):
 
     async def _get_precisions_arr(self, chain):
         obj = await Asset().connect(ws_node=self.wallet_uri)
-        assets_arr = np.array([
-            *(itertools.chain.from_iterable(
+        assets_arr = tuple(
+            (itertools.chain.from_iterable(
                 map(lambda x: x.split(':'), chain)
             ))
-        ], dtype=self.dtype_str)
-        precisions_arr = np.array(range(4), dtype=self.dtype_int16)
+        )
+        precisions_arr = np.array(range(4), dtype=self.dtype_int64)
 
         for i, asset in enumerate(assets_arr[:4]):
             if i == 2:
@@ -198,7 +198,7 @@ class BitsharesArbitrage(BaseRin):
 
             # -- checking speed
             start = dt.now()
-            tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains[:1])
+            tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains)
 
             try:
                 self._ioloop.run_until_complete(asyncio.gather(*tasks))

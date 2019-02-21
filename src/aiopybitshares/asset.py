@@ -3,8 +3,6 @@ from .grambitshares import GramBitshares, default_node
 
 
 class Asset(GramBitshares):
-    __slots__ = ['_gram']
-
     def __init__(self):
         super().__init__()
         self._gram = None

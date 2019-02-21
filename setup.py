@@ -41,6 +41,7 @@ setup(
         'markdown',
         'uvloop',
         'numpy',
+        'mypy'
     ],
     include_package_data=True,
     packages=find_packages(),

@@ -120,14 +120,12 @@ class BitsharesArbitrage(BaseRin):
 
     async def _get_precisions_arr(self, chain):
         obj = await Asset().connect(ws_node=self.wallet_uri)
-        assets_arr = tuple(
-            (itertools.chain.from_iterable(
+        assets_arr = itertools.chain.from_iterable(
                 map(lambda x: x.split(':'), chain)
-            ))
-        )
+            )
         precisions_arr = np.array(range(4), dtype=self.dtype_int64)
 
-        for i, asset in enumerate(assets_arr[:4]):
+        for i, asset in enumerate(itertools.islice(assets_arr, 4)):
             if i == 2:
                 precisions_arr[i] = (precisions_arr[i - 1])
                 continue

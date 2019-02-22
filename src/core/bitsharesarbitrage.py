@@ -39,14 +39,12 @@ class BitsharesArbitrage(BaseRin):
         self._profit_logger = self.setup_logger('Profit', os.path.join(self.log_dir, 'profit.log'))
         self._blacklisted_assets = self.get_blacklisted_assets()
 
-    async def _add_asset_to_blacklist(self, chain, count):
-        if chain[count][1] not in self._blacklisted_assets:
-            self._blacklisted_assets.append(chain[count][1])
-            await self.write_data(chain[count][1], self._blacklisted_assets_file)
+    async def _add_asset_to_blacklist(self, asset):
+        if asset not in self._blacklisted_assets:
+            self._blacklisted_assets.append(asset)
+            await self.write_data(asset, self._blacklisted_assets_file)
 
     async def _orders_setter(self, orders_placement_data, chain, orders_objs):
-        filled_all = True
-
         def convert_scientific_notation_to_decimal(val):
             pattern = re.compile(r'e-')
             splitted_val = re.split(pattern, str(val))
@@ -55,6 +53,8 @@ class BitsharesArbitrage(BaseRin):
                 return '{:.12f}'.format(val).rstrip('0')
 
             return str(val)
+
+        filled_all = True
 
         for i, (vols_arr, order_obj) in enumerate(zip(orders_placement_data, orders_objs)):
             splitted_pair = chain[i].split(':')
@@ -77,7 +77,7 @@ class BitsharesArbitrage(BaseRin):
                 break
 
             except AuthorizedAsset:
-                await self._add_asset_to_blacklist(chain, i)
+                await self._add_asset_to_blacklist(splitted_pair[1])
                 self._logger.warning(f'Got Authorized asset {chain[i][1]} '
                                      f'in chain {chain} while placing order.')
                 raise
@@ -91,9 +91,9 @@ class BitsharesArbitrage(BaseRin):
 
     async def volumes_checker(self, orders_vols, chain, orders_objs, profit):
         if orders_vols.size:
-            await self._orders_setter(orders_vols, chain, orders_objs)
             self._profit_logger.info(f'Profit = {profit} | Chain: {chain} | '
                                      f'Volumes: {orders_vols[0][0], orders_vols[2][1]}')
+            await self._orders_setter(orders_vols, chain, orders_objs)
 
     async def get_order_data_for_pair(self, pair, market_gram, order_type='asks', limit=BaseRin.orders_depth):
         base_asset, quote_asset = pair.split(':')
@@ -179,9 +179,6 @@ class BitsharesArbitrage(BaseRin):
             [await market.close() for market in markets_objs]
             [await order_obj.close() for order_obj in orders_objs]
 
-        #
-        # x = 0
-
         while time_delta < self.data_update_time:
             try:
                 orders_arrs = await self._get_orders_data_for_chain(chain, markets_objs)
@@ -195,21 +192,10 @@ class BitsharesArbitrage(BaseRin):
 
             except (EmptyOrdersList, AuthorizedAsset, UnknownOrderException):
                 await close_connections()
-                # print('Conns closed')
                 return
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600
-
-            #
-            # x += 1
-            # print(x)
-            # import asyncio
-            # await asyncio.sleep(7)
-            #
-            # if x == 5:
-            #     break
-            # #
 
         await close_connections()
 
@@ -220,9 +206,6 @@ class BitsharesArbitrage(BaseRin):
             chains = ChainsWithGatewayPairFees(self._ioloop).get_chains_with_fees()
             self._vol_limits = VolLimits(self._ioloop).get_volume_limits()
             self._bts_default_fee = DefaultBTSFee(self._ioloop).get_converted_default_bts_fee()
-
-            # -- checking speed
-            start = dt.now()
             tasks = (self._ioloop.create_task(self._arbitrage_testing(chain.chain, chain.fees)) for chain in chains)
 
             try:
@@ -233,10 +216,3 @@ class BitsharesArbitrage(BaseRin):
             else:
                 self._logger.info(f'Success arbitrage cycle #{cycle_counter}.\n')
                 cycle_counter += 1
-
-            end = dt.now()
-            delta = end - start
-            print('CHAINS + ALGO', delta.microseconds / 1_000_000, ' ms')
-            # --\
-
-            break

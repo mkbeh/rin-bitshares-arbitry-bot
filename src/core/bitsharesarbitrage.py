@@ -98,10 +98,11 @@ class BitsharesArbitrage(BaseRin):
     async def get_order_data_for_pair(self, pair, market_gram, order_type='asks', limit=BaseRin.orders_depth):
         base_asset, quote_asset = pair.split(':')
         raw_orders_data = await market_gram.get_order_book(base_asset, quote_asset, order_type, limit=limit)
-        order_data_lst = map(
-            lambda order_data: [float(value) for value in order_data.values()], raw_orders_data
-        )
-        arr = np.array([*order_data_lst], dtype=self.dtype_float64)
+        arr = np.array([
+            *map(
+                lambda order_data: tuple(float(value) for value in order_data.values()), raw_orders_data
+            )
+        ], dtype=self.dtype_float64)
 
         try:
             arr[0]

@@ -38,7 +38,9 @@ class GramBitshares:
         return gram
 
     async def call_method(self, method, *args):
-        message = json.dumps({'id': 0, 'method': '{}'.format(method), 'params': [*args]})
+        message = json.dumps(
+            {'id': 0, 'method': '{}'.format(method), 'params': [*args]}
+        )
         await self._ws.send_str(message)
 
         return await self._ws.receive_json()

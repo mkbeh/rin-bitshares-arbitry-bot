@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import re
 import time
 import logging
 import itertools
@@ -46,13 +47,27 @@ class BitsharesArbitrage(BaseRin):
     async def _orders_setter(self, orders_placement_data, chain, orders_objs):
         filled_all = True
 
+        def convert_scientific_notation_to_decimal(val):
+            pattern = re.compile(r'e-')
+            splitted_val = re.split(pattern, str(val))
+
+            if len(splitted_val) == 2:
+                return '{:.12f}'.format(val).rstrip('0')
+
+            return str(val)
+
         for i, (vols_arr, order_obj) in enumerate(zip(orders_placement_data, orders_objs)):
             splitted_pair = chain[i].split(':')
+            converted_vols_arr = tuple(
+                map(
+                    convert_scientific_notation_to_decimal, vols_arr
+                )
+            )
 
             try:
                 await order_obj.create_order(
-                    f'{self.account_name}', f'{vols_arr[0]}', f'{splitted_pair[0]}',
-                    f'{vols_arr[1]}', f'{splitted_pair[1]}', 0, True, True
+                    f'{self.account_name}', f'{converted_vols_arr[0]}', f'{splitted_pair[0]}',
+                    f'{converted_vols_arr[1]}', f'{splitted_pair[1]}', 0, True, True
                 )
 
             except OrderNotFilled:
@@ -76,7 +91,7 @@ class BitsharesArbitrage(BaseRin):
 
     async def volumes_checker(self, orders_vols, chain, orders_objs, profit):
         if orders_vols.size:
-            # await self._orders_setter(order_placement_data, chain, orders_objs)
+            await self._orders_setter(orders_vols, chain, orders_objs)
             self._profit_logger.info(f'Profit = {profit} | Chain: {chain} | '
                                      f'Volumes: {orders_vols[0][0], orders_vols[2][1]}')
 
@@ -164,6 +179,9 @@ class BitsharesArbitrage(BaseRin):
             [await market.close() for market in markets_objs]
             [await order_obj.close() for order_obj in orders_objs]
 
+        #
+        # x = 0
+
         while time_delta < self.data_update_time:
             try:
                 orders_arrs = await self._get_orders_data_for_chain(chain, markets_objs)
@@ -177,12 +195,21 @@ class BitsharesArbitrage(BaseRin):
 
             except (EmptyOrdersList, AuthorizedAsset, UnknownOrderException):
                 await close_connections()
+                # print('Conns closed')
                 return
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600
 
-            break
+            #
+            # x += 1
+            # print(x)
+            # import asyncio
+            # await asyncio.sleep(7)
+            #
+            # if x == 5:
+            #     break
+            # #
 
         await close_connections()
 

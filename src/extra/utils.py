@@ -42,7 +42,7 @@ def get_dir_file(dir_, regex):
             pass
 
 
-def get_proj_dir(cwd=''):
+def join_proj_dir_and_dir(cwd=''):
     return os.path.join(os.path.dirname(sys.modules['__main__'].__file__), f'../{cwd}')
 
 

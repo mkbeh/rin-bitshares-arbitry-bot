@@ -44,7 +44,9 @@ class GramBitshares:
         return await self._ws.receive_json()
 
     async def is_wallet_locked(self):
-        return (await self.call_method('is_locked'))['result']
+        return (
+            await self.call_method('is_locked')
+        )['result']
 
     async def unlock_wallet(self):
         await self.call_method('unlock', BaseRin.wallet_pwd)

@@ -154,9 +154,7 @@ class ChainsWithGatewayPairFees(BaseRin):
 
     def __init__(self, loop):
         self._ioloop = loop
-        # self._file_with_chains = ChainsCreator(self._ioloop).start_creating_chains()
-        self._file_with_chains = '/home/cyberpunk/PycharmProjects/rin-bitshares-arbitry-bot/' \
-                                 'output/chains-18-02-2019-21-46-32.lst'
+        self._file_with_chains = ChainsCreator(self._ioloop).start_creating_chains()
         self._fees_count = 0
 
     async def _get_fees_for_chain(self, chain):

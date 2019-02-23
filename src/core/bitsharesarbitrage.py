@@ -72,14 +72,14 @@ class BitsharesArbitrage(BaseRin):
 
             except OrderNotFilled:
                 filled_all = False
-                self._logger.warning(f'Order for pair {chain[i]} in chain '
-                                     f'{chain} with volumes {vols_arr} not filled.')
+                self._profit_logger.warning(f'Order for pair {chain[i]} in chain '
+                                            f'{chain} with volumes {vols_arr} not filled.')
                 break
 
             except AuthorizedAsset:
                 await self._add_asset_to_blacklist(splitted_pair[1])
-                self._logger.warning(f'Got Authorized asset {chain[i][1]} '
-                                     f'in chain {chain} while placing order.')
+                self._profit_logger.warning(f'Got Authorized asset {chain[i][1]} '
+                                            f'in chain {chain} while placing order.')
                 raise
 
             except UnknownOrderException:

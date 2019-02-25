@@ -89,13 +89,13 @@ class BitsharesArbitrage(BaseRin):
             self._profit_logger.info(f'All orders for {chain} with volumes '
                                      f'- {orders_placement_data} successfully filed.')
 
-    async def volumes_checker(self, orders_vols, chain, orders_objs, profit):
+    async def _volumes_checker(self, orders_vols, chain, orders_objs, profit):
         if orders_vols.size:
             await self._orders_setter(orders_vols, chain, orders_objs)
             self._profit_logger.info(f'Profit = {profit} | Chain: {chain} | '
                                      f'Volumes: {orders_vols[0][0], orders_vols[2][1]}')
 
-    async def get_order_data_for_pair(self, pair, market_gram, order_type='asks', limit=BaseRin.orders_depth):
+    async def _get_order_data_for_pair(self, pair, market_gram, order_type='asks', limit=BaseRin.orders_depth):
         base_asset, quote_asset = pair.split(':')
         raw_orders_data = await market_gram.get_order_book(base_asset, quote_asset, order_type, limit=limit)
         arr = np.array([
@@ -113,7 +113,7 @@ class BitsharesArbitrage(BaseRin):
 
     async def _get_orders_data_for_chain(self, chain, gram_markets):
         pairs_orders_data_arrs = await asyncio.gather(
-            *(self.get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_markets))
+            *(self._get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_markets))
         )
 
         async def get_size_of_smallest_arr(arrs_lst):
@@ -188,7 +188,7 @@ class BitsharesArbitrage(BaseRin):
 
                 if self._is_orders_placing is False:
                     self._is_orders_placing = True
-                    await self.volumes_checker(orders_vols, chain, orders_objs, profit)
+                    await self._volumes_checker(orders_vols, chain, orders_objs, profit)
                     self._is_orders_placing = False
 
             except (EmptyOrdersList, AuthorizedAsset, UnknownOrderException):

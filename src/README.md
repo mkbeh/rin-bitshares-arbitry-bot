@@ -89,3 +89,8 @@ lines in setup.py and change the extension of
 the desired files to .pyx. But Cython compiling not
 tested so use it at your own risk.
 ```
+### **Roadmap**:
+* Write own cmd explorer REST API without web interface instead 
+oxarbitrage explorer.
+* Improve bot.
+* Write full async lib for Bitshares API.

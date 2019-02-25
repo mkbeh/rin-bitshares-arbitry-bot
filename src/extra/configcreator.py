@@ -14,7 +14,7 @@ class ConfigCreator:
             'log dir': utils.join_proj_dir_and_dir('logs')
         }},
         {'MIN_DAILY_VOLUME': {
-            'overall min daily volume': '10',  # $ / required int
+            'overall min daily volume': '10',  # $ / required non
             'pair min daily volume': '5'       # $ / required int
         }},
         {'LIMITS': {

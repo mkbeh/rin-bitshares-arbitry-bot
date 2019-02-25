@@ -24,6 +24,7 @@ class BaseRin:
 
     node_uri = cfg_data.get('node uri')
     wallet_uri = cfg_data.get('wallet uri')
+    explorer_uri = cfg_data.get('explorer uri')
 
     account_name = cfg_data.get('account name')
     wallet_pwd = cfg_data.get('wallet password')

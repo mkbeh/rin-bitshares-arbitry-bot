@@ -24,7 +24,8 @@ class ConfigCreator:
         }},
         {'URI': {
             'node uri': '',
-            'wallet uri': ''
+            'wallet uri': '',
+            'explorer uri': '',
         }},
         {'ACCOUNT': {
             'account name': '',

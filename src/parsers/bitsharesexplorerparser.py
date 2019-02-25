@@ -11,9 +11,6 @@ from src.extra import utils
 
 class BitsharesExplorerParser(BaseRin):
     _logger = logging.getLogger('Rin.BitsharesExplorerParser')
-    _assets_url = 'http://185.208.208.184:5000/assets'
-    _assets_markets_url = 'http://185.208.208.184:5000/get_markets?asset_id={}'
-    _market_data_url = 'http://185.208.208.184:5000/get_volume?base={}&quote={}'
     _lock = asyncio.Lock()
     _date = utils.get_today_date()
     _old_file = utils.get_file(BaseRin.output_dir, utils.get_dir_file(BaseRin.output_dir, 'pairs'))
@@ -24,6 +21,10 @@ class BitsharesExplorerParser(BaseRin):
         self._ioloop = loop
         self._bts_price_in_usd = BTSPriceParser(loop).get_bts_price_in_usd()
         self._overall_min_daily_vol = self.overall_min_daily_volume / self._bts_price_in_usd
+
+        self._assets_url = self.explorer_uri + '/assets'
+        self._assets_markets_url = self.explorer_uri + '/get_markets?asset_id={}'
+        self._market_data_url = self.explorer_uri + '/get_volume?base={}&quote={}'
 
     async def _check_pair_on_valid(self, pair, base_price):
         market_data = await self.get_data(self._market_data_url.format(*pair),

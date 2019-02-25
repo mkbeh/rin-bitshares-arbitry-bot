@@ -5,7 +5,10 @@ BTS, BRIDGE.BTC, CNY, USD. Market pairs are taken
 from the bitshares node and then are added to the 
 chains along which the bot works. The description 
 of the arbitration algorithm is in the module 
-`src.algorithms.arbitryalgorithm`.
+`src.algorithms.arbitryalgorithm`. 
+***
+Further installation assumes that your node, wallet 
+and explorer are on one server, and the bot is on another.
 
 ### **How it works**
 Here will be block scheme
@@ -75,7 +78,7 @@ wallet password = wallet_password
 
 [OTHER]
 data update time = 1      # Hours. Required int
-time to reconnect = 350   # Secs. Required int
+time to reconnect = 350   # Reconnect to node or wallet. Secs. Required int
 orders depth = 5          # Amount. Required int
 ```
 
@@ -92,5 +95,5 @@ tested so use it at your own risk.
 ### **Roadmap**:
 * Write own cmd explorer REST API without web interface instead 
 oxarbitrage explorer.
-* Improve bot.
+* Improve bot by adding new features.
 * Write full async lib for Bitshares API.

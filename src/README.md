@@ -25,7 +25,7 @@ Here will be block scheme
 ### **Installing BitShares Explorer REST API**
 Use this manual https://github.com/oxarbitrage/bitshares-explorer-api
 
-### **Installing bot**
+### **Installing and usage bot**
 The following procedure will work in Debian 
 based Linux, more specifically the commands 
 to make the guide were executed in Ubuntu 18.10 
@@ -68,9 +68,9 @@ volume limits = {"1.3.0": 15, "1.3.113": 15, "1.3.1570": 15, "1.3.121": 15}
 min profit limits = {"1.3.0": 0.001, "1.3.113": 0.02, "1.3.1570": 2e-08, "1.3.121": 0.02}
 
 [URI]
-node uri = 
-wallet uri = ws://127.0.0.1:8093/ws - example
-explorer uri = 
+node uri = nodr_uri
+wallet uri = ws://127.0.0.1:8093/ws      # example
+explorer uri = explrer_uri
 
 [ACCOUNT]
 account name = account_name
@@ -83,7 +83,8 @@ orders depth = 5          # Amount. Required int
 ```
 
 When you will fill config , run application again , typing
-rin-bot in command line.
+rin-bot in command line again , being in a previously 
+activated virtual environment.
 
 #### Note
 ```angular2

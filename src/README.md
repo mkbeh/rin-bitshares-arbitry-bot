@@ -19,8 +19,49 @@ Here will be block scheme
 ### **Installing Bitshares node and wallet**
 ...
 
+### **Installing nginx**
+> wget http://nginx.org/download/nginx-1.11.3.tar.gz
+
+> tar -xzvf nginx-1.11.3.tar.gz
+
+> cd nginx-1.11.3/
+
+> sudo apt-get install libpcre3 libpcre3-dev libpcrecpp0v5 libssl-dev zlib1g-dev libssl1.0-dev
+
+> ./configure --sbin-path=/usr/bin/nginx --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --with-debug --with-pcre --with-cc-opt="-Wno-error"
+
+> make
+
+> sudo make install
+
 ### **Configuring nginx**
-...
+> sudo vi /lib/systemd/system/nginx.service
+```angular2
+[Unit]
+Description=The NGINX HTTP and reverse proxy server
+After=syslog.target network.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=forking
+PIDFile=/usr/local/nginx/logs/nginx.pid
+ExecStartPre=/usr/bin/nginx -t
+ExecStart=/usr/bin/nginx
+ExecReload=/usr/bin/nginx -s reload
+ExecStop=/bin/kill -s QUIT $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+```
+> systemctl daemon-reload
+
+> systemctl enable nginx.service
+
+> systemctl start nginx.service
+
+> systemctl -l status nginx.service
+
+
 
 ### **Installing BitShares Explorer REST API**
 Use this manual https://github.com/oxarbitrage/bitshares-explorer-api
@@ -85,6 +126,9 @@ orders depth = 5          # Amount. Required int
 When you will fill config , run application again , typing
 rin-bot in command line again , being in a previously 
 activated virtual environment.
+
+#### Logging
+Here will be description of output and logs dirs
 
 #### Note
 ```angular2

@@ -50,7 +50,7 @@ setup(
     },
     entry_points={
         'console_scripts':
-            ['rin = src.rin:main']
+            ['rin-bot = src.rin:main']
     },
     zip_save=False,
     include_dirs=[np.get_include()],

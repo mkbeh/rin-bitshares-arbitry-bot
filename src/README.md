@@ -39,7 +39,7 @@ source venv/bin/activate
 python3.7 setup.py install
 
 # Running #
-Just type rin in the command line and press enter.
+Just type rin-bot in the command line and press enter.
 
 On first app startup will be generated config, 
 which must be filled. When you will fill config , 

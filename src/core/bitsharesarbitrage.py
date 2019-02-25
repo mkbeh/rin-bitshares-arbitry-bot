@@ -12,6 +12,7 @@ from datetime import datetime as dt
 
 from aiohttp.client_exceptions import ClientConnectionError
 
+from src.extra.baserin import BaseRin
 from src.extra.customexceptions import OrderNotFilled, AuthorizedAsset, EmptyOrdersList, UnknownOrderException
 from src.extra import utils
 
@@ -19,10 +20,9 @@ from src.aiopybitshares.market import Market
 from src.aiopybitshares.order import Order
 from src.aiopybitshares.asset import Asset
 
-from src.extra.baserin import BaseRin
+from src.algorithms.arbitryalgorithm import ArbitrationAlgorithm
 
 from .limitsandfees import ChainsWithGatewayPairFees, VolLimits, DefaultBTSFee
-from src.algorithms.arbitryalgorithm import ArbitrationAlgorithm
 
 
 class BitsharesArbitrage(BaseRin):

@@ -10,7 +10,7 @@ of the arbitration algorithm is in the module
 Further installation assumes that your node, wallet 
 and explorer are on one server, and the bot is on another.
 
-### **How it works**
+### **How bot works**
 [TO DO]
 
 
@@ -63,6 +63,8 @@ export LC_ALL=C
 > wget http://nginx.org/download/nginx-1.11.3.tar.gz
 
 > tar -xzvf nginx-1.11.3.tar.gz
+
+> rm nginx-1.11.3.tar.gz
 
 > cd nginx-1.11.3/
 
@@ -227,6 +229,11 @@ http {
 
 
 ### **Installing BitShares Explorer REST API**
+
+#### **NOTE**
+```bash
+Do everything that is described in the following guide until creating nginx config.
+```
 Use this manual https://github.com/oxarbitrage/bitshares-explorer-api
 
 ### **Installing and usage bot**

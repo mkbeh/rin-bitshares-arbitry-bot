@@ -178,7 +178,7 @@ ssl_session_timeout 4h;
 ```bash
 # user  nobody;
 worker_processes         auto;
-pid		                 /usr/local/nginx/logs/nginx.pid;
+pid                      /usr/local/nginx/logs/nginx.pid;
 
 events {
     worker_connections   2048;

@@ -235,6 +235,7 @@ http {
 > systemctl restart NGINX.service
 
 or do 
+
 > systemctl reload NGINX.service
 
 #### **NOTE**
@@ -276,6 +277,9 @@ ufw enable
 ufw allow www
 ufw allow 443/tcp
 ```
+
+#### **Nginx basic auth**.
+[TO DO]
 
 ### **Installing and usage bot**
 The following procedure will work in Debian 

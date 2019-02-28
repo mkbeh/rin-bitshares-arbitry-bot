@@ -1,6 +1,3 @@
-[TO DO]
-* заменить uri ноды в строке запуска кошелька
-
 # Asynchronous Bitshares arbitrage bot
 An arbitration bot only works inside bitshares.
 The bot builds up the volume of four assets: 
@@ -32,6 +29,35 @@ and explorer are on one server, and the bot is on another.
 > tar -xzvf BitShares-Core-2.0.190219-Linux-cli-tools.tar.gz
 
 > rm BitShares-Core-2.0.190219-Linux-cli-tools.tar.gz
+
+#### **Configuring witness node**
+[TO DO]
+
+#### **Configuring wallet**.
+```bash
+./cli_wallet --server-rpc-endpoint=wss://127.0.0.1:8094 -r 127.0.0.1:8093
+set_password <your_super_pwd>
+unlock <your_super_pwd>
+import_key <user_name> <priv_key>
+```
+
+**NOTE:**
+
+If error while trying to run wallet:
+```bash
+Logging RPC to file: logs/rpc/rpc.log
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  locale::facet::_S_create_c_locale name not valid
+Aborted (core dumped)
+```
+
+Try this:
+```bash
+sudo vi ~/.bashrc
+
+# Add line to the end of the file
+export LC_ALL=C
+```
 
 #### **Adding node and wallet to supervisor**
 > sudo apt-get install supervisor
@@ -72,32 +98,6 @@ user=<user>
 > supervisorctl supervisorctl start bts_wallet
 
 > supervisorctl supervisorctl start bts_api
-
-#### Configuring wallet.
-```bash
-./cli_wallet --server-rpc-endpoint=wss://127.0.0.1:8094 -r 127.0.0.1:8093
-set_password <your_super_pwd>
-unlock <your_super_pwd>
-import_key <user_name> <priv_key>
-```
-
-**NOTE:**
-
-If error while trying to run wallet:
-```bash
-Logging RPC to file: logs/rpc/rpc.log
-terminate called after throwing an instance of 'std::runtime_error'
-  what():  locale::facet::_S_create_c_locale name not valid
-Aborted (core dumped)
-```
-
-Try this:
-```bash
-sudo vi ~/.bashrc
-
-# Add line to the end of the file
-export LC_ALL=C
-```
 
 ### **Installing nginx**
 > wget http://nginx.org/download/nginx-1.11.3.tar.gz

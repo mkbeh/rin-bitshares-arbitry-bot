@@ -254,7 +254,18 @@ Use this manual https://github.com/oxarbitrage/bitshares-explorer-api
 ### Server security setting
 
 #### **Add SSH keys**
-[TO DO]
+```bash
+# On your local car.
+ssh-keygen
+mv key_name* ~/.ssh/
+ssh-copy-id user@sever_ip
+
+# On remote server. 
+# Disable pas auth.
+sudo vi /etc/ssh/sshd_config
+-> replace yes to no in PasswordAuthentication line
+sudo systemctl reload sshd
+```
 
 #### **Configuring UFW**
 ```bash
@@ -264,7 +275,6 @@ ufw allow ssh
 ufw enable
 ufw allow www
 ufw allow 443/tcp
-
 ```
 
 ### **Installing and usage bot**

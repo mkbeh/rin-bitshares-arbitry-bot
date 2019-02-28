@@ -112,7 +112,7 @@ user=<user>
 
 > sudo apt-get install libpcre3 libpcre3-dev libpcrecpp0v5 libssl-dev zlib1g-dev build-essential
 
-> ./configure --sbin-path=/usr/bin/nginx --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --with-debug --with-pcre --with-cc-opt="-Wno-error" --with-http_ssl_module
+> ./configure --sbin-path=/usr/bin/nginx --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --with-debug --with-pcre --with-cc-opt="-Wno-error" --with-http_ssl_module --with-threads
 
 > make
 
@@ -177,40 +177,40 @@ ssl_session_timeout 4h;
 
 ```bash
 # user  nobody;
-worker_processes  auto;
-pid               /usr/local/nginx/logs/nginx.pid;
+worker_processes         auto;
+pid		                 /usr/local/nginx/logs/nginx.pid;
 
 events {
-    worker_connections  2048;
-    multi_accept on;
-    use epoll;
+    worker_connections   2048;
+    multi_accept         on;
+    use                  epoll;
 }
 
 
 http {
-
     # Basic settings
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    
+    sendfile       on;
+    tcp_nopush     on;
+    tcp_nodelay    on;
+    aio            threads;    
+
     # Logging
-    access_log off;
-    error_log /var/log/nginx/error.log crit;
+    access_log     off;
+    error_log      /var/log/nginx/error.log crit;
 
     # Enable open file cache
-    open_file_cache		max=1000 inactive=20s;
-    open_file_cache_valid	30s;
+    open_file_cache		        max=1000 inactive=20s;
+    open_file_cache_valid	    30s;
     open_file_cache_min_uses	2;
-    open_file_cache_errors	on;
+    open_file_cache_errors	    on;
 
     # Keepalive
-    keepalive_timeout 300;
+    keepalive_timeout    300;
 
-    send_timeout 10;
+    send_timeout         10;
 
     # Hide nginx version information.
-    server_tokens off;
+    server_tokens        off;
     
     # Websockets
     map $http_upgrade $connection_upgrade {
@@ -219,7 +219,7 @@ http {
 	}
 
     upstream subwallet {
-	server 127.0.0.1:8093;
+	    server 127.0.0.1:8093;
     }
 
     upstream subnode {
@@ -227,56 +227,55 @@ http {
     }   
 
     server {
-        listen 443 ssl;
-
-        ssl_certificate         /etc/letsencrypt/live/wallet.domain.com/fullchain.pem;
-        ssl_certificate_key     /etc/letsencrypt/live/wallet.domain.com/privkey.pem;
-        include                 /etc/letsencrypt/options-ssl-nginx.conf;
-        ssl_dhparam             /etc/letsencrypt/ssl-dhparams.pem;
-
-        server_name wallet.domain.com;
-
+        listen                   443 ssl;
+    
+        ssl_certificate          /etc/letsencrypt/live/wallet.domain.com/fullchain.pem;
+        ssl_certificate_key      /etc/letsencrypt/live/wallet.domain.com/privkey.pem;
+        include 	             /etc/letsencrypt/options-ssl-nginx.conf;
+        ssl_dhparam		         /etc/letsencrypt/ssl-dhparams.pem;
+    
+        server_name              wallet.domain.com;
+    
         location /ws {
-            proxy_pass http://subwallet;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
+            proxy_pass           http://subwallet;
+            proxy_http_version   1.1;
+            proxy_set_header     Upgrade $http_upgrade;
+            proxy_set_header     Connection $connection_upgrade;
+    
+            proxy_set_header     Host $http_host;
+            proxy_set_header     X-Real-IP $remote_addr;
+            proxy_set_header     X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header     X-Forwarded-Proto $scheme;
+        }
+    }
 
-            proxy_set_header Host $http_host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
+    server {
+        listen                   80;
+        server_name              node.domain.com;
+	
+        location /ws {
+            proxy_pass           http://subnode;
+            proxy_http_version   1.1;
+            proxy_set_header     Upgrade $http_upgrade;
+            proxy_set_header     Connection $connection_upgrade;
+
+            proxy_set_header     Host $http_host;
+            proxy_set_header     X-Real-IP $remote_addr;
+            proxy_set_header     X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header     X-Forwarded-Proto $scheme;
         }
     }
     
     server {
-        listen 80;
-        server_name node.domain.com;
+    	listen                   80;
+    	server_name              api.domain.com;
 
-        location /ws {
-            proxy_pass http://subnode;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
-
-            proxy_set_header Host $http_host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
+    	location / {
+            include              uwsgi_params;
+            uwsgi_pass           unix:/tmp/app.sock;
         }
     }
-    
-    server {
-        listen 80;
-        server_name api.domain.com;
-
-        location / {
-            include uwsgi_params;
-            uwsgi_pass unix:/tmp/app.sock;
-        }
-    }
-} 
-
+}
 ```
 > systemctl restart NGINX.service
 

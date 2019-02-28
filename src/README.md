@@ -2,7 +2,7 @@
 An arbitration bot only works inside bitshares.
 The bot builds up the volume of four assets: 
 BTS, BRIDGE.BTC, CNY, USD. Market pairs are taken 
-from the bitshares node and then are added to the 
+from the bitshares node with ES and then are added to the 
 chains along which the bot works. The description 
 of the arbitration algorithm is in the module 
 `src.algorithms.arbitryalgorithm`. 
@@ -19,6 +19,8 @@ and explorer are on one server, and the bot is on another.
 [TO DO] Сделать содержание со ссылками для перехода
 к отдельным пунктам доки.
 
+**The following actions were performed on ubuntu 16.04**
+
 ### **Installing Bitshares node and wallet**
 > sudo apt-get update
 
@@ -33,7 +35,7 @@ and explorer are on one server, and the bot is on another.
 #### **Configuring witness node**
 [TO DO]
 
-#### **Configuring wallet**.
+#### **Configuring wallet**
 ```bash
 ./cli_wallet --server-rpc-endpoint=wss://127.0.0.1:8094 -r 127.0.0.1:8093
 set_password <your_super_pwd>

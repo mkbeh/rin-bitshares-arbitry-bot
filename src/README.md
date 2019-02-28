@@ -147,6 +147,10 @@ http {
     sendfile on;
     tcp_nopush on;
     tcp_nodelay on;
+    
+    # Logging
+    access_log off;
+    error_log /var/log/nginx/error.log crit;
 
     # Enable open file cache
     open_file_cache		max=1000 inactive=20s;
@@ -229,6 +233,14 @@ http {
 
 ```
 > systemctl restart NGINX.service
+
+or do 
+> systemctl reload NGINX.service
+
+#### **NOTE**
+```bash
+If something was wrong -> reboot your system and try again , in 99 percent of the happenings it helps :D
+```
 
 
 ### **Installing BitShares Explorer REST API**

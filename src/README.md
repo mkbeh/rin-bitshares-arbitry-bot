@@ -1,3 +1,6 @@
+[TO DO]
+* заменить uri ноды в строке запуска кошелька
+
 # Asynchronous Bitshares arbitrage bot
 An arbitration bot only works inside bitshares.
 The bot builds up the volume of four assets: 
@@ -31,11 +34,48 @@ and explorer are on one server, and the bot is on another.
 > rm BitShares-Core-2.0.190219-Linux-cli-tools.tar.gz
 
 #### **Adding node and wallet to supervisor**
-[TO DO]
+> sudo apt-get install supervisor
+> vi /etc/supervisor/conf.d/bts_node.conf
+```bash
+[program:bts_node]
+command=/home/<user>/programs/witness_node/witness_node --rpc-endpoint="127.0.0.1:8094"
+directory=/home/<user>/programs/witness_node/
+stdout_logfile=/var/log/supervisor/bts_node_out.log
+stderr_logfile=/var/log/supervisor/bts_node_err.log
+autostart=true
+autorestart=true
+numprocs=1
+user=<user>
+```
+> vi /etc/supervisor/conf.d/bts_wallet.conf
+```bash
+[program:bts_wallet]
+command=/home/<user>/programs/cli_wallet/cli_wallet --server-rpc-endpoint=ws://127.0.0.1:8094 -r 127.0.0.1:8093
+directory=/home/<user>/programs/cli_wallet/
+stdout_logfile=/var/log/supervisor/bts_wallet_out.log
+stderr_logfile=/var/log/supervisor/bts_wallet_err.log
+autostart=true
+autorestart=true
+numprocs=1
+user=<user>
+```
+> vi /etc/supervisor/conf.d/bts_api.conf
+```bash
+
+```
+> sudo supervisorctl reread
+
+> sudo supervisorctl update
+
+> supervisorctl supervisorctl start bts_node
+
+> supervisorctl supervisorctl start bts_wallet
+
+> supervisorctl supervisorctl start bts_api
 
 #### Configuring wallet.
 ```bash
-./cli_wallet --server-rpc-endpoint=wss://bitshares.openledger.info/ws -r 127.0.0.1:8093
+./cli_wallet --server-rpc-endpoint=wss://127.0.0.1:8094 -r 127.0.0.1:8093
 set_password <your_super_pwd>
 unlock <your_super_pwd>
 import_key <user_name> <priv_key>
@@ -124,6 +164,10 @@ certbot --nginx -d wallet.domain.com certonly
 crontab -e
 # Add next line for auto updating cert.
 @daily certbot renew
+
+# Change values /etc/letsencrypt/options-ssl-nginx.conf.
+ssl_session_cache shared:le_nginx_SSL:100m;
+ssl_session_timeout 4h;
 ```
 
 #### **Filling nginx.conf**
@@ -274,8 +318,8 @@ ufw default deny incoming
 ufw default allow outgoing
 ufw allow ssh
 ufw enable
-ufw allow www
-ufw allow 443/tcp
+ufw allow from <your ip> to any port www
+ufw allow from <your ip> to any port 443
 ```
 
 #### **Nginx basic auth**.

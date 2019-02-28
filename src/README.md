@@ -199,10 +199,10 @@ http {
     error_log      /var/log/nginx/error.log crit;
 
     # Enable open file cache
-    open_file_cache		        max=1000 inactive=20s;
-    open_file_cache_valid	    30s;
-    open_file_cache_min_uses	2;
-    open_file_cache_errors	    on;
+    open_file_cache             max=1000 inactive=20s;
+    open_file_cache_valid       30s;
+    open_file_cache_min_uses    2;
+    open_file_cache_errors      on;
 
     # Keepalive
     keepalive_timeout    300;

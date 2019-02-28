@@ -219,7 +219,7 @@ http {
 	}
 
     upstream subwallet {
-	    server 127.0.0.1:8093;
+        server 127.0.0.1:8093;
     }
 
     upstream subnode {
@@ -231,8 +231,8 @@ http {
     
         ssl_certificate          /etc/letsencrypt/live/wallet.domain.com/fullchain.pem;
         ssl_certificate_key      /etc/letsencrypt/live/wallet.domain.com/privkey.pem;
-        include 	             /etc/letsencrypt/options-ssl-nginx.conf;
-        ssl_dhparam		         /etc/letsencrypt/ssl-dhparams.pem;
+        include                  /etc/letsencrypt/options-ssl-nginx.conf;
+        ssl_dhparam              /etc/letsencrypt/ssl-dhparams.pem;
     
         server_name              wallet.domain.com;
     

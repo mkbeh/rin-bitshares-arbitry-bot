@@ -293,10 +293,10 @@ If something was wrong -> reboot your system and try again , in 99 percent of th
 ### **Installing BitShares Explorer REST API**
 
 #### **NOTE**
-```bash
-Do everything that is described in the following guide until creating nginx config.
-```
-Use this manual https://github.com/oxarbitrage/bitshares-explorer-api
+Full manual -> https://github.com/oxarbitrage/bitshares-explorer-api
+
+#### Quick installing.
+[TO DO]
 
 ### Server security setting
 
@@ -364,7 +364,7 @@ overall min daily volume = 10  #  Must be non float value
 pair min daily volume = 5      #  Must be non float value
 
 [LIMITS]
-# Options values must be dicts. Values in dicts must have types int 
+# Values of the options must be dicts. Values in dicts must have types int 
 # or float. Values in dict 'volume limits' expressed in dollars.
 volume limits = {"1.3.0": 15, "1.3.113": 15, "1.3.1570": 15, "1.3.121": 15}
 min profit limits = {"1.3.0": 0.001, "1.3.113": 0.02, "1.3.1570": 2e-08, "1.3.121": 0.02}

@@ -77,6 +77,8 @@ export LC_ALL=C
 > sudo make install
 
 ### **Configuring nginx**
+Previously add 3 CNAME records for subdomens:
+api.domain.com, wallet.domain.com, node.domain.com.
 
 #### **Base configuration**
 > sudo vi /lib/systemd/system/NGINX.service
@@ -128,8 +130,9 @@ crontab -e
 > vi /etc/nginx/nginx.conf
 
 ```bash
-# user  cyberpunk;
+# user  nobody;
 worker_processes  auto;
+pid               /usr/local/nginx/logs/nginx.pid;
 
 events {
     worker_connections  2048;

@@ -251,6 +251,22 @@ Do everything that is described in the following guide until creating nginx conf
 ```
 Use this manual https://github.com/oxarbitrage/bitshares-explorer-api
 
+### Server security setting
+
+#### **Add SSH keys**
+[TO DO]
+
+#### **Configuring UFW**
+```bash
+ufw default deny incoming 
+ufw default allow outgoing
+ufw allow ssh
+ufw enable
+ufw allow www
+ufw allow 443/tcp
+
+```
+
 ### **Installing and usage bot**
 The following procedure will work in Debian 
 based Linux, more specifically the commands 

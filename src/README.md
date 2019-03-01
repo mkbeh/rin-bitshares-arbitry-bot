@@ -398,7 +398,7 @@ wallet password = wallet_password
 
 [OTHER]
 # IMPORTANT: If u want to change 'data update time' don't forget change proxy_read_timeout
-# in server directive of wallet subdomain - otherwise you will get an error 
+# in server directive of wallet subdomain in nginx.conf - otherwise you will get an error 
 # associated with websocket connection because nginx will drop some ws connections by timeout.
 data update time = 1      # Hours. Required int
 time to reconnect = 350   # Reconnect to node or wallet. Secs. Required int

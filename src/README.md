@@ -37,7 +37,8 @@ and explorer are on one server, and the bot is on another.
 
 #### **Configuring wallet**
 ```bash
-./cli_wallet --server-rpc-endpoint=wss://127.0.0.1:8094 -r 127.0.0.1:8093
+cd programs/cli_wallet/
+./cli_wallet --server-rpc-endpoint=ws://127.0.0.1:8094 -r 127.0.0.1:8093
 set_password <your_super_pwd>
 unlock <your_super_pwd>
 import_key <user_name> <priv_key>
@@ -63,7 +64,8 @@ export LC_ALL=C
 
 #### **Adding node and wallet to supervisor**
 > sudo apt-get install supervisor
-> vi /etc/supervisor/conf.d/bts_node.conf
+
+> sudo vi /etc/supervisor/conf.d/bts_node.conf
 ```bash
 [program:bts_node]
 command=/home/<user>/programs/witness_node/witness_node --rpc-endpoint="127.0.0.1:8094"
@@ -75,7 +77,7 @@ autorestart=true
 numprocs=1
 user=<user>
 ```
-> vi /etc/supervisor/conf.d/bts_wallet.conf
+> sudo vi /etc/supervisor/conf.d/bts_wallet.conf
 ```bash
 [program:bts_wallet]
 command=/home/<user>/programs/cli_wallet/cli_wallet --server-rpc-endpoint=ws://127.0.0.1:8094 -r 127.0.0.1:8093
@@ -87,7 +89,7 @@ autorestart=true
 numprocs=1
 user=<user>
 ```
-> vi /etc/supervisor/conf.d/bts_api.conf
+> sudo vi /etc/supervisor/conf.d/bts_api.conf
 ```bash
 
 ```
@@ -110,7 +112,7 @@ user=<user>
 
 > cd nginx-1.11.3/
 
-> sudo apt-get install libpcre3 libpcre3-dev libpcrecpp0v5 libssl-dev zlib1g-dev build-essential
+> sudo apt-get install libpcre3 libpcre3-dev libpcrecpp0v5 libssl-dev zlib1g-dev build-essential libssl1.0-dev
 
 > ./configure --sbin-path=/usr/bin/nginx --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --with-debug --with-pcre --with-cc-opt="-Wno-error" --with-http_ssl_module --with-threads
 
@@ -149,29 +151,6 @@ WantedBy=multi-user.target
 
 > systemctl -l status NGINX.service
 
-#### **Adding ssl**
-```bash
-sudo apt-get update
-sudo apt-get install software-properties-common
-sudo add-apt-repository universe
-sudo add-apt-repository ppa:certbot/certbot
-sudo apt-get update
-sudo apt-get install certbot python-certbot-nginx 
-
-cd /run/
-ln -s /usr/local/nginx/logs/nginx.pid nginx.pid
-
-certbot --nginx -d wallet.domain.com certonly
-
-crontab -e
-# Add next line for auto updating cert.
-@daily certbot renew
-
-# Change values /etc/letsencrypt/options-ssl-nginx.conf.
-ssl_session_cache shared:le_nginx_SSL:100m;
-ssl_session_timeout 4h;
-```
-
 #### **Filling nginx.conf**
 > vi /etc/nginx/nginx.conf
 
@@ -205,9 +184,9 @@ http {
     open_file_cache_errors      on;
 
     # Keepalive
-    keepalive_timeout    300;
+    keepalive_timeout    300s;
 
-    send_timeout         10;
+    send_timeout         60s;
 
     # Hide nginx version information.
     server_tokens        off;
@@ -228,12 +207,14 @@ http {
 
     server {
         listen                   443 ssl;
-    
-        ssl_certificate          /etc/letsencrypt/live/wallet.domain.com/fullchain.pem;
-        ssl_certificate_key      /etc/letsencrypt/live/wallet.domain.com/privkey.pem;
-        include                  /etc/letsencrypt/options-ssl-nginx.conf;
-        ssl_dhparam              /etc/letsencrypt/ssl-dhparams.pem;
-    
+        
+        # <----- Uncomment this ------->
+        # ssl_certificate          /etc/letsencrypt/live/wallet.domain.com/fullchain.pem;
+        # ssl_certificate_key      /etc/letsencrypt/live/wallet.domain.com/privkey.pem;
+        # include                  /etc/letsencrypt/options-ssl-nginx.conf;
+        # ssl_dhparam              /etc/letsencrypt/ssl-dhparams.pem;
+        # <-----                ------->
+        
         server_name              wallet.domain.com;
     
         location /ws {
@@ -283,10 +264,32 @@ or do
 
 > systemctl reload NGINX.service
 
+#### **Adding ssl**
+```bash
+sudo apt-get update
+sudo apt-get install software-properties-common
+sudo add-apt-repository universe
+sudo add-apt-repository ppa:certbot/certbot
+sudo apt-get update
+sudo apt-get install certbot python-certbot-nginx 
+
+certbot --nginx -d wallet.domain.com certonly
+
+crontab -e
+# Add next line for auto updating cert.
+@daily certbot renew
+
+# Change values in /etc/letsencrypt/options-ssl-nginx.conf.
+ssl_session_cache shared:le_nginx_SSL:100m;
+ssl_session_timeout 4h;
+```
+
 #### **NOTE**
 ```bash
 If something was wrong -> reboot your system and try again , in 99 percent of the happenings it helps :D
 ```
+
+After previous steps uncomment lines in nginx.conf and replace domens on yours. Then reboot your system.
 
 
 ### **Installing BitShares Explorer REST API**

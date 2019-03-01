@@ -62,7 +62,15 @@ sudo vi ~/.bashrc
 export LC_ALL=C
 ```
 
-#### **Adding node and wallet to supervisor**
+### **Installing BitShares Explorer REST API**
+
+#### **NOTE**
+Full manual -> https://github.com/oxarbitrage/bitshares-explorer-api
+
+#### Quick installing.
+[TO DO]
+
+#### **Adding node, wallet and explorer to supervisor**
 > sudo apt-get install supervisor
 
 > sudo vi /etc/supervisor/conf.d/bts_node.conf
@@ -306,15 +314,6 @@ If something was wrong -> reboot your system and try again , in 99 percent of th
 ```
 
 After previous steps uncomment lines in nginx.conf and replace domens on yours. Then reboot your system.
-
-
-### **Installing BitShares Explorer REST API**
-
-#### **NOTE**
-Full manual -> https://github.com/oxarbitrage/bitshares-explorer-api
-
-#### Quick installing.
-[TO DO]
 
 ### Server security setting
 

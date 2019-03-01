@@ -264,12 +264,12 @@ http {
     }
     
     server {
-    	listen                   80;
-    	server_name              api.domain.com;
+    	listen                     80;
+    	server_name                api.domain.com;
 
     	location / {
-            include              uwsgi_params;
-            uwsgi_pass           unix:/tmp/app.sock;
+            include                uwsgi_params;
+            uwsgi_pass             unix:/tmp/app.sock;
         }
     }
 }

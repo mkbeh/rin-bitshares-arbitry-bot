@@ -97,11 +97,11 @@ user=<user>
 
 > sudo supervisorctl update
 
-> supervisorctl supervisorctl start bts_node
+> sudo supervisorctl start bts_node
 
-> supervisorctl supervisorctl start bts_wallet
+> sudo supervisorctl start bts_wallet
 
-> supervisorctl supervisorctl start bts_api
+> sudo supervisorctl start bts_api
 
 ### **Installing nginx**
 > wget http://nginx.org/download/nginx-1.11.3.tar.gz
@@ -152,15 +152,24 @@ WantedBy=multi-user.target
 > systemctl -l status NGINX.service
 
 #### **Filling nginx.conf**
+> vi /etc/sysctl.conf
+```bash
+# Add next line in the end of the file.
+fs.file-max = 40000
+```
+> sysctl -p
+
 > vi /etc/nginx/nginx.conf
 
 ```bash
 # user  nobody;
 worker_processes         auto;
+worker_rlimit_nofile     40000;
+
 pid                      /usr/local/nginx/logs/nginx.pid;
 
 events {
-    worker_connections   2048;
+    worker_connections   40000;   # worker_rlimit_nofile / worker_processes
     multi_accept         on;
     use                  epoll;
 }
@@ -184,9 +193,8 @@ http {
     open_file_cache_errors      on;
 
     # Keepalive
-    keepalive_timeout    300s;
-
-    send_timeout         60s;
+    keepalive_timeout    30s;
+    send_timeout         10s;
 
     # Hide nginx version information.
     server_tokens        off;
@@ -196,7 +204,8 @@ http {
 	    default upgrade;
 	    ''        close;
 	}
-
+    
+    # -- Upstreams --
     upstream subwallet {
         server 127.0.0.1:8093;
     }
@@ -204,46 +213,53 @@ http {
     upstream subnode {
     	server 127.0.0.1:8094;
     }   
-
+    
+    # --- Servers directives ---
     server {
-        listen                   443 ssl;
+        listen                     443 ssl;
+        server_name                wallet.domain.com;
         
-        # <----- Uncomment this ------->
-        # ssl_certificate          /etc/letsencrypt/live/wallet.domain.com/fullchain.pem;
-        # ssl_certificate_key      /etc/letsencrypt/live/wallet.domain.com/privkey.pem;
-        # include                  /etc/letsencrypt/options-ssl-nginx.conf;
-        # ssl_dhparam              /etc/letsencrypt/ssl-dhparams.pem;
+        # <----- Uncomment this after generating ssl certs. ------->
+        # ssl_certificate            /etc/letsencrypt/live/wallet.domain.com/fullchain.pem;
+        # ssl_certificate_key        /etc/letsencrypt/live/wallet.domain.com/privkey.pem;
+        # include                    /etc/letsencrypt/options-ssl-nginx.conf;
+        # ssl_dhparam                /etc/letsencrypt/ssl-dhparams.pem;
         # <-----                ------->
-        
-        server_name              wallet.domain.com;
     
         location /ws {
-            proxy_pass           http://subwallet;
-            proxy_http_version   1.1;
-            proxy_set_header     Upgrade $http_upgrade;
-            proxy_set_header     Connection $connection_upgrade;
+            proxy_pass             http://subwallet;
+            proxy_http_version     1.1;
+            proxy_set_header       Upgrade $http_upgrade;
+            proxy_set_header       Connection $connection_upgrade;
     
-            proxy_set_header     Host $http_host;
-            proxy_set_header     X-Real-IP $remote_addr;
-            proxy_set_header     X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header     X-Forwarded-Proto $scheme;
+            proxy_set_header       Host $http_host;
+            proxy_set_header       X-Real-IP $remote_addr;
+            proxy_set_header       X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header       X-Forwarded-Proto $scheme;
+            
+            proxy_read_timeout     300s;
+            proxy_connect_timeout  30s;
+
         }
     }
 
     server {
-        listen                   80;
-        server_name              node.domain.com;
+        listen                     80;
+        server_name                node.domain.com;
 	
         location /ws {
-            proxy_pass           http://subnode;
-            proxy_http_version   1.1;
-            proxy_set_header     Upgrade $http_upgrade;
-            proxy_set_header     Connection $connection_upgrade;
+            proxy_pass             http://subnode;
+            proxy_http_version     1.1;
+            proxy_set_header       Upgrade $http_upgrade;
+            proxy_set_header       Connection $connection_upgrade;
 
-            proxy_set_header     Host $http_host;
-            proxy_set_header     X-Real-IP $remote_addr;
-            proxy_set_header     X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header     X-Forwarded-Proto $scheme;
+            proxy_set_header       Host $http_host;
+            proxy_set_header       X-Real-IP $remote_addr;
+            proxy_set_header       X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header       X-Forwarded-Proto $scheme;
+            
+            proxy_read_timeout     500s;
+            proxy_connect_timeout  30s;
         }
     }
     
@@ -381,6 +397,9 @@ account name = account_name
 wallet password = wallet_password
 
 [OTHER]
+# IMPORTANT: If u want to change 'data update time' don't forget change proxy_read_timeout
+# in server directive of wallet subdomain - otherwise you will get an error 
+# associated with websocket connection because nginx will drop some ws connections by timeout.
 data update time = 1      # Hours. Required int
 time to reconnect = 350   # Reconnect to node or wallet. Secs. Required int
 orders depth = 5          # Amount. Required int
@@ -400,7 +419,7 @@ lines in setup.py and change the extension of
 the desired files to .pyx. But Cython compiling not
 tested so use it at your own risk.
 ```
-### **Roadmap**:
+### **Milestones**:
 * Write own async cmd explorer REST API without web interface instead 
 oxarbitrage explorer.
 * Improve bot by adding new features.

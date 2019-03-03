@@ -188,7 +188,8 @@ http {
     sendfile       on;
     tcp_nopush     on;
     tcp_nodelay    on;
-    aio            threads;    
+    aio            threads;  
+    reset_timedout_connection on;  
 
     # Logging
     access_log     off;
@@ -224,7 +225,8 @@ http {
     
     # --- Servers directives ---
     server {
-        listen                     443 ssl;
+        # listen                     443 ssl;
+        listen                     80;
         server_name                wallet.domain.com;
         
         # <----- Uncomment this after generating ssl certs. ------->
@@ -246,7 +248,7 @@ http {
             proxy_set_header       X-Forwarded-Proto $scheme;
             
             proxy_read_timeout     300s;
-            proxy_connect_timeout  30s;
+            proxy_connect_timeout  10s;
 
         }
     }
@@ -267,7 +269,7 @@ http {
             proxy_set_header       X-Forwarded-Proto $scheme;
             
             proxy_read_timeout     500s;
-            proxy_connect_timeout  30s;
+            proxy_connect_timeout  10s;
         }
     }
     
@@ -289,6 +291,15 @@ or do
 > systemctl reload NGINX.service
 
 #### **Adding ssl**
+```bash
+IMPORTANT NOTE:
+Adding ssl you will get a memory leak due to the fact 
+that the aiohttp library contains a memory leak when working with ssl.
+So , don't use ssl until this bug is fixed.
+
+Due with the lack of ssl on the wallet, I recommend reconsidering the nginx configuration.
+```
+
 ```bash
 sudo apt-get update
 sudo apt-get install software-properties-common

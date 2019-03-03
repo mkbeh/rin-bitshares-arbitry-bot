@@ -189,7 +189,6 @@ http {
     tcp_nopush     on;
     tcp_nodelay    on;
     aio            threads;  
-    reset_timedout_connection on;  
 
     # Logging
     access_log     off;
@@ -268,7 +267,7 @@ http {
             proxy_set_header       X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header       X-Forwarded-Proto $scheme;
             
-            proxy_read_timeout     500s;
+            proxy_read_timeout     60s;
             proxy_connect_timeout  10s;
         }
     }

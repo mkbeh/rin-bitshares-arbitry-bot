@@ -17,8 +17,7 @@ class GramBitshares:
         self._session = None
 
     async def ws_connect(self, node=default_node):
-        timeout = aiohttp.ClientTimeout(total=1800)
-        session = aiohttp.ClientSession(timeout=timeout)
+        session = aiohttp.ClientSession()
 
         try:
             self._ws = await session.ws_connect(node)

@@ -44,7 +44,7 @@ class BitsharesArbitrage(BaseRin):
             self._blacklisted_assets.append(asset)
             await self.write_data(asset, self._blacklisted_assets_file)
 
-    async def _orders_setter(self, orders_placement_data, chain, orders_objs):
+    async def _orders_setter(self, orders_placement_data, chain):
         def convert_scientific_notation_to_decimal(val):
             pattern = re.compile(r'e-')
             splitted_val = re.split(pattern, str(val))
@@ -55,8 +55,9 @@ class BitsharesArbitrage(BaseRin):
             return str(val)
 
         filled_all = True
+        order_objs = [await Order().connect(ws_node=self.wallet_uri) for _ in range(len(chain))]
 
-        for i, (vols_arr, order_obj) in enumerate(zip(orders_placement_data, orders_objs)):
+        for i, (vols_arr, order_obj) in enumerate(zip(orders_placement_data, order_objs)):
             splitted_pair = chain[i].split(':')
             converted_vols_arr = tuple(
                 map(
@@ -89,9 +90,9 @@ class BitsharesArbitrage(BaseRin):
             self._profit_logger.info(f'All orders for {chain} with volumes '
                                      f'- {orders_placement_data} successfully filed.')
 
-    async def _volumes_checker(self, orders_vols, chain, orders_objs, profit):
+    async def _volumes_checker(self, orders_vols, chain, profit):
         if orders_vols.size:
-            await self._orders_setter(orders_vols, chain, orders_objs)
+            await self._orders_setter(orders_vols, chain)
             self._profit_logger.info(f'Profit = {profit} | Chain: {chain} | '
                                      f'Volumes: {orders_vols[0][0], orders_vols[2][1]}')
 
@@ -169,16 +170,10 @@ class BitsharesArbitrage(BaseRin):
 
     async def _arbitrage_testing(self, chain, assets_fees):
         markets_objs = [await Market().connect() for _ in range(len(chain))]
-        orders_objs = [await Order().connect(ws_node=self.wallet_uri) for _ in range(len(chain))]
-
         asset_vol_limit, bts_default_fee, min_profit_limit, precisions_arr = await self._get_specific_data(chain)
 
         time_start = dt.now()
         time_delta = 0
-
-        async def close_connections():
-            [await market.close() for market in markets_objs]
-            [await order_obj.close() for order_obj in orders_objs]
 
         while time_delta < self.data_update_time:
             try:
@@ -188,17 +183,17 @@ class BitsharesArbitrage(BaseRin):
 
                 if self._is_orders_placing is False:
                     self._is_orders_placing = True
-                    await self._volumes_checker(orders_vols, chain, orders_objs, profit)
+                    await self._volumes_checker(orders_vols, chain, profit)
                     self._is_orders_placing = False
 
             except (EmptyOrdersList, AuthorizedAsset, UnknownOrderException):
-                await close_connections()
+                [await market.close() for market in markets_objs]
                 return
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600
 
-        await close_connections()
+        [await market.close() for market in markets_objs]
 
     def start_arbitrage(self):
         cycle_counter = 0

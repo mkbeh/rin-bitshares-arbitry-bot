@@ -177,7 +177,7 @@ worker_rlimit_nofile     40000;
 pid                      /usr/local/nginx/logs/nginx.pid;
 
 events {
-    worker_connections   40000;   # worker_rlimit_nofile / worker_processes
+    worker_connections   <set_value>;   # worker_rlimit_nofile / worker_processes
     multi_accept         on;
     use                  epoll;
 }
@@ -294,12 +294,12 @@ or do
 IMPORTANT NOTE:
 Adding ssl you will get a memory leak due to the fact 
 that the aiohttp library contains a memory leak when working with ssl.
-So , don't use ssl until this bug is fixed.
+So , do not use ssl until this bug is fixed.
 
 Due with the lack of ssl on the wallet, I recommend reconsidering the nginx configuration.
 ```
 
-```bash
+```
 sudo apt-get update
 sudo apt-get install software-properties-common
 sudo add-apt-repository universe
@@ -417,6 +417,26 @@ orders depth = 5          # Amount. Required int
 When you will fill config , run application again , typing
 rin-bot in command line again , being in a previously 
 activated virtual environment.
+
+### Adding to supervisor
+> sudo vi /etc/supervisor/conf.d/arbitry-bot.conf
+```bash
+[program:arbitry-bot]
+command=/home/<user>/rin-bitshares-arbitry-bot/venv/bin/python3.7 /home/<user>/rin-bitshares-arbitry-bot/rin
+stdout_logfile=/var/log/supervisor/arbitry-bot_out.log
+stderr_logfile=/var/log/supervisor/arbitry-bot_err.log
+autostart=true
+autorestart=true
+stopsignal=KILL
+numprocs=1
+user=<user>
+```
+
+> sudo supervisorctl reread
+
+> sudo supervisorctl update
+
+> sudo supervisorctl start arbitry-bot
 
 #### Logging
 [TO DO]

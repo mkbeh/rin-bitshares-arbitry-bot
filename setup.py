@@ -20,7 +20,7 @@ def readme():
 
 
 setup(
-    name='Rin',
+    name='rin-bot',
     author='mkbeh',
     description='Bitshares arbitry bot.',
     long_description=readme(),
@@ -41,7 +41,6 @@ setup(
         'markdown',
         'uvloop',
         'numpy',
-        'mypy'
     ],
     include_package_data=True,
     packages=find_packages(),

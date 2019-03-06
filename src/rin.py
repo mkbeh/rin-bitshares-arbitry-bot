@@ -23,11 +23,10 @@ class Rin:
 
 
 def main():
-    Rin().start_arbitrage()
-    # try:
-    #     Rin().start_arbitrage()
-    # except Exception as err:
-    #     logger.exception('Got unhandled exception.', err)
+    try:
+        Rin().start_arbitrage()
+    except Exception as err:
+        logger.exception('Got unhandled exception.', err)
 
 
 if __name__ == '__main__':

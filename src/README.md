@@ -32,8 +32,8 @@ and explorer are on one server, and the bot is on another.
 
 > rm BitShares-Core-2.0.190219-Linux-cli-tools.tar.gz
 
-#### **Configuring witness node**
-[TO DO]
+#### **Configuring witness node with ES plugin**
+Full manual -> https://github.com/oxarbitrage/bitshares-explorer-api#manual
 
 #### **Configuring wallet**
 ```bash
@@ -293,7 +293,7 @@ or do
 ```bash
 IMPORTANT NOTE:
 Adding ssl you will get a memory leak due to the fact 
-that the aiohttp library contains a memory leak when working with ssl.
+that the aiohttp 3.5.4 library contains a memory leak when working with ssl.
 So , do not use ssl until this bug is fixed.
 
 Due with the lack of ssl on the wallet, I recommend reconsidering the nginx configuration.
@@ -369,6 +369,9 @@ cd rin-bitshares-arbitry-bot
 pip install virtualenv 
 virtualenv venv
 source venv/bin/activate
+
+pip3.7 install Cython
+pip3.7 install numpy
 
 # Installing bot
 python3.7 setup.py install

@@ -425,9 +425,9 @@ activated virtual environment.
 > sudo vi /etc/supervisor/conf.d/arbitry-bot.conf
 ```bash
 [program:arbitry-bot]
-command=/home/<user>/rin-bitshares-arbitry-bot/venv/bin/python3.7 /home/<user>/rin-bitshares-arbitry-bot/rin
-stdout_logfile=/var/log/supervisor/arbitry-bot_out.log
-stderr_logfile=/var/log/supervisor/arbitry-bot_err.log
+command=/home/<user>/rin-bitshares-arbitry-bot/venv/bin/rin-bot
+stdout_logfile=/var/log/supervisor/rin-bot_out.log
+stderr_logfile=/var/log/supervisor/rin-bot_err.log
 autostart=true
 autorestart=true
 stopsignal=KILL

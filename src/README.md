@@ -417,17 +417,13 @@ time to reconnect = 350   # Reconnect to node or wallet. Secs. Required int
 orders depth = 5          # Amount. Required int
 ```
 
-When you will fill config , run application again , typing
-rin-bot in command line again , being in a previously 
-activated virtual environment.
+When you will fill config - go to the next step.
 
 ### Adding to supervisor
 > sudo vi /etc/supervisor/conf.d/rin-bot.conf
 ```bash
 [program:rin-bot]
 command=/home/<user>/rin-bitshares-arbitry-bot/venv/bin/rin-bot
-stdout_logfile=/var/log/supervisor/rin-bot_out.log
-stderr_logfile=/var/log/supervisor/rin-bot_err.log
 autostart=true
 autorestart=true
 stopsignal=KILL

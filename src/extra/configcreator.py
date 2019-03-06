@@ -4,13 +4,14 @@ import configparser
 import json
 
 from . import utils
+from .customexceptions import ConfigNotFilled
 
 
 class ConfigCreator:
+    _work_dir = utils.get_dir('rin-bot')
     _cfg_file = os.path.join(
         utils.get_dir('rin-bot'), 'config.ini'
     )
-    _work_dir = utils.get_dir('rin-bot')
 
     _data = (
         {'DIRS': {
@@ -69,7 +70,7 @@ class ConfigCreator:
                 config.write(cfg)
 
         if self._is_empty_fields(config):
-            raise Exception('The configuration file is not filled. Fill out the configuration file.')
+            raise ConfigNotFilled
 
     def get_cfg_data(self):
         config = configparser.ConfigParser()

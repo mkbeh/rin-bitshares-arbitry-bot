@@ -33,3 +33,8 @@ Other exceptions.
 
 class WalletIsLocked(Exception):
     pass
+
+
+class ConfigNotFilled(Exception):
+    def __init__(self):
+        Exception.__init__(self, 'The configuration file is not filled. Fill out the configuration file.')

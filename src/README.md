@@ -422,9 +422,9 @@ rin-bot in command line again , being in a previously
 activated virtual environment.
 
 ### Adding to supervisor
-> sudo vi /etc/supervisor/conf.d/arbitry-bot.conf
+> sudo vi /etc/supervisor/conf.d/rin-bot.conf
 ```bash
-[program:arbitry-bot]
+[program:rin-bot]
 command=/home/<user>/rin-bitshares-arbitry-bot/venv/bin/rin-bot
 stdout_logfile=/var/log/supervisor/rin-bot_out.log
 stderr_logfile=/var/log/supervisor/rin-bot_err.log
@@ -439,7 +439,7 @@ user=<user>
 
 > sudo supervisorctl update
 
-> sudo supervisorctl start arbitry-bot
+> sudo supervisorctl start rin-bot
 
 #### Logging
 [TO DO]

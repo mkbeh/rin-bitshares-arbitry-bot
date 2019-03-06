@@ -42,10 +42,6 @@ def get_dir_file(dir_, regex):
             pass
 
 
-def join_proj_dir_and_dir(cwd=''):
-    return os.path.join(os.path.dirname(sys.modules['__main__'].__file__), f'../{cwd}')
-
-
 def read_file(file):
     with open(file, 'r') as f:
         return [line for line in f]
@@ -68,3 +64,11 @@ def clear_each_str_in_seq(seq, *args):
 def remove_file(file):
     if file:
         os.remove(file)
+
+
+def get_dir(work_dir):
+    return dir_exists(
+        os.path.join(
+            os.path.expanduser('~'), work_dir
+        )
+    )

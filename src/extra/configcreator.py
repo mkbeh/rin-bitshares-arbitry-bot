@@ -7,11 +7,19 @@ from . import utils
 
 
 class ConfigCreator:
-    _cfg_file = 'config.ini'
+    _cfg_file = os.path.join(
+        utils.get_dir('rin-bot'), 'config.ini'
+    )
+    _work_dir = utils.get_dir('rin-bot')
+
     _data = (
         {'DIRS': {
-            'output dir': utils.join_proj_dir_and_dir('output'),
-            'log dir': utils.join_proj_dir_and_dir('logs')
+            'output dir': utils.dir_exists(
+                            os.path.join(_work_dir, 'output')
+                          ),
+            'log dir': utils.dir_exists(
+                            os.path.join(_work_dir, 'logs')
+                          )
         }},
         {'MIN_DAILY_VOLUME': {
             'overall min daily volume': '10',  # $ / required non

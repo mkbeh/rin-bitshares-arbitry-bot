@@ -33,9 +33,6 @@ class BaseRin:
     time_to_reconnect = cfg_data.get('time to reconnect')
     orders_depth = cfg_data.get('orders depth')
 
-    utils.dir_exists(cfg_data.get('output dir'))
-    utils.dir_exists(cfg_data.get('log dir'))
-
     dtype_float64 = np.float64
     dtype_int64 = np.int64
 

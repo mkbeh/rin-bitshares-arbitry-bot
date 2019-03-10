@@ -59,6 +59,11 @@ class BitsharesArbitrage(BaseRin):
             *(Order().connect(ws_node=self.wallet_uri) for _ in range(len(chain)))
         )
 
+        async def close_connections():
+            await asyncio.gather(
+                *(obj.close() for obj in order_obj)
+            )
+
         for i, (vols_arr, order_obj) in enumerate(zip(orders_placement_data, order_objs)):
             splitted_pair = chain[i].split(':')
             converted_vols_arr = tuple(
@@ -80,17 +85,20 @@ class BitsharesArbitrage(BaseRin):
                 break
 
             except AuthorizedAsset:
+                await close_connections()
                 await self._add_asset_to_blacklist(splitted_pair[1])
                 self._profit_logger.warning(f'Got Authorized asset {chain[i][1]} '
                                             f'in chain {chain} while placing order.')
                 raise
 
             except UnknownOrderException:
+                await close_connections()
                 raise
 
         if filled_all:
             self._profit_logger.info(f'All orders for {chain} with volumes '
                                      f'- {orders_placement_data} successfully filed.')
+        await close_connections()
 
     async def _volumes_checker(self, orders_vols, chain, profit):
         if orders_vols.size:
@@ -197,7 +205,9 @@ class BitsharesArbitrage(BaseRin):
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600
 
-        [await market.close() for market in markets_objs]
+        await asyncio.gather(
+            *(market.close() for market in markets_objs)
+        )
 
     def start_arbitrage(self):
         cycle_counter = 0

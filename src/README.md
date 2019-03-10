@@ -357,7 +357,7 @@ based Linux, more specifically the commands
 to make the guide were executed in Ubuntu 18.10 
 with Python 3.7.
 
-```bash
+```
 # Cloning repository
 git clone https://github.com/mkbeh/rin-bitshares-arbitry-bot
 cd rin-bitshares-arbitry-bot
@@ -375,10 +375,9 @@ python3.7 setup.py install
 
 # Running bot
 Just type rin-bot in the command line and press enter.
-
+```
 On first app startup will be generated config, 
 which must be filled.
-```
 
 #### **Contents of the config.ini file**
 ```angular2

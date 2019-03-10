@@ -55,7 +55,9 @@ class BitsharesArbitrage(BaseRin):
             return str(val)
 
         filled_all = True
-        order_objs = [await Order().connect(ws_node=self.wallet_uri) for _ in range(len(chain))]
+        order_objs = await asyncio.gather(
+            *(Order().connect(ws_node=self.wallet_uri) for _ in range(len(chain)))
+        )
 
         for i, (vols_arr, order_obj) in enumerate(zip(orders_placement_data, order_objs)):
             splitted_pair = chain[i].split(':')
@@ -169,7 +171,9 @@ class BitsharesArbitrage(BaseRin):
         )
 
     async def _arbitrage_testing(self, chain, assets_fees):
-        markets_objs = [await Market().connect() for _ in range(len(chain))]
+        markets_objs = asyncio.gather(
+            *(Market().connect() for _ in range(len(chain)))
+        )
         asset_vol_limit, bts_default_fee, min_profit_limit, precisions_arr = await self._get_specific_data(chain)
 
         time_start = dt.now()

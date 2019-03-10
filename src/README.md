@@ -47,7 +47,7 @@ import_key <user_name> <priv_key>
 **NOTE:**
 
 If error while trying to run wallet:
-```bash
+```
 Logging RPC to file: logs/rpc/rpc.log
 terminate called after throwing an instance of 'std::runtime_error'
   what():  locale::facet::_S_create_c_locale name not valid
@@ -55,7 +55,7 @@ Aborted (core dumped)
 ```
 
 Try this:
-```bash
+```
 sudo vi ~/.bashrc
 
 # Add line to the end of the file
@@ -66,9 +66,6 @@ export LC_ALL=C
 
 #### **NOTE**
 Full manual -> https://github.com/oxarbitrage/bitshares-explorer-api
-
-#### Quick installing.
-[TO DO]
 
 #### **Adding node, wallet and explorer to supervisor**
 > sudo apt-get install supervisor

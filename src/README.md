@@ -38,7 +38,7 @@ Full manual -> https://github.com/oxarbitrage/bitshares-explorer-api#manual
 #### **Configuring wallet**
 ```bash
 cd programs/cli_wallet/
-./cli_wallet --server-rpc-endpoint=ws://127.0.0.1:8094 -r 127.0.0.1:8093
+./cli_wallet --server-rpc-endpoint=ws://127.0.0.1:8091 -r 127.0.0.1:8093
 set_password <your_super_pwd>
 unlock <your_super_pwd>
 import_key <user_name> <priv_key>
@@ -73,7 +73,7 @@ Full manual -> https://github.com/oxarbitrage/bitshares-explorer-api
 > sudo vi /etc/supervisor/conf.d/bts_node.conf
 ```bash
 [program:bts_node]
-command=/home/<user>/programs/witness_node/witness_node --rpc-endpoint="127.0.0.1:8094"
+command=/home/<user>/programs/witness_node/witness_node --rpc-endpoint="127.0.0.1:8091"
 directory=/home/<user>/programs/witness_node/
 stdout_logfile=/var/log/supervisor/bts_node_out.log
 stderr_logfile=/var/log/supervisor/bts_node_err.log
@@ -85,7 +85,7 @@ user=<user>
 > sudo vi /etc/supervisor/conf.d/bts_wallet.conf
 ```bash
 [program:bts_wallet]
-command=/home/<user>/programs/cli_wallet/cli_wallet --server-rpc-endpoint=ws://127.0.0.1:8094 -r 127.0.0.1:8093
+command=/home/<user>/programs/cli_wallet/cli_wallet --server-rpc-endpoint=ws://127.0.0.1:8091 -r 127.0.0.1:8093
 directory=/home/<user>/programs/cli_wallet/
 stdout_logfile=/var/log/supervisor/bts_wallet_out.log
 stderr_logfile=/var/log/supervisor/bts_wallet_err.log
@@ -216,7 +216,7 @@ http {
     }
 
     upstream subnode {
-    	server 127.0.0.1:8094;
+    	server 127.0.0.1:8091;
     }   
     
     # --- Servers directives ---

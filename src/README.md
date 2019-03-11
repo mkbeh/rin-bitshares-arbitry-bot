@@ -441,7 +441,7 @@ user=<user>
 > sudo supervisorctl start rin-bot
 
 #### Logging
-Logs and output files are available by path /home/<user>/rin-bot
+Logs, output files and config are available by path /home/<user>/rin-bot
 
 #### Note
 ```angular2

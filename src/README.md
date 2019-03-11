@@ -2,13 +2,11 @@
 An arbitration bot only works inside bitshares.
 The bot builds up the volume of four assets: 
 BTS, BRIDGE.BTC, CNY, USD. Market pairs are taken 
-from the bitshares node with ES and then are added to the 
+from third party API using the bitshares node with ES plugin. Then market pairs are added to the 
 chains along which the bot works. The description 
 of the arbitration algorithm is in the module 
 `src.algorithms.arbitryalgorithm`. 
 ***
-Further installation assumes that your node, wallet 
-and explorer are on one server, and the bot is on another.
 
 ### **How bot works**
 [TO DO]
@@ -19,12 +17,19 @@ and explorer are on one server, and the bot is on another.
 [TO DO] Сделать содержание со ссылками для перехода
 к отдельным пунктам доки.
 
-**The following actions were performed on ubuntu 16.04**
+**The following actions were performed on ubuntu 18.10**
 
 ### **Installing Bitshares node and wallet**
+> vi /etc/apt/sources.list
+
+```bash
+# Add repo.
+deb http://security.ubuntu.com/ubuntu xenial-security main
+```
+
 > sudo apt-get update
 
-> sudo apt-get install autoconf cmake make automake libtool git libboost-all-dev libssl-dev g++ libcurl4-openssl-dev
+> sudo apt-get install autoconf cmake make automake libtool git libboost-all-dev libssl-dev g++ libcurl4-openssl-dev libgconf-2-4 libcurl3
 
 > wget https://github.com/bitshares/bitshares-core/releases/download/2.0.190219/BitShares-Core-2.0.190219-Linux-cli-tools.tar.gz
 
@@ -32,8 +37,8 @@ and explorer are on one server, and the bot is on another.
 
 > rm BitShares-Core-2.0.190219-Linux-cli-tools.tar.gz
 
-#### **Configuring witness node with ES plugin**
-Full manual -> https://github.com/oxarbitrage/bitshares-explorer-api#manual
+#### **Configuring witness node**
+[TO DO]
 
 #### **Configuring wallet**
 ```bash
@@ -55,19 +60,23 @@ Aborted (core dumped)
 ```
 
 Try this:
+> sudo vi /etc/default/locale
 ```
-sudo vi ~/.bashrc
-
-# Add line to the end of the file
-export LC_ALL=C
+# The file should look like this:
+LANGUAGE=en_US.UTF-8
+LC_ALL=en_US.UTF-8
+LANG=en_US.UTF-8
+LC_TYPE=en_US.UTF-8
 ```
 
-### **Installing BitShares Explorer REST API**
+```bash
+locale-gen en_US.UTF-8
+dpkg-reconfigure locales
+```
 
-#### **NOTE**
-Full manual -> https://github.com/oxarbitrage/bitshares-explorer-api
+```
 
-#### **Adding node, wallet and explorer to supervisor**
+#### **Adding node, wallet to supervisor**
 > sudo apt-get install supervisor
 
 > sudo vi /etc/supervisor/conf.d/bts_node.conf
@@ -94,10 +103,7 @@ autorestart=true
 numprocs=1
 user=<user>
 ```
-> sudo vi /etc/supervisor/conf.d/bts_api.conf
-```bash
 
-```
 > sudo supervisorctl reread
 
 > sudo supervisorctl update
@@ -105,8 +111,6 @@ user=<user>
 > sudo supervisorctl start bts_node
 
 > sudo supervisorctl start bts_wallet
-
-> sudo supervisorctl start bts_api
 
 ### **Installing nginx**
 > wget http://nginx.org/download/nginx-1.11.3.tar.gz
@@ -117,7 +121,7 @@ user=<user>
 
 > cd nginx-1.11.3/
 
-> sudo apt-get install libpcre3 libpcre3-dev libpcrecpp0v5 libssl-dev zlib1g-dev build-essential libssl1.0-dev
+> sudo apt-get install libpcre3 libpcre3-dev libpcrecpp0v5 zlib1g-dev build-essential libssl1.0-dev
 
 > ./configure --sbin-path=/usr/bin/nginx --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --with-debug --with-pcre --with-cc-opt="-Wno-error" --with-http_ssl_module --with-threads
 
@@ -126,8 +130,8 @@ user=<user>
 > sudo make install
 
 ### **Configuring nginx**
-Previously add 3 CNAME records for subdomens:
-api.domain.com, wallet.domain.com, node.domain.com.
+Previously buy domain and add 2 CNAME records for subdomens:
+wallet.domain.com, node.domain.com.
 
 #### **Base configuration**
 > sudo vi /lib/systemd/system/NGINX.service
@@ -268,16 +272,6 @@ http {
             proxy_connect_timeout  10s;
         }
     }
-    
-    server {
-    	listen                     80;
-    	server_name                api.domain.com;
-
-    	location / {
-            include                uwsgi_params;
-            uwsgi_pass             unix:/tmp/app.sock;
-        }
-    }
 }
 ```
 > systemctl restart NGINX.service
@@ -329,7 +323,7 @@ After previous steps uncomment lines in nginx.conf and replace domens on yours. 
 # On your local car.
 ssh-keygen
 mv key_name* ~/.ssh/
-ssh-copy-id user@sever_ip
+ssh-copy-id user@server_ip
 
 # On remote server. 
 # Disable pas auth.
@@ -358,12 +352,24 @@ to make the guide were executed in Ubuntu 18.10
 with Python 3.7.
 
 ```
+# Installing python 3.7
+sudo apt-get install build-essential checkinstall
+sudo apt-get install libreadline-gplv2-dev libncursesw5-dev libssl-dev \
+    libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev
+cd /usr/src
+sudo wget https://www.python.org/ftp/python/3.7.2/Python-3.7.2.tgz
+sudo tar xzf Python-3.7.2.tgz
+cd Python-3.7.2
+sudo ./configure --enable-optimizations
+sudo make install
+Python-3.7.2 -V
+
 # Cloning repository
 git clone https://github.com/mkbeh/rin-bitshares-arbitry-bot
 cd rin-bitshares-arbitry-bot
 
 # Creating and activating virtual env
-pip install virtualenv 
+sudo pip install virtualenv 
 virtualenv venv
 source venv/bin/activate
 
@@ -377,7 +383,8 @@ python3.7 setup.py install
 Just type rin-bot in the command line and press enter.
 ```
 On first app startup will be generated config, 
-which must be filled.
+which must be filled. 
+Config is located -> /home/<user>/rin-bot/config.ini
 
 #### **Contents of the config.ini file**
 ```angular2
@@ -444,7 +451,6 @@ the desired files to .pyx. But Cython compiling not
 tested so use it at your own risk.
 ```
 ### **Milestones**:
-* Write own async cmd explorer REST API without web interface instead 
-oxarbitrage explorer.
+* Write own async cmd explorer REST API without web interface.
 * Improve bot by adding new features.
 * Write full async lib for Bitshares API.

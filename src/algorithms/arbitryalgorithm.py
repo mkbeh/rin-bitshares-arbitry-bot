@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import math
 import numpy as np
 
 from dataclasses import dataclass
@@ -21,21 +22,36 @@ class ArbitrationAlgorithm:
     async def __call__(self):
         return await self._run_data_through_algo()
 
+    @staticmethod
+    async def round_half_down(n, decimals=0):
+        multiplier = 10 ** decimals
+        return math.floor(n * multiplier) / multiplier
+
     async def _round_vols_to_specific_prec(self, vols_arr: np.ndarray) -> np.ndarray:
         flatten_vols_arr = vols_arr.flatten()
         vols_arr_with_precs = np.fromiter(
-            (round(vol, prec) for vol, prec in zip(flatten_vols_arr, self._precisions_arr)), dtype=DTYPE_FLOAT64
-        )
+            (
+                self.round_half_down(vol, prec)
+                for vol, prec in zip(flatten_vols_arr, self._precisions_arr)
+            ), dtype=DTYPE_FLOAT64)
 
-        return vols_arr_with_precs
+        profit = await self._get_profit(vols_arr_with_precs[0], vols_arr_with_precs[-1])
+
+        return vols_arr_with_precs \
+            if await self._is_profit_valid(profit) \
+            else np.delete(vols_arr_with_precs, np.s_[:])
 
     async def _prepare_orders_arr(self, arr: np.ndarray, profit: DTYPE_FLOAT64) -> tuple:
         vols_arr_without_prices = np.array([
             *((el[2], el[1]) for el in arr)
         ], dtype=DTYPE_FLOAT64)
+
         rounded_vols_arr = await self._round_vols_to_specific_prec(vols_arr_without_prices)
 
-        return rounded_vols_arr.reshape(3, 2), profit
+        if rounded_vols_arr.size:
+            return rounded_vols_arr.reshape(3, 2), profit
+
+        return rounded_vols_arr, profit
 
     async def _is_profit_valid(self, profit: DTYPE_FLOAT64) -> bool:
         return profit > self._profit_limit

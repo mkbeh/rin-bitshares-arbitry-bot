@@ -61,7 +61,7 @@ class BitsharesArbitrage(BaseRin):
 
         async def close_connections():
             await asyncio.gather(
-                *(obj.close() for obj in order_obj)
+                *(obj.close() for obj in order_objs)
             )
 
         for i, (vols_arr, order_obj) in enumerate(zip(orders_placement_data, order_objs)):
@@ -179,7 +179,7 @@ class BitsharesArbitrage(BaseRin):
         )
 
     async def _arbitrage_testing(self, chain, assets_fees):
-        markets_objs = asyncio.gather(
+        markets_objs = await asyncio.gather(
             *(Market().connect() for _ in range(len(chain)))
         )
         asset_vol_limit, bts_default_fee, min_profit_limit, precisions_arr = await self._get_specific_data(chain)

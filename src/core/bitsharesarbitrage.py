@@ -100,11 +100,13 @@ class BitsharesArbitrage(BaseRin):
                                      f'- {orders_placement_data} successfully filed.')
         await close_connections()
 
+        return filled_all
+
     async def _volumes_checker(self, orders_vols, chain, profit):
         if orders_vols.size:
-            await self._orders_setter(orders_vols, chain)
-            self._profit_logger.info(f'Profit = {profit} | Chain: {chain} | '
-                                     f'Volumes: {orders_vols[0][0], orders_vols[2][1]}')
+            if await self._orders_setter(orders_vols, chain):
+                self._profit_logger.info(f'Profit = {profit} | Chain: {chain} | '
+                                         f'Volumes: {orders_vols[0][0], orders_vols[2][1]}')
 
     async def _get_order_data_for_pair(self, pair, market_gram, order_type='asks', limit=BaseRin.orders_depth):
         base_asset, quote_asset = pair.split(':')

@@ -152,7 +152,7 @@ class BitsharesArbitrage(BaseRin):
         assets_arr = itertools.chain.from_iterable(
                 map(lambda x: x.split(':'), chain)
             )
-        precisions_arr = np.array(range(4), dtype=self.dtype_int64)
+        precisions_arr = np.array(range(4), dtype=self.dtype_float64)
 
         for i, asset in enumerate(itertools.islice(assets_arr, 4)):
             if i == 2:

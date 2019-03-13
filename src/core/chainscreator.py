@@ -114,6 +114,6 @@ class ChainsCreator(BaseRin):
 
         else:
             utils.remove_file(self._old_file)
-            self._logger.info(f'Created: {self._chains_count} chains.\n')
+            self._logger.info(f'Created: {self._chains_count} chains.')
 
             return self._new_file

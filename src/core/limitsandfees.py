@@ -138,7 +138,7 @@ class DefaultBTSFee(VolLimits):
 
         else:
             utils.remove_file(self._old_file)
-            self._logger.info(f'Successfully got prices and calculate fees: {self._fees}')
+            self._logger.info(f'Successfully got prices and calculate fees: {self._fees}\n')
 
             return converted_fees
 
@@ -153,7 +153,8 @@ class ChainsWithGatewayPairFees(BaseRin):
 
     def __init__(self, loop):
         self._ioloop = loop
-        self._file_with_chains = ChainsCreator(self._ioloop).start_creating_chains()
+        # self._file_with_chains = ChainsCreator(self._ioloop).start_creating_chains()
+        self._file_with_chains = '/home/cyberpunk/rin-bot/output/chains-13-03-2019-12-38-49.lst'
         self._fees_count = 0
 
     async def _get_fees_for_chain(self, chain):

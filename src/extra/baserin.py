@@ -8,6 +8,7 @@ import numpy as np
 
 from . import utils
 from .configcreator import ConfigCreator
+from src.blacklistedassets import blacklisted_assets_lst
 
 
 class BaseRin:
@@ -35,6 +36,12 @@ class BaseRin:
 
     dtype_float64 = np.float64
     dtype_int64 = np.int64
+
+    work_dir = utils.get_dir('rin-bot')
+    blacklist = utils.create_empty_file(
+        work_dir, 'blacklist.lst'
+    )
+    utils.write_data_into_file(blacklist, blacklisted_assets_lst)
 
     @staticmethod
     def setup_logger(logger_name, log_file, level=logging.INFO):
@@ -125,7 +132,7 @@ class BaseRin:
         return utils.clear_each_str_in_seq(utils.read_file(file), '\n', ' ')
 
     def get_blacklisted_assets(self):
-        blacklist_file = utils.get_file(self.cfg_data.get('output dir'), f'blacklist.lst')
+        blacklist_file = utils.get_file(self.work_dir, f'blacklist.lst')
 
         try:
             blacklisted_assets = self.get_data_from_file(blacklist_file)

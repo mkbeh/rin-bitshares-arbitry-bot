@@ -29,7 +29,7 @@ class BitsharesArbitrage(BaseRin):
     _logger = logging.getLogger('Rin.BitsharesArbitrage')
     _vol_limits = None
     _bts_default_fee = None
-    _blacklisted_assets_file = utils.get_file(BaseRin.output_dir, f'blacklist.lst')
+    _blacklisted_assets_file = utils.get_file(BaseRin.work_dir, f'blacklist.lst')
     _is_orders_placing = False
 
     _client_conn_err_msg = 'Getting client connection error while arbitrage testing.'

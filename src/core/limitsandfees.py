@@ -3,7 +3,6 @@ import logging
 import json
 import asyncio
 import itertools
-import array
 
 import numpy as np
 
@@ -154,8 +153,7 @@ class ChainsWithGatewayPairFees(BaseRin):
 
     def __init__(self, loop):
         self._ioloop = loop
-        # self._file_with_chains = ChainsCreator(self._ioloop).start_creating_chains()
-        self._file_with_chains = '/home/cyberpunk/rin-bot/output/chains-12-03-2019-14-41-07.lst'
+        self._file_with_chains = ChainsCreator(self._ioloop).start_creating_chains()
         self._fees_count = 0
 
     async def _get_fees_for_chain(self, chain):

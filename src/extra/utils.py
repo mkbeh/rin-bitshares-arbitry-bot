@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import re
-import logging
 
 from datetime import datetime
 
@@ -72,3 +71,21 @@ def get_dir(work_dir):
             os.path.expanduser('~'), work_dir
         )
     )
+
+
+def create_empty_file(work_dir, file_name):
+    path_to_file = os.path.join(work_dir, file_name)
+
+    if not os.path.isfile(path_to_file):
+        os.mknod(
+            path_to_file
+        )
+
+        return path_to_file
+
+
+def write_data_into_file(file, data):
+    if file:
+        with open(file, 'a') as f:
+            for item in data:
+                f.write(item)

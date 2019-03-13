@@ -9,9 +9,7 @@ from .customexceptions import ConfigNotFilled
 
 class ConfigCreator:
     _work_dir = utils.get_dir('rin-bot')
-    _cfg_file = os.path.join(
-        utils.get_dir('rin-bot'), 'config.ini'
-    )
+    _cfg_file = os.path.join(_work_dir, 'config.ini')
 
     _data = (
         {'DIRS': {

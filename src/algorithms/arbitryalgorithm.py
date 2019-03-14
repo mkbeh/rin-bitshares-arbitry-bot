@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-import math
 import numpy as np
 
 from dataclasses import dataclass
 
 
-DTYPE_FLOAT64 = np.float128
+DTYPE_FLOAT64 = np.float64
 
 
 @dataclass(repr=False, eq=False)
@@ -23,13 +22,9 @@ class ArbitrationAlgorithm:
         return await self._run_data_through_algo()
 
     async def _round_vols_to_specific_prec(self, vols_arr: np.ndarray) -> np.ndarray:
-        # def round_half_up(n, decimals):
-        #     multiplier = 10 ** decimals
-        #     return math.floor(n * multiplier + 0.5) / multiplier
-
-        def truncate(n, decimals):
+        def truncate(num, decimals):
             multiplier = 10 ** decimals
-            return int(n * multiplier) / multiplier
+            return int(num * multiplier) / multiplier
 
         flatten_vols_arr = vols_arr.flatten()
         vols_arr_with_precs = np.fromiter(
@@ -39,16 +34,30 @@ class ArbitrationAlgorithm:
         return vols_arr_with_precs
 
     async def _prepare_orders_arr(self, arr: np.ndarray, profit: DTYPE_FLOAT64) -> tuple:
+        def get_precision(num):
+            return len(
+                str(num).split('.')[1]
+            )
+
+        async def magic_crutch(array):
+            index = 0
+
+            for fee in self._assets_fees[:2]:
+                if fee > 0:
+                    multiplier = get_precision(array[index + 2])
+                    array[index + 2] += 2 / 10 ** multiplier
+                    index += 2
+
+            return array
+
         vols_arr_without_prices = np.array([
             *((el[2], el[1]) for el in arr)
         ], dtype=DTYPE_FLOAT64)
 
         rounded_vols_arr = await self._round_vols_to_specific_prec(vols_arr_without_prices)
+        arr_with_magic = await magic_crutch(rounded_vols_arr)
 
-        if rounded_vols_arr.size:
-            return rounded_vols_arr.reshape(3, 2), profit
-
-        return rounded_vols_arr, profit
+        return arr_with_magic.reshape(3, 2), profit
 
     async def _is_profit_valid(self, profit: DTYPE_FLOAT64) -> bool:
         return profit > self._profit_limit

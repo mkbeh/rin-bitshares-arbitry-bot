@@ -44,7 +44,7 @@ class BitsharesArbitrage(BaseRin):
             self._blacklisted_assets.append(asset)
             await self.write_data(asset, self._blacklisted_assets_file)
 
-    async def _orders_setter(self, orders_placement_data, chain):
+    async def _orders_setter(self, orders_placement_data, chain, assets_fees):
         def convert_scientific_notation_to_decimal(val):
             pattern = re.compile(r'e-')
             splitted_val = re.split(pattern, str(val))
@@ -87,6 +87,8 @@ class BitsharesArbitrage(BaseRin):
                 filled_all = False
                 self._profit_logger.warning(f'Order for pair {chain[i]} in chain '
                                             f'{chain} with volumes {vols_arr} not filled.')
+                self._profit_logger.warning(f'assets_fees {assets_fees}')
+                self._profit_logger.warning(f'vols', orders_placement_data)
                 break
 
             except AuthorizedAsset:
@@ -107,9 +109,9 @@ class BitsharesArbitrage(BaseRin):
 
         return filled_all
 
-    async def _volumes_checker(self, orders_vols, chain, profit):
+    async def _volumes_checker(self, orders_vols, chain, profit, assets_fees):
         if orders_vols.size:
-            if await self._orders_setter(orders_vols, chain):
+            if await self._orders_setter(orders_vols, chain, assets_fees):
                 self._profit_logger.info(f'Profit = {profit} | Chain: {chain} | '
                                          f'Volumes: {orders_vols[0][0], orders_vols[2][1]}')
 
@@ -202,7 +204,7 @@ class BitsharesArbitrage(BaseRin):
 
                 if self._is_orders_placing is False:
                     self._is_orders_placing = True
-                    await self._volumes_checker(orders_vols, chain, profit)
+                    await self._volumes_checker(orders_vols, chain, profit, assets_fees)
                     self._is_orders_placing = False
 
             except (EmptyOrdersList, AuthorizedAsset, UnknownOrderException):

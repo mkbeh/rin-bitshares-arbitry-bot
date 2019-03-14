@@ -32,7 +32,7 @@ class GramBitshares:
         self._session = await gram.ws_connect(ws_node)
         self._ws = gram._ws
 
-        if ws_node != default_node or ws_node != BaseRin.node_uri and await self.is_wallet_locked():
+        if ws_node == BaseRin.wallet_uri and await self.is_wallet_locked():
             await self.unlock_wallet()
 
         return gram

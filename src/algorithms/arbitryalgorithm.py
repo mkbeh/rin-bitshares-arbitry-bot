@@ -5,7 +5,7 @@ import numpy as np
 from dataclasses import dataclass
 
 
-DTYPE_FLOAT64 = np.float64
+DTYPE_FLOAT64 = np.float128
 
 
 @dataclass(repr=False, eq=False)
@@ -23,20 +23,20 @@ class ArbitrationAlgorithm:
         return await self._run_data_through_algo()
 
     async def _round_vols_to_specific_prec(self, vols_arr: np.ndarray) -> np.ndarray:
-        def round_half_up(n, decimals):
+        # def round_half_up(n, decimals):
+        #     multiplier = 10 ** decimals
+        #     return math.floor(n * multiplier + 0.5) / multiplier
+
+        def truncate(n, decimals):
             multiplier = 10 ** decimals
-            return math.floor(n * multiplier + 0.5) / multiplier
+            return int(n * multiplier) / multiplier
 
         flatten_vols_arr = vols_arr.flatten()
         vols_arr_with_precs = np.fromiter(
-            (round_half_up(vol, prec) for vol, prec in zip(flatten_vols_arr, self._precisions_arr)),
+            (truncate(vol, prec) for vol, prec in zip(flatten_vols_arr, self._precisions_arr)),
             dtype=DTYPE_FLOAT64)
 
-        profit = await self._get_profit(vols_arr_with_precs[0], vols_arr_with_precs[-1])
-
-        return vols_arr_with_precs \
-            if await self._is_profit_valid(profit) \
-            else np.delete(vols_arr_with_precs, np.s_[:])
+        return vols_arr_with_precs
 
     async def _prepare_orders_arr(self, arr: np.ndarray, profit: DTYPE_FLOAT64) -> tuple:
         vols_arr_without_prices = np.array([

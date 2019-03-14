@@ -59,6 +59,11 @@ class BitsharesArbitrage(BaseRin):
             *(Order().connect(ws_node=self.wallet_uri) for _ in range(len(chain)))
         )
 
+        # test
+        print('order placement data', orders_placement_data)
+        print('chain', chain)
+        #
+
         async def close_connections():
             await asyncio.gather(
                 *(obj.close() for obj in order_objs)
@@ -152,7 +157,7 @@ class BitsharesArbitrage(BaseRin):
         assets_arr = itertools.chain.from_iterable(
                 map(lambda x: x.split(':'), chain)
             )
-        precisions_arr = np.array(range(4), dtype=self.dtype_float64)
+        precisions_arr = np.array(range(4), dtype=self.dtype_int64)
 
         for i, asset in enumerate(itertools.islice(assets_arr, 4)):
             if i == 2:

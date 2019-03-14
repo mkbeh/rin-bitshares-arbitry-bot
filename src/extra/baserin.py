@@ -34,7 +34,9 @@ class BaseRin:
     time_to_reconnect = cfg_data.get('time to reconnect')
     orders_depth = cfg_data.get('orders depth')
 
-    dtype_float64 = np.float64
+    # dtype_float64 = np.float64
+    dtype_float64 = float
+    dtype_int64 = int
 
     work_dir = utils.get_dir('rin-bot')
     blacklist = utils.create_empty_file(

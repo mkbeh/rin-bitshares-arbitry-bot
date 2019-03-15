@@ -7,7 +7,7 @@ from src.extra.baserin import BaseRin
 
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-logger = BaseRin.setup_logger('Rin', os.path.join(BaseRin.log_dir, 'rin.log'))
+logger = BaseRin.setup_logger('Rin', os.path.join(BaseRin.log_dir, 'rin-bot.log'))
 
 
 class Rin:

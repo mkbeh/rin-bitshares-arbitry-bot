@@ -15,12 +15,12 @@ class Account(GramBitshares):
     async def get_account_balances(self, account_id, *args):
         """
         :param account_id: ID of the account to get balances for
-        :param args: IDs of the assets to get balances of; if empty, get all assets account has a balance in
+        :param args: ID of the asset to get balances of; if empty, get all assets account has a balance in
         :return:
         """
         raw_data = await self._gram.call_method('get_account_balances', account_id, args)
 
         try:
-            return raw_data['result']
+            return raw_data['result'][0]['amount']
         except KeyError:
             pass

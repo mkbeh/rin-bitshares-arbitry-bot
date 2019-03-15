@@ -36,7 +36,8 @@ class ConfigCreator:
         }},
         {'ACCOUNT': {
             'account name': '',
-            'wallet password': ''
+            'account id': '',
+            'wallet password': '',
         }},
         {'OTHER': {
             'data update time': '1',        # hours / required int

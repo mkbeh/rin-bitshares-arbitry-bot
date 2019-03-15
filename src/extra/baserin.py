@@ -28,6 +28,7 @@ class BaseRin:
     explorer_uri = cfg_data.get('explorer uri')
 
     account_name = cfg_data.get('account name')
+    account_id = cfg_data.get('account id')
     wallet_pwd = cfg_data.get('wallet password')
 
     data_update_time = cfg_data.get('data update time')

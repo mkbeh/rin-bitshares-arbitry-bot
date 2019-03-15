@@ -25,14 +25,7 @@ class ArbitrationAlgorithm:
         return await self._run_data_through_algo()
 
     async def _round_vols_to_specific_prec(self, vols_arr: np.ndarray) -> np.ndarray:
-        def round_half_up(num, decimals):
-            multiplier = 10 ** decimals
-
-            return math.floor(num * multiplier + 0.5) / multiplier
-
         flatten_vols_arr = vols_arr.flatten()
-        flatten_vols_arr[0] = round_half_up(flatten_vols_arr[0], self._precisions_arr[0])
-
         vols_arr_with_precs = np.fromiter(
             (BaseRin.truncate(vol, prec) for vol, prec in zip(flatten_vols_arr, self._precisions_arr)),
             dtype=DTYPE_FLOAT64)

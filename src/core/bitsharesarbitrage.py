@@ -19,6 +19,7 @@ from src.extra import utils
 from src.aiopybitshares.market import Market
 from src.aiopybitshares.order import Order
 from src.aiopybitshares.asset import Asset
+from src.aiopybitshares.account import Account
 
 from src.algorithms.arbitryalgorithm import ArbitrationAlgorithm
 
@@ -44,7 +45,7 @@ class BitsharesArbitrage(BaseRin):
             self._blacklisted_assets.append(asset)
             await self.write_data(asset, self._blacklisted_assets_file)
 
-    async def _orders_setter(self, orders_placement_data, chain, assets_fees):
+    async def _orders_setter(self, orders_placement_data, chain, precs_arr):
         def convert_scientific_notation_to_decimal(val):
             pattern = re.compile(r'e-')
             splitted_val = re.split(pattern, str(val))
@@ -54,20 +55,18 @@ class BitsharesArbitrage(BaseRin):
 
             return str(val)
 
-        filled_all = True
-        order_objs = await asyncio.gather(
-            *(Order().connect(ws_node=self.wallet_uri) for _ in range(len(chain)))
-        )
-
-        # test
-        print('order placement data', orders_placement_data)
-        print('chain', chain)
-        #
-
-        async def close_connections():
+        async def close_connections(*args):
             await asyncio.gather(
-                *(obj.close() for obj in order_objs)
+                *(obj.close() for obj in args[0]),
+                *(obj.close() for obj in args[1])
             )
+
+        filled_all = True
+        objs = await asyncio.gather(
+            *(Order().connect(ws_node=self.wallet_uri) for _ in range(len(chain))),
+            *(Account().connect(ws_node=self.node_uri) for _ in range(2))
+        )
+        order_objs, accounts_objs = objs[:3], objs[3:]
 
         for i, (vols_arr, order_obj) in enumerate(zip(orders_placement_data, order_objs)):
             splitted_pair = chain[i].split(':')
@@ -78,6 +77,17 @@ class BitsharesArbitrage(BaseRin):
             )
 
             try:
+                if i != 0:
+                    raw_balance = await accounts_objs[i - 1].get_account_balances(self.account_id, splitted_pair[0])
+                    balance = BaseRin.truncate(raw_balance / 10 ** precs_arr[i - 1],
+                                               precs_arr[i - 1])
+                    converted_balance = convert_scientific_notation_to_decimal(balance)
+                    await order_obj.create_order(
+                        f'{self.account_name}', f'{converted_balance}', f'{splitted_pair[0]}',
+                        f'{converted_vols_arr[1]}', f'{splitted_pair[1]}', 0, True, True
+                    )
+                    continue
+
                 await order_obj.create_order(
                     f'{self.account_name}', f'{converted_vols_arr[0]}', f'{splitted_pair[0]}',
                     f'{converted_vols_arr[1]}', f'{splitted_pair[1]}', 0, True, True
@@ -87,8 +97,6 @@ class BitsharesArbitrage(BaseRin):
                 filled_all = False
                 self._profit_logger.warning(f'Order for pair {chain[i]} in chain '
                                             f'{chain} with volumes {vols_arr} not filled.')
-                self._profit_logger.warning(f'assets_fees {assets_fees}')
-                self._profit_logger.warning(f'vols', orders_placement_data)
                 break
 
             except AuthorizedAsset:
@@ -109,9 +117,9 @@ class BitsharesArbitrage(BaseRin):
 
         return filled_all
 
-    async def _volumes_checker(self, orders_vols, chain, profit, assets_fees):
+    async def _volumes_checker(self, orders_vols, chain, profit, precs_arr):
         if orders_vols.size:
-            if await self._orders_setter(orders_vols, chain, assets_fees):
+            if await self._orders_setter(orders_vols, chain, precs_arr):
                 self._profit_logger.info(f'Profit = {profit} | Chain: {chain} | '
                                          f'Volumes: {orders_vols[0][0], orders_vols[2][1]}')
 
@@ -204,7 +212,8 @@ class BitsharesArbitrage(BaseRin):
 
                 if self._is_orders_placing is False:
                     self._is_orders_placing = True
-                    await self._volumes_checker(orders_vols, chain, profit, assets_fees)
+                    specific_prec_arr = (precisions_arr[2], precisions_arr[4])
+                    await self._volumes_checker(orders_vols, chain, profit, specific_prec_arr)
                     self._is_orders_placing = False
 
             except (EmptyOrdersList, AuthorizedAsset, UnknownOrderException):

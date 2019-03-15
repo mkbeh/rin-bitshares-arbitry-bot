@@ -141,3 +141,9 @@ class BaseRin:
 
         return blacklisted_assets
 
+    @staticmethod
+    def truncate(num, decimals):
+        multiplier = 10 ** decimals
+
+        return int(num * multiplier) / multiplier
+

@@ -100,20 +100,20 @@ class BitsharesArbitrage(BaseRin):
                 break
 
             except AuthorizedAsset:
-                await close_connections()
+                await close_connections(order_objs, accounts_objs)
                 await self._add_asset_to_blacklist(splitted_pair[1])
                 self._profit_logger.warning(f'Got Authorized asset {chain[i][1]} '
                                             f'in chain {chain} while placing order.')
                 raise
 
             except UnknownOrderException:
-                await close_connections()
+                await close_connections(order_objs, accounts_objs)
                 raise
 
         if filled_all:
             self._profit_logger.info(f'All orders for {chain} with volumes '
                                      f'- {orders_placement_data} successfully filed.')
-        await close_connections()
+        await close_connections(order_objs, accounts_objs)
 
         return filled_all
 

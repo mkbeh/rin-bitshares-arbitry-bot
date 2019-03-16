@@ -32,6 +32,7 @@ class BitsharesArbitrage(BaseRin):
     _bts_default_fee = None
     _blacklisted_assets_file = utils.get_file(BaseRin.work_dir, f'blacklist.lst')
     _is_orders_placing = False
+    _core_assets = ('BTS', 'CNY', 'USD', 'BRIDGE.BTC')
 
     _client_conn_err_msg = 'Getting client connection error while arbitrage testing.'
 
@@ -50,6 +51,22 @@ class BitsharesArbitrage(BaseRin):
             self._blacklisted_assets.append(asset)
             await self.write_data(asset, self._blacklisted_assets_file)
 
+    async def _is_core_asset_received_asset(self, pair_asset):
+        for asset in self._core_assets:
+            if asset == pair_asset:
+                return True
+
+        return False
+
+    async def _core_asset_checker(self, asset, account_obj):
+        core_asset_is_received_asset = await self._is_core_asset_received_asset(asset)
+        raw_balance = None
+
+        if core_asset_is_received_asset:
+            raw_balance = await account_obj.get_account_balances(self.account_id, asset)
+
+        return core_asset_is_received_asset, raw_balance
+
     async def _orders_setter(self, orders_placement_data, chain, precs_arr):
         def convert_scientific_notation_to_decimal(val):
             pattern = re.compile(r'e-')
@@ -63,9 +80,11 @@ class BitsharesArbitrage(BaseRin):
         filled_all = True
         objs = await asyncio.gather(
             *(Order().connect(ws_node=self.wallet_uri) for _ in range(len(chain))),
-            *(Account().connect(ws_node=self.node_uri) for _ in range(2))
+            *(Account().connect(ws_node=self.node_uri) for _ in range(len(chain)))
         )
         order_objs, accounts_objs = objs[:3], objs[3:]
+        core_asset_is_received_asset = None
+        old_raw_balance = None
 
         for i, (vols_arr, order_obj) in enumerate(zip(orders_placement_data, order_objs)):
             splitted_pair = chain[i].split(':')
@@ -76,19 +95,27 @@ class BitsharesArbitrage(BaseRin):
             )
 
             try:
-                if i != 0:
-                    raw_balance = await accounts_objs[i - 1].get_account_balances(self.account_id, splitted_pair[0])
-                    balance = BaseRin.truncate(raw_balance / 10 ** precs_arr[i - 1],
-                                               precs_arr[i - 1])
-                    converted_balance = convert_scientific_notation_to_decimal(balance)
+                if i == 0:
+                    core_asset_is_received_asset, old_raw_balance = \
+                        await self._core_asset_checker(splitted_pair[1], accounts_objs[i])
                     await order_obj.create_order(
-                        f'{self.account_name}', f'{converted_balance}', f'{splitted_pair[0]}',
+                        f'{self.account_name}', f'{converted_vols_arr[0]}', f'{splitted_pair[0]}',
                         f'{converted_vols_arr[1]}', f'{splitted_pair[1]}', 0, True, True
                     )
                     continue
 
+                raw_balance = await accounts_objs[i].get_account_balances(self.account_id, splitted_pair[0])
+                new_raw_balance = raw_balance - old_raw_balance if core_asset_is_received_asset else raw_balance
+                balance = BaseRin.truncate(new_raw_balance / 10 ** precs_arr[i - 1],
+                                           precs_arr[i - 1])
+                converted_balance = convert_scientific_notation_to_decimal(balance)
+
+                if i == 1:
+                    core_asset_is_received_asset = await self._is_core_asset_received_asset(splitted_pair[1])
+                    old_raw_balance = new_raw_balance
+
                 await order_obj.create_order(
-                    f'{self.account_name}', f'{converted_vols_arr[0]}', f'{splitted_pair[0]}',
+                    f'{self.account_name}', f'{converted_balance}', f'{splitted_pair[0]}',
                     f'{converted_vols_arr[1]}', f'{splitted_pair[1]}', 0, True, True
                 )
 

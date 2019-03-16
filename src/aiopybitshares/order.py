@@ -25,7 +25,7 @@ class Order(GramBitshares):
 
     async def create_order(self, *args):
         raw_data = await self._gram.call_method('sell_asset', *args)
-
+        print(raw_data)
         try:
             raw_data['result']
 

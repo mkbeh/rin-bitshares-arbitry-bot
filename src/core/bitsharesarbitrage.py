@@ -19,7 +19,6 @@ from src.extra import utils
 from src.aiopybitshares.market import Market
 from src.aiopybitshares.order import Order
 from src.aiopybitshares.asset import Asset
-from src.aiopybitshares.account import Account
 
 from src.algorithms.arbitryalgorithm import ArbitrationAlgorithm
 
@@ -51,23 +50,7 @@ class BitsharesArbitrage(BaseRin):
             self._blacklisted_assets.append(asset)
             await self.write_data(asset, self._blacklisted_assets_file)
 
-    async def _is_core_asset_received_asset(self, pair_asset):
-        for asset in self._core_assets:
-            if asset == pair_asset:
-                return True
-
-        return False
-
-    async def _core_asset_checker(self, asset, account_obj):
-        core_asset_is_received_asset = await self._is_core_asset_received_asset(asset)
-        raw_balance = None
-
-        if core_asset_is_received_asset:
-            raw_balance = await account_obj.get_account_balances(self.account_id, asset)
-
-        return core_asset_is_received_asset, raw_balance
-
-    async def _orders_setter(self, orders_placement_data, chain, precs_arr):
+    async def _orders_setter(self, orders_placement_data, chain):
         def convert_scientific_notation_to_decimal(val):
             pattern = re.compile(r'e-')
             splitted_val = re.split(pattern, str(val))
@@ -78,13 +61,9 @@ class BitsharesArbitrage(BaseRin):
             return str(val)
 
         filled_all = True
-        objs = await asyncio.gather(
+        order_objs = await asyncio.gather(
             *(Order().connect(ws_node=self.wallet_uri) for _ in range(len(chain))),
-            *(Account().connect(ws_node=self.node_uri) for _ in range(len(chain)))
         )
-        order_objs, accounts_objs = objs[:3], objs[3:]
-        core_asset_is_received_asset = None
-        old_raw_balance = None
 
         for i, (vols_arr, order_obj) in enumerate(zip(orders_placement_data, order_objs)):
             splitted_pair = chain[i].split(':')
@@ -95,27 +74,8 @@ class BitsharesArbitrage(BaseRin):
             )
 
             try:
-                if i == 0:
-                    core_asset_is_received_asset, old_raw_balance = \
-                        await self._core_asset_checker(splitted_pair[1], accounts_objs[i])
-                    await order_obj.create_order(
-                        f'{self.account_name}', f'{converted_vols_arr[0]}', f'{splitted_pair[0]}',
-                        f'{converted_vols_arr[1]}', f'{splitted_pair[1]}', 0, True, True
-                    )
-                    continue
-
-                raw_balance = await accounts_objs[i].get_account_balances(self.account_id, splitted_pair[0])
-                new_raw_balance = raw_balance - old_raw_balance if core_asset_is_received_asset else raw_balance
-                balance = BaseRin.truncate(new_raw_balance / 10 ** precs_arr[i - 1],
-                                           precs_arr[i - 1])
-                converted_balance = convert_scientific_notation_to_decimal(balance)
-
-                if i == 1:
-                    core_asset_is_received_asset = await self._is_core_asset_received_asset(splitted_pair[1])
-                    old_raw_balance = new_raw_balance
-
                 await order_obj.create_order(
-                    f'{self.account_name}', f'{converted_balance}', f'{splitted_pair[0]}',
+                    f'{self.account_name}', f'{converted_vols_arr[0]}', f'{splitted_pair[0]}',
                     f'{converted_vols_arr[1]}', f'{splitted_pair[1]}', 0, True, True
                 )
 
@@ -126,26 +86,26 @@ class BitsharesArbitrage(BaseRin):
                 break
 
             except AuthorizedAsset:
-                await self.close_connections(order_objs, accounts_objs)
+                await self.close_connections(order_objs)
                 await self._add_asset_to_blacklist(splitted_pair[1])
                 self._profit_logger.warning(f'Got Authorized asset {chain[i][1]} '
                                             f'in chain {chain} while placing order.')
                 raise
 
             except UnknownOrderException:
-                await self.close_connections(order_objs, accounts_objs)
+                await self.close_connections(order_objs)
                 raise
 
         if filled_all:
             self._profit_logger.info(f'All orders for {chain} with volumes '
                                      f'- {orders_placement_data} successfully filed.')
-        await self.close_connections(order_objs, accounts_objs)
+        await self.close_connections(order_objs)
 
         return filled_all
 
-    async def _volumes_checker(self, orders_vols, chain, profit, precs_arr):
+    async def _volumes_checker(self, orders_vols, chain, profit):
         if orders_vols.size:
-            if await self._orders_setter(orders_vols, chain, precs_arr):
+            if await self._orders_setter(orders_vols, chain):
                 self._profit_logger.info(f'Profit = {profit} | Chain: {chain} | '
                                          f'Volumes: {orders_vols[0][0], orders_vols[2][1]}')
 
@@ -238,8 +198,7 @@ class BitsharesArbitrage(BaseRin):
 
                 if self._is_orders_placing is False:
                     self._is_orders_placing = True
-                    specific_prec_arr = (precisions_arr[2], precisions_arr[4])
-                    await self._volumes_checker(orders_vols, chain, profit, specific_prec_arr)
+                    await self._volumes_checker(orders_vols, chain, profit)
                     self._is_orders_placing = False
 
             except (EmptyOrdersList, AuthorizedAsset, UnknownOrderException):

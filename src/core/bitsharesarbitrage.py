@@ -40,6 +40,11 @@ class BitsharesArbitrage(BaseRin):
         self._profit_logger = self.setup_logger('Profit', os.path.join(self.log_dir, 'profit.log'))
         self._blacklisted_assets = self.get_blacklisted_assets()
 
+    async def close_connections(*args):
+        await asyncio.gather(
+            *(obj.close() for objs in args for obj in objs)
+        )
+
     async def _add_asset_to_blacklist(self, asset):
         if asset not in self._blacklisted_assets:
             self._blacklisted_assets.append(asset)
@@ -54,12 +59,6 @@ class BitsharesArbitrage(BaseRin):
                 return '{:.12f}'.format(val).rstrip('0')
 
             return str(val)
-
-        async def close_connections(*args):
-            await asyncio.gather(
-                *(obj.close() for obj in args[0]),
-                *(obj.close() for obj in args[1])
-            )
 
         filled_all = True
         objs = await asyncio.gather(
@@ -100,20 +99,20 @@ class BitsharesArbitrage(BaseRin):
                 break
 
             except AuthorizedAsset:
-                await close_connections(order_objs, accounts_objs)
+                await self.close_connections(order_objs, accounts_objs)
                 await self._add_asset_to_blacklist(splitted_pair[1])
                 self._profit_logger.warning(f'Got Authorized asset {chain[i][1]} '
                                             f'in chain {chain} while placing order.')
                 raise
 
             except UnknownOrderException:
-                await close_connections(order_objs, accounts_objs)
+                await self.close_connections(order_objs, accounts_objs)
                 raise
 
         if filled_all:
             self._profit_logger.info(f'All orders for {chain} with volumes '
                                      f'- {orders_placement_data} successfully filed.')
-        await close_connections(order_objs, accounts_objs)
+        await self.close_connections(order_objs, accounts_objs)
 
         return filled_all
 
@@ -140,10 +139,6 @@ class BitsharesArbitrage(BaseRin):
         return arr
 
     async def _get_orders_data_for_chain(self, chain, gram_markets):
-        pairs_orders_data_arrs = await asyncio.gather(
-            *(self._get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_markets))
-        )
-
         async def get_size_of_smallest_arr(arrs_lst):
             return min(map(lambda x: len(x), arrs_lst))
 
@@ -153,6 +148,10 @@ class BitsharesArbitrage(BaseRin):
             ], dtype=self.dtype_float64)
 
             return arr
+
+        pairs_orders_data_arrs = await asyncio.gather(
+            *(self._get_order_data_for_pair(pair, market) for pair, market in zip(chain, gram_markets))
+        )
 
         try:
             pairs_orders_data_arr = np.array(pairs_orders_data_arrs, dtype=self.dtype_float64)
@@ -217,15 +216,13 @@ class BitsharesArbitrage(BaseRin):
                     self._is_orders_placing = False
 
             except (EmptyOrdersList, AuthorizedAsset, UnknownOrderException):
-                [await market.close() for market in markets_objs]
+                await self.close_connections(markets_objs)
                 return
 
             time_end = dt.now()
             time_delta = (time_end - time_start).seconds / 3600
 
-        await asyncio.gather(
-            *(market.close() for market in markets_objs)
-        )
+        await self.close_connections(markets_objs)
 
     def start_arbitrage(self):
         cycle_counter = 0

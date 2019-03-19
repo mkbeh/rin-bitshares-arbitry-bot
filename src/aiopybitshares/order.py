@@ -23,6 +23,8 @@ class Order(GramBitshares):
             if received_err_msg.startswith(err_msg):
                 raise exception
 
+        raise UnknownOrderException
+
     async def create_order(self, *args):
         raw_data = await self._gram.call_method('sell_asset', *args)
         print(raw_data)
@@ -31,6 +33,3 @@ class Order(GramBitshares):
 
         except KeyError:
             await self._find_and_raise_specific_exception(raw_data['error']['message'])
-
-        except UnknownOrderException:
-            raise

@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
+import math
 import numpy as np
 
 from dataclasses import dataclass
-
-from src.extra.baserin import BaseRin
 
 
 DTYPE_FLOAT64 = np.float64
@@ -23,10 +22,15 @@ class ArbitrationAlgorithm:
     async def __call__(self):
         return await self._run_data_through_algo()
 
+    @staticmethod
+    def round_half_up(number, decimals):
+        multiplier = 10 ** decimals
+        return math.floor(number * multiplier + 0.5) / multiplier
+
     async def _round_vols_to_specific_prec(self, vols_arr: np.ndarray) -> np.ndarray:
         flatten_vols_arr = vols_arr.flatten()
         vols_arr_with_precs = np.fromiter(
-            (BaseRin.truncate(vol, prec) for vol, prec in zip(flatten_vols_arr, self._precisions_arr)),
+            (self.round_half_up(vol, prec) for vol, prec in zip(flatten_vols_arr, self._precisions_arr)),
             dtype=DTYPE_FLOAT64)
 
         return vols_arr_with_precs

@@ -40,6 +40,7 @@ class BitsharesArbitrage(BaseRin):
         self._profit_logger = self.setup_logger('Profit', os.path.join(self.log_dir, 'profit.log'))
         self._blacklisted_assets = self.get_blacklisted_assets()
 
+    @staticmethod
     async def close_connections(*args):
         await asyncio.gather(
             *(obj.close() for objs in args for obj in objs)
@@ -175,9 +176,9 @@ class BitsharesArbitrage(BaseRin):
 
     async def _get_specific_data(self, chain):
         return (
-            await self._get_fee_or_limit(self._vol_limits, chain[0]),
-            await self._get_fee_or_limit(self._bts_default_fee, chain[0]),
-            await self._get_fee_or_limit(self.min_profit_limits, chain[0]),
+            np.float_(await self._get_fee_or_limit(self._vol_limits, chain[0])),
+            np.float_(await self._get_fee_or_limit(self._bts_default_fee, chain[0])),
+            np.float_(await self._get_fee_or_limit(self.min_profit_limits, chain[0])),
             await self._get_precisions_arr(chain)
         )
 
@@ -195,7 +196,6 @@ class BitsharesArbitrage(BaseRin):
                 orders_arrs = await self._get_orders_data_for_chain(chain, markets_objs)
                 orders_vols, profit = await ArbitrationAlgorithm(orders_arrs, asset_vol_limit, bts_default_fee,
                                                                  assets_fees, min_profit_limit, precisions_arr)()
-
                 if self._is_orders_placing is False:
                     self._is_orders_placing = True
                     await self._volumes_checker(orders_vols, chain, profit)

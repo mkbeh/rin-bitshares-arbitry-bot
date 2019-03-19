@@ -10,6 +10,33 @@ DTYPE_FLOAT64 = np.float64
 
 @dataclass(repr=False, eq=False)
 class ArbitrationAlgorithm:
+    """
+    _orders_data:       3D array which contains orders data (price, quote volume, base volume) for each pair in chain.
+
+    _vol_limit:         Float number denoting max volume limit of order for first (core) asset in first pair.
+
+    _bts_default_fee:   Float number denoting BTS default fee for placing order multiplied by 3.
+                        Also this number converted to core (first) asset in first pair.
+
+    _assets_fees:       1D array which contains market fees for each second asset in pair of chain.
+
+    _profit_limit:      Float number denoting min profit limit which you want to receive.
+
+    _precisions_arr:    1D array which contains precisions for each asset in pair of chain.
+                        If you don't round calculated volume to specific precision - Bitshares blockchain will return
+                        you an error.
+
+    :return:            If profit >= _profit_limit - will be returned tuple of 3D array with volumes for placing orders
+                        and and calculated profit , else tuple of empty array and calculated profit.
+
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    Short Description:  Ex: There is chain BTS:CNY CNY:USD USD:BTS. We need to sell BTS for CNY , then CNY for USD and
+                        and USD for BTS (simple description of arbitration algorithm). This algorithm is built on the
+                        above.
+
+                        Also this algorithm has a little feature. He can sum orders. It works not only on the most
+                        latest orders in the glass, but also it works in depth.
+    """
     __slots__ = ['_orders_data', '_vol_limit', '_bts_default_fee', '_assets_fees', '_profit_limit', '_precisions_arr']
 
     _orders_data: np.ndarray

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import json
+import ujson
 import aiohttp
 
 from aiohttp.client_exceptions import ClientConnectionError
@@ -39,7 +39,7 @@ class GramBitshares:
 
     async def call_method(self, method, *args):
         await self._ws.send_str(
-            json.dumps(
+            ujson.dumps(
                 {'id': 0, 'method': '{}'.format(method), 'params': [*args]}
             )
         )

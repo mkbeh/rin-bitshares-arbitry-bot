@@ -15,6 +15,8 @@ of the arbitration algorithm is in the module
 ## **Getting started**
 
 * [Installing Bitshares node and wallet](#installing-bitshares-node-and-wallet)
+    * [Configuring node](#configuring-node)
+    * [Configuring wallet](#configuring-wallet)
 
 **The following actions were performed on ubuntu 18.10**
 

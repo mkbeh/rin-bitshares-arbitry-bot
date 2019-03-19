@@ -15,7 +15,7 @@ compiler_directives = {
 
 
 def readme():
-    with open('src/README.md') as f:
+    with open('../src/README.md') as f:
         return f.read()
 
 

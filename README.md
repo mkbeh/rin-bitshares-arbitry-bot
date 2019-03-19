@@ -26,7 +26,7 @@ solutions to this problem, but have not yet
 come to success.
 
 ### **How bot works**
-![Alt text](/home/cyberpunk/Downloads/lol.png "Title")
+![scheme](https://user-images.githubusercontent.com/26373902/54623384-74f31a80-4a7c-11e9-967d-5a368477a23e.png)
 
 
 ## **Getting started**

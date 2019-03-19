@@ -37,8 +37,23 @@ deb http://security.ubuntu.com/ubuntu xenial-security main
 
 > rm BitShares-Core-2.0.190219-Linux-cli-tools.tar.gz
 
-#### **Configuring witness node**
-[TO DO]
+#### **Configuring node**
+> sudo apt-get install supervisor
+
+> sudo vi /etc/supervisor/conf.d/bts_node.conf
+```bash
+[program:bts_node]
+command=/home/<user>/programs/witness_node/witness_node --rpc-endpoint="127.0.0.1:8091"
+directory=/home/<user>/programs/witness_node/
+stdout_logfile=/var/log/supervisor/bts_node_out.log
+stderr_logfile=/var/log/supervisor/bts_node_err.log
+autostart=true
+autorestart=true
+numprocs=1
+user=<user>
+```
+
+When the node is synchronized - go to the next step.
 
 #### **Configuring wallet**
 ```bash
@@ -72,24 +87,6 @@ LC_TYPE=en_US.UTF-8
 ```bash
 locale-gen en_US.UTF-8
 dpkg-reconfigure locales
-```
-
-```
-
-#### **Adding node, wallet to supervisor**
-> sudo apt-get install supervisor
-
-> sudo vi /etc/supervisor/conf.d/bts_node.conf
-```bash
-[program:bts_node]
-command=/home/<user>/programs/witness_node/witness_node --rpc-endpoint="127.0.0.1:8091"
-directory=/home/<user>/programs/witness_node/
-stdout_logfile=/var/log/supervisor/bts_node_out.log
-stderr_logfile=/var/log/supervisor/bts_node_err.log
-autostart=true
-autorestart=true
-numprocs=1
-user=<user>
 ```
 > sudo vi /etc/supervisor/conf.d/bts_wallet.conf
 ```bash
@@ -131,7 +128,7 @@ user=<user>
 
 ### **Configuring nginx**
 Previously buy domain and add 2 CNAME records for subdomens:
-wallet.domain.com, node.domain.com.
+wallet.your-domain.com, node.your-domain.com.
 
 #### **Base configuration**
 > sudo vi /lib/systemd/system/NGINX.service
@@ -161,6 +158,8 @@ WantedBy=multi-user.target
 > systemctl -l status NGINX.service
 
 #### **Filling nginx.conf**
+Don't forget to change stubs in nginx.conf on yours values.
+
 > vi /etc/sysctl.conf
 ```bash
 # Add next line in the end of the file.
@@ -284,10 +283,8 @@ or do
 ```bash
 IMPORTANT NOTE:
 Adding ssl you will get a memory leak due to the fact 
-that the aiohttp 3.5.4 library contains a memory leak when working with ssl.
+that the aiohttp 3.5.4 library with python3.7 contains a memory leak when working with ssl.
 So , do not use ssl until this bug is fixed.
-
-Due with the lack of ssl on the wallet, I recommend reconsidering the nginx configuration.
 ```
 
 ```
@@ -333,6 +330,7 @@ sudo systemctl reload sshd
 ```
 
 #### **Configuring UFW**
+Сhange firewall settings to your liking.
 ```bash
 ufw default deny incoming 
 ufw default allow outgoing
@@ -341,9 +339,6 @@ ufw enable
 ufw allow from <your ip> to any port www
 ufw allow from <your ip> to any port 443
 ```
-
-#### **Nginx basic auth**.
-[TO DO]
 
 ### **Installing and usage bot**
 The following procedure will work in Debian 
@@ -441,7 +436,7 @@ user=<user>
 > sudo supervisorctl start rin-bot
 
 #### Logging
-Logs, output files and config are available by path /home/<user>/rin-bot
+Logs, output files and config are available by path /home/\<user>/rin-bot
 
 #### Note
 ```angular2

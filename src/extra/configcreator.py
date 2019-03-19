@@ -1,7 +1,7 @@
 # -*- coding: utf-8
 import os
 import configparser
-import json
+import ujson
 
 from . import utils
 from .customexceptions import ConfigNotFilled
@@ -25,8 +25,8 @@ class ConfigCreator:
             'pair min daily volume': '5'       # $ / required int
         }},
         {'LIMITS': {
-            'volume limits': json.dumps({'1.3.0': .5, '1.3.113': .5, '1.3.1570': .5, '1.3.121': .5}),   # required dict
-            'min profit limits': json.dumps({'1.3.0': 0.001, '1.3.113': 0.02,                           # required dict
+            'volume limits': ujson.dumps({'1.3.0': .5, '1.3.113': .5, '1.3.1570': .5, '1.3.121': .5}),   # required dict
+            'min profit limits': ujson.dumps({'1.3.0': 0.001, '1.3.113': 0.02,                           # required dict
                                              '1.3.1570': 0.000_000_02, '1.3.121': 0.02})
         }},
         {'URI': {
@@ -85,7 +85,7 @@ class ConfigCreator:
                     val = int(config.get(section, option))
 
                 elif section == 'LIMITS':
-                    val = json.loads(config.get(section, option))
+                    val = ujson.loads(config.get(section, option))
 
                 else:
                     val = config.get(section, option)

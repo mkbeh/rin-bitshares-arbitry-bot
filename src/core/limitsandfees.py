@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
-import json
+import ujson
 import asyncio
 import itertools
 
@@ -62,7 +62,7 @@ class VolLimits(BaseRin):
         vol_limits = await self._calculate_limits(prices)
         self._vol_limits_pattern = '{}:{} {}:{} {}:{} {}:{}'\
             .format(*itertools.chain(*vol_limits.items()))
-        await self.write_data(json.dumps(vol_limits), self._new_file, self._lock)
+        await self.write_data(ujson.dumps(vol_limits), self._new_file, self._lock)
 
         return vol_limits
 
@@ -73,7 +73,7 @@ class VolLimits(BaseRin):
             vol_limits = self._ioloop.run_until_complete(asyncio.gather(*tasks))[0]
         except ClientConnectionError:
             self._logger.exception('Client connection error occurred while getting volume limits.')
-            return json.loads(
+            return ujson.loads(
                 self.actions_when_errors_with_read_data(self._old_file)[0]
             )
 
@@ -121,7 +121,7 @@ class DefaultBTSFee(VolLimits):
 
         self._fees = '{}:{} {}:{} {}:{} {}:{}' \
             .format(*itertools.chain(*final_fees.items()))
-        await self.write_data(json.dumps(final_fees), self._new_file, self._lock)
+        await self.write_data(ujson.dumps(final_fees), self._new_file, self._lock)
 
         return final_fees
 
@@ -132,7 +132,7 @@ class DefaultBTSFee(VolLimits):
             converted_fees = self._ioloop.run_until_complete(asyncio.gather(*tasks))[0]
         except ClientConnectionError:
             self._logger.exception('Client connection error occurred while getting converted default bts fee')
-            return json.loads(
+            return ujson.loads(
                 self.actions_when_errors_with_read_data(self._old_file)[0]
             )
 

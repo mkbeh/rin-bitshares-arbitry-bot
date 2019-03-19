@@ -3,10 +3,12 @@ import logging
 import asyncio
 
 from src.extra.baserin import BaseRin
+from src.extra import utils
+
 from src.parsers.cryptofreshparser import CryptofreshParser
 from src.parsers.bitsharesexplorerparser import BitsharesExplorerParser
+
 from src.aiopybitshares.asset import Asset
-from src.extra import utils
 
 
 class ChainsCreator(BaseRin):

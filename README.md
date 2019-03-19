@@ -8,6 +8,23 @@ of the arbitration algorithm is in the module
 `src.algorithms.arbitryalgorithm`. 
 ***
 
+### Donate
+If this project help you, you can give me a cup of tea :)
+```bash
+Bitshares account -> makar0ff
+Bitcoin address   -> 15CVdWbLTXdvDd2U29o42ZJe1HvjdJLy7n
+Ethereum address  -> 0xe015b343d077211ccdc511bbe165b1da9cce9251
+```
+
+
+### Current issue
+The problem is the incorrect calculation of 
+the final volumes for placing orders. Due to a 
+small error in the calculations, it is not 
+possible to place orders. I tried various 
+solutions to this problem, but have not yet 
+come to success.
+
 ### **How bot works**
 [TO DO]
 
@@ -17,6 +34,20 @@ of the arbitration algorithm is in the module
 * [Installing Bitshares node and wallet](#installing-bitshares-node-and-wallet)
     * [Configuring node](#configuring-node)
     * [Configuring wallet](#configuring-wallet)
+* [Installing nginx](#installing-nginx)
+    * [Configuring nginx](#configuring-nginx)
+        * [Base configuration](#base-configuration)
+        * [Filling nginx.conf](#filling-nginxconf)
+        * [Adding ssl](#adding-ssl)
+* [Server security setting](#server-security-setting)
+    * [Adding SSH keys](#adding-ssh-keys)
+    * [Configuring Firewall](#configuring-ufw)
+* [Installing and usage bot](#installing-and-usage-bot)
+    * [Contents of the config.ini file](#contents-of-the-configini-file)
+    * [Adding app to supervisor](#adding-app-to-supervisor)
+    * [Logging](#logging)
+    * [Cython supporting](#cython-supporting)
+* [Milestones](#milestones)
 
 **The following actions were performed on ubuntu 18.10**
 
@@ -64,6 +95,26 @@ set_password <your_super_pwd>
 unlock <your_super_pwd>
 import_key <user_name> <priv_key>
 ```
+> sudo vi /etc/supervisor/conf.d/bts_wallet.conf
+```bash
+[program:bts_wallet]
+command=/home/<user>/programs/cli_wallet/cli_wallet --server-rpc-endpoint=ws://127.0.0.1:8091 -r 127.0.0.1:8093
+directory=/home/<user>/programs/cli_wallet/
+stdout_logfile=/var/log/supervisor/bts_wallet_out.log
+stderr_logfile=/var/log/supervisor/bts_wallet_err.log
+autostart=true
+autorestart=true
+numprocs=1
+user=<user>
+```
+
+> sudo supervisorctl reread
+
+> sudo supervisorctl update
+
+> sudo supervisorctl start bts_node
+
+> sudo supervisorctl start bts_wallet
 
 **NOTE:**
 
@@ -89,26 +140,6 @@ LC_TYPE=en_US.UTF-8
 locale-gen en_US.UTF-8
 dpkg-reconfigure locales
 ```
-> sudo vi /etc/supervisor/conf.d/bts_wallet.conf
-```bash
-[program:bts_wallet]
-command=/home/<user>/programs/cli_wallet/cli_wallet --server-rpc-endpoint=ws://127.0.0.1:8091 -r 127.0.0.1:8093
-directory=/home/<user>/programs/cli_wallet/
-stdout_logfile=/var/log/supervisor/bts_wallet_out.log
-stderr_logfile=/var/log/supervisor/bts_wallet_err.log
-autostart=true
-autorestart=true
-numprocs=1
-user=<user>
-```
-
-> sudo supervisorctl reread
-
-> sudo supervisorctl update
-
-> sudo supervisorctl start bts_node
-
-> sudo supervisorctl start bts_wallet
 
 ### **Installing nginx**
 > wget http://nginx.org/download/nginx-1.11.3.tar.gz
@@ -316,7 +347,7 @@ After previous steps uncomment lines in nginx.conf and replace domens on yours. 
 
 ### Server security setting
 
-#### **Add SSH keys**
+#### **Adding SSH keys**
 ```bash
 # On your local car.
 ssh-keygen
@@ -420,7 +451,7 @@ orders depth = 5          # Amount. Required int
 
 When you will fill config - go to the next step.
 
-### Adding to supervisor
+#### Adding app to supervisor
 > sudo vi /etc/supervisor/conf.d/rin-bot.conf
 ```bash
 [program:rin-bot]
@@ -441,7 +472,7 @@ user=<user>
 #### Logging
 Logs, output files and config are available by path /home/\<user>/rin-bot
 
-#### Note
+#### Cython supporting
 ```angular2
 If you want to compile modules by Cython - uncomment
 lines in setup.py and change the extension of 
@@ -449,6 +480,7 @@ the desired files to .pyx. But Cython compiling not
 tested so use it at your own risk.
 ```
 ### **Milestones**:
+* Fix a bug associated with incorrect calculation of volumes.
 * Write own async cmd explorer REST API without web interface.
 * Improve bot by adding new features.
 * Write full async lib for Bitshares API.

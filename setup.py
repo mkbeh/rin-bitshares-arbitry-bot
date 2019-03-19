@@ -1,9 +1,13 @@
+import os
+
 import numpy as np
 import src
 
 from setuptools import setup, find_packages
 from Cython.Build import cythonize
 from Cython.Distutils import build_ext
+
+from src.extra import utils
 
 
 compiler_directives = {
@@ -15,7 +19,11 @@ compiler_directives = {
 
 
 def readme():
-    with open('../src/README.md') as f:
+    path = os.path.join(
+        utils.get_abs_path('README.md')
+    )
+
+    with open(path) as f:
         return f.read()
 
 

@@ -14,8 +14,7 @@ of the arbitration algorithm is in the module
 
 ## **Getting started**
 
-[TO DO] Сделать содержание со ссылками для перехода
-к отдельным пунктам доки.
+* [Installing Bitshares node and wallet](#installing-bitshares-node-and-wallet)
 
 **The following actions were performed on ubuntu 18.10**
 
@@ -379,9 +378,11 @@ Just type rin-bot in the command line and press enter.
 ```
 On first app startup will be generated config, 
 which must be filled. 
-Config is located -> /home/<user>/rin-bot/config.ini
+Config is located -> /home/\<user>/rin-bot/config.ini
 
 #### **Contents of the config.ini file**
+Explorer uri you can get here https://github.com/oxarbitrage/bitshares-explorer-api
+
 ```angular2
 [DIRS]
 output dir = path/to/output/directory/output # name output requried

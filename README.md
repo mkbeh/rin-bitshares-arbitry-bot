@@ -26,7 +26,7 @@ solutions to this problem, but have not yet
 come to success.
 
 ### **How bot works**
-![lol](https://user-images.githubusercontent.com/26373902/54623184-188ffb00-4a7c-11e9-9d09-35c6139eb3fd.png)
+![scheme](https://user-images.githubusercontent.com/26373902/54623384-74f31a80-4a7c-11e9-967d-5a368477a23e.png)
 
 
 ## **Getting started**

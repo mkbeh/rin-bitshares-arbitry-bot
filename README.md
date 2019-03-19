@@ -11,7 +11,7 @@ of the arbitration algorithm is in the module
 ### Donate
 If this project help you, you can give me a cup of tea :)
 ```bash
-Bitshares account -> makar0ff
+Bitshares account -> mkbehforever007
 Bitcoin address   -> 15CVdWbLTXdvDd2U29o42ZJe1HvjdJLy7n
 Ethereum address  -> 0xe015b343d077211ccdc511bbe165b1da9cce9251
 ```
@@ -26,7 +26,7 @@ solutions to this problem, but have not yet
 come to success.
 
 ### **How bot works**
-[TO DO]
+![Alt text](/home/cyberpunk/Downloads/lol.png "Title")
 
 
 ## **Getting started**
@@ -312,7 +312,7 @@ or do
 > systemctl reload NGINX.service
 
 #### **Adding ssl**
-```bash
+```
 IMPORTANT NOTE:
 Adding ssl you will get a memory leak due to the fact 
 that the aiohttp 3.5.4 library with python3.7 contains a memory leak when working with ssl.
@@ -339,7 +339,7 @@ ssl_session_timeout 4h;
 ```
 
 #### **NOTE**
-```bash
+```
 If something was wrong -> reboot your system and try again , in 99 percent of the happenings it helps :D
 ```
 

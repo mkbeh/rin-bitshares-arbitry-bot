@@ -40,7 +40,7 @@ class GramBitshares:
     async def call_method(self, method, *args):
         await self._ws.send_str(
             ujson.dumps(
-                {'id': 0, 'method': '{}'.format(method), 'params': [*args]}
+                {'id': 0, 'method': '{}'.format(method), 'params': args}
             )
         )
 

@@ -9,11 +9,11 @@ of the arbitration algorithm is in the module
 ***
 
 ### Donate
-If this project help you, you can give me a cup of tea :)
+**Donate me if you like it :)**
 ```bash
 Bitshares account -> mkbehforever007
-Bitcoin address   -> 15CVdWbLTXdvDd2U29o42ZJe1HvjdJLy7n
-Ethereum address  -> 0xe015b343d077211ccdc511bbe165b1da9cce9251
+bitcoin -> bc1qqkr72aemz59aawxf74gytrwuw4m9mj20t7e7df
+ethereum -> 0xB3e5b643cFB9e2565a3456eC7c7A73491A32e31F
 ```
 
 

@@ -42,7 +42,7 @@ setup(
     platforms=['Linux'],
     install_requires=[
         'aiofiles==0.4.0',
-        'aiohttp==3.5.4',
+        'aiohttp==3.7.4',
         'beautifulsoup4==4.7.1',
         'Cython==0.29.3',
         'lxml==4.3.0',

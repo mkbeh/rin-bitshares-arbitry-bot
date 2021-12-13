@@ -45,7 +45,7 @@ setup(
         'aiohttp==3.7.4',
         'beautifulsoup4==4.7.1',
         'Cython==0.29.3',
-        'lxml==4.6.3',
+        'lxml==4.6.5',
         'uvloop==0.12.1',
         'numpy==1.16.0',
         'ujson==1.35',

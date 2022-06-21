@@ -47,7 +47,7 @@ setup(
         'Cython==0.29.3',
         'lxml==4.6.3',
         'uvloop==0.12.1',
-        'numpy==1.16.0',
+        'numpy==1.22.0',
         'ujson==1.35',
         'markdown',
     ],

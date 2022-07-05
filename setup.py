@@ -48,7 +48,7 @@ setup(
         'lxml==4.6.3',
         'uvloop==0.12.1',
         'numpy==1.16.0',
-        'ujson==1.35',
+        'ujson==5.4.0',
         'markdown',
     ],
     include_package_data=True,
